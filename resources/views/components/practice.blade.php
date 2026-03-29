@@ -1,0 +1,766 @@
+<section
+    class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    <div
+        class="border-b border-gray-200 bg-gradient-to-r from-brand-500/10 via-white to-orange-500/10 p-6 dark:border-gray-800 dark:from-brand-500/5 dark:via-gray-900 dark:to-orange-500/5">
+        <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+            <div class="max-w-3xl">
+                <span
+                    class="mb-3 inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                    AI-Based Interview Practice System
+                </span>
+
+                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
+                    Interview Simulation
+                </h1>
+
+                <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    Select a category, answer naturally, and review automated feedback in real time without leaving the
+                    interview practice workspace.
+                </p>
+            </div>
+
+            <div class="grid gap-3 sm:grid-cols-3">
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Categories</p>
+                    <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">4 Tracks</p>
+                </div>
+
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Response Modes</p>
+                    <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Text + Voice</p>
+                </div>
+
+                <div
+                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Feedback</p>
+                    <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Instant Review</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div id="practiceApp" class="grid items-stretch gap-6 xl:grid-cols-12">
+    <section class="flex flex-col gap-6 xl:col-span-4">
+        <article
+            id="practiceSetupSection"
+            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Session Setup</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Configure how your next mock interview should run.
+                </p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="questionCountSelect">
+                        Question Count
+                    </label>
+                    <select
+                        id="questionCountSelect"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                        <option value="3">Quick Drill (3 questions)</option>
+                        <option value="5">Full Mock (5 questions)</option>
+                        <option value="10">Extended Practice (10 questions)</option>
+                        <option value="15">Intensive Round (15 questions)</option>
+                        <option value="20">Marathon Mock (20 questions)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="focusModeSelect">
+                        Coach Focus
+                    </label>
+                    <select
+                        id="focusModeSelect"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></select>
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="pacingModeSelect">
+                        Pacing Mode
+                    </label>
+                    <select
+                        id="pacingModeSelect"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></select>
+                </div>
+            </div>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Categories</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Choose an interview scenario to begin.
+                </p>
+            </div>
+
+            <div id="practiceCategoryList" class="grid grid-cols-2 gap-3"></div>
+        </article>
+    </section>
+
+    <section class="xl:col-span-8">
+        <div class="flex h-full flex-col gap-6">
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <div
+                    class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
+                    <div class="max-w-2xl">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
+                            Interview Workspace Modal
+                        </p>
+                        <h3 id="practiceModalCategoryName" class="mt-2 text-xl font-semibold text-gray-900 dark:text-white/90">
+                            Select a category to launch
+                        </h3>
+                        <p id="practiceModalSummaryText" class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            Choose a category from the left panel. The interview flow and AI interviewer will open in a modal.
+                        </p>
+                    </div>
+
+                    <div class="flex flex-col items-start gap-3 md:items-end">
+                        <span
+                            id="practiceModalStateTag"
+                            class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                            Waiting
+                        </span>
+
+                        <button
+                            id="openPracticeModalBtn"
+                            type="button"
+                            disabled
+                            class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
+                            Open Interview Modal
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Active Category</p>
+                        <strong
+                            id="practiceModalActiveCategory"
+                            class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            None selected
+                        </strong>
+                    </div>
+
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Answers Reviewed</p>
+                        <strong
+                            id="practiceModalAnsweredValue"
+                            class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            0 / 0
+                        </strong>
+                    </div>
+
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Workspace</p>
+                        <strong
+                            id="practiceModalWorkspaceValue"
+                            class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            Closed
+                        </strong>
+                    </div>
+                </div>
+            </article>
+
+            <div class="grid gap-6 lg:grid-cols-2">
+                <article
+                    id="practiceFeedbackSection"
+                    class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div
+                        class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
+                        <div>
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Automated Feedback</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Evaluation appears here after you submit an answer.
+                            </p>
+                        </div>
+
+                        <button
+                            id="printFeedbackBtn"
+                            type="button"
+                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                            Print Summary
+                        </button>
+                    </div>
+
+                    <div id="feedbackContent" class="mt-5 flex-1">
+                        <div
+                            class="flex h-full min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">No answer evaluated yet</h3>
+                            <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                Once you submit a response, the system will generate detailed scores, strengths,
+                                improvement areas, and suggestions.
+                            </p>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Session Tips</h3>
+                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                            Helpful guidance while answering interview questions.
+                        </p>
+                    </div>
+
+                    <div class="mt-5 flex-1">
+                        <div
+                            class="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-700">
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Practice Reminder</h3>
+                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                Speak clearly, answer directly, and include concrete examples whenever the question calls
+                                for proof.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+                        <div
+                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">Mode</p>
+                            <strong
+                                id="inputModeValue"
+                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                Text
+                            </strong>
+                        </div>
+
+                        <div
+                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">Answered</p>
+                            <strong
+                                id="answeredCountValue"
+                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                0
+                            </strong>
+                        </div>
+
+                        <div
+                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">Pacing</p>
+                            <strong
+                                id="paceModeValue"
+                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                Standard
+                            </strong>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Question Generator</h3>
+                    <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                        After you choose a category, the Interview Workspace modal will use the AI question chatbot to
+                        create a fresh set of interview questions for that category and sync the active question with
+                        the interviewer voice.
+                    </p>
+                </div>
+
+                <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Question Sets</p>
+                        <strong class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            Dynamic Per Category
+                        </strong>
+                    </div>
+
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Generation Mode</p>
+                        <strong class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            Chatbot-Driven
+                        </strong>
+                    </div>
+
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Voice Sync</p>
+                        <strong class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            Interviewer Reads Active Question
+                        </strong>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div
+    id="practiceSessionModal"
+    x-data="{
+        viewportWidth: window.innerWidth,
+        handleResize: null,
+        init() {
+            this.handleResize = () => {
+                this.viewportWidth = window.innerWidth;
+            };
+
+            this.handleResize();
+            window.addEventListener('resize', this.handleResize);
+        },
+        destroy() {
+            if (this.handleResize) {
+                window.removeEventListener('resize', this.handleResize);
+            }
+        },
+        get isDesktop() {
+            return this.viewportWidth >= 1280;
+        },
+        get sidebarOffset() {
+            if (!this.isDesktop) {
+                return 0;
+            }
+
+            return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
+        },
+        get topOffset() {
+            return this.viewportWidth >= 640 ? 88 : 72;
+        },
+        get wrapperPadding() {
+            if (this.viewportWidth >= 1280) {
+                return 24;
+            }
+
+            if (this.viewportWidth >= 640) {
+                return 20;
+            }
+
+            return 12;
+        },
+        get wrapperStyle() {
+            return `top: ${this.topOffset}px; left: ${this.sidebarOffset}px; right: 0; bottom: 0; padding: ${this.wrapperPadding}px;`;
+        }
+    }"
+    class="fixed z-[9999] hidden items-start justify-center"
+    :style="wrapperStyle"
+    aria-hidden="true"
+    aria-labelledby="practiceModalTitle"
+    aria-modal="true"
+    role="dialog">
+    <div id="practiceSessionModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+    <div
+        class="relative z-10 flex h-full w-full max-w-[1500px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        <div
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-5 lg:px-6">
+            <div>
+                <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
+                    Practice Modal
+                </p>
+                <h2 id="practiceModalTitle" class="mt-1 text-lg font-semibold text-gray-900 dark:text-white/90">
+                    Interview Workspace
+                </h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Continue your selected interview flow and use the AI interviewer in one modal view.
+                </p>
+            </div>
+
+            <button
+                id="closePracticeModalBtn"
+                type="button"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white sm:h-11 sm:w-11">
+                <span class="sr-only">Close interview modal</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                        fill="currentColor" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="min-h-0 overflow-y-auto p-4 sm:p-5 lg:p-6">
+            <div class="grid items-stretch gap-4 lg:gap-6 xl:grid-cols-12">
+                <section class="min-w-0 xl:col-span-7">
+                    <article
+                        class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div
+                            class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
+                            <div>
+                                <h3 id="selectedCategoryName" class="text-lg font-semibold text-gray-900 dark:text-white/90">
+                                    Select a category to start
+                                </h3>
+                                <p
+                                    id="selectedCategoryDescription"
+                                    class="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                    Your chosen interview type will load a fresh AI-generated question set.
+                                </p>
+                            </div>
+
+                            <span
+                                id="questionCounter"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Question 0 of 0
+                            </span>
+                        </div>
+
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <span
+                                id="practiceStatusTag"
+                                class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">
+                                Awaiting category
+                            </span>
+                            <span
+                                id="practiceLabelTag"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                No active session
+                            </span>
+                        </div>
+
+                        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                <p class="text-xs uppercase tracking-wide text-gray-500">Coach Focus</p>
+                                <strong
+                                    id="coachModeValue"
+                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                    Balanced Coach
+                                </strong>
+                            </div>
+
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                <p class="text-xs uppercase tracking-wide text-gray-500">Target Time</p>
+                                <strong
+                                    id="timerTargetValue"
+                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                    03:00
+                                </strong>
+                            </div>
+
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                <p class="text-xs uppercase tracking-wide text-gray-500">Current Timer</p>
+                                <strong
+                                    id="questionTimerValue"
+                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                    00:00
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 h-2 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                            <div
+                                id="questionProgressFill"
+                                class="h-full rounded-full bg-brand-500 transition-all duration-300"
+                                style="width: 0%;"></div>
+                        </div>
+
+                        <div class="mt-6 space-y-6">
+                            <div>
+                                <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Current question</p>
+                                <h2
+                                    id="currentQuestionText"
+                                    class="text-xl font-semibold leading-8 text-gray-900 dark:text-white/90">
+                                    Choose a category from the left panel to begin your interview simulation.
+                                </h2>
+                            </div>
+
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                                <div
+                                    class="flex flex-col gap-3 border-b border-gray-200 pb-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+                                    <div>
+                                        <strong class="text-sm font-semibold text-gray-900 dark:text-white/90">Coach Guidance</strong>
+                                    </div>
+                                    <span
+                                        id="coachModeTag"
+                                        class="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                                        Balanced Coach
+                                    </span>
+                                </div>
+
+                                <p id="coachTipText" class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                    Choose a category to load your coach guidance and answer keywords.
+                                </p>
+
+                                <div id="questionKeywordTags" class="mt-4 flex flex-wrap gap-2"></div>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    for="responseInput">
+                                    Your Response
+                                </label>
+
+                                <textarea
+                                    id="responseInput"
+                                    class="dark:bg-dark-900 min-h-[220px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                    placeholder="Type your answer here or use voice input if supported by your browser."></textarea>
+
+                                <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    Blank answers are not accepted. Complete your response before submitting.
+                                </p>
+                            </div>
+
+                            <div class="flex flex-wrap gap-3">
+                                <button
+                                    id="startVoiceBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                    Start Voice Input
+                                </button>
+
+                                <button
+                                    id="stopVoiceBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                    Stop Voice Input
+                                </button>
+
+                                <button
+                                    id="submitAnswerBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+                                    Submit Answer
+                                </button>
+
+                                <button
+                                    id="nextQuestionBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                    Next Question
+                                </button>
+
+                                <button
+                                    id="endSessionBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-error-300 px-4 py-3 text-sm font-medium text-error-600 transition hover:bg-error-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-error-500/40 dark:text-error-300 dark:hover:bg-error-500/10 sm:w-auto">
+                                    End Session
+                                </button>
+                            </div>
+
+                            <div
+                                id="voiceStatus"
+                                aria-live="polite"
+                                class="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-400">
+                                <span id="voiceStatusDot" class="h-2.5 w-2.5 rounded-full bg-gray-400"></span>
+                                <span id="voiceStatusText">Voice input is idle.</span>
+                            </div>
+
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                Realtime speech-to-text works best in Chrome or Edge while running on localhost or HTTPS.
+                            </p>
+
+                            <div id="practiceMessage" aria-live="polite" class="hidden rounded-xl border px-4 py-3 text-sm"></div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="grid auto-rows-fr gap-6 xl:col-span-5">
+                    <article
+                        id="aiInterviewerSection"
+                        class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div
+                            class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Interviewer</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Avatar asks the question aloud and checks if your face is visible on camera.
+                                </p>
+                            </div>
+
+                            <span
+                                id="interviewerStatusTag"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Camera Off
+                            </span>
+                        </div>
+
+                        <div class="mt-5 space-y-4">
+                            <div
+                                class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                <div class="flex items-center gap-4">
+                                    <div
+                                        id="avatarOrb"
+                                        class="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-base font-semibold text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                                        AI
+                                    </div>
+
+                                    <div class="min-w-0">
+                                        <strong
+                                            id="avatarSpeechStatus"
+                                            class="block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                            Avatar idle
+                                        </strong>
+                                        <p id="avatarLineText" class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                            Start the camera, then choose a category. I will read each interview question aloud.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 flex flex-wrap gap-3">
+                                    <button
+                                        id="startCameraBtn"
+                                        type="button"
+                                        class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                        Start Camera
+                                    </button>
+
+                                    <button
+                                        id="stopCameraBtn"
+                                        type="button"
+                                        class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                        Stop Camera
+                                    </button>
+
+                                    <button
+                                        id="askQuestionAloudBtn"
+                                        type="button"
+                                        class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:w-auto">
+                                        Ask Current Question
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-black dark:border-gray-800">
+                                <video id="faceCameraVideo" autoplay muted playsinline class="h-56 w-full object-cover sm:h-64"></video>
+                            </div>
+
+                            <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                                <div
+                                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Camera</p>
+                                    <strong
+                                        id="cameraStateValue"
+                                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                        Off
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Face Status</p>
+                                    <strong
+                                        id="faceStateValue"
+                                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                        Not detected
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Avatar Voice</p>
+                                    <strong
+                                        id="avatarVoiceValue"
+                                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                        Ready
+                                    </strong>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <article
+                        id="practiceQuestionAgentSection"
+                        class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div
+                            class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Question Chatbot</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Generates fresh category-based questions and keeps the active prompt synced with the interviewer voice.
+                                </p>
+                            </div>
+
+                            <span
+                                id="practiceQuestionAgentStatusTag"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Waiting
+                            </span>
+                        </div>
+
+                        <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                            <div
+                                class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                <p class="text-xs uppercase tracking-wide text-gray-500">Question Source</p>
+                                <strong
+                                    id="practiceQuestionAgentSourceValue"
+                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                    Awaiting category
+                                </strong>
+                            </div>
+
+                            <div
+                                class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                <label
+                                    for="practiceQuestionAgentProviderSelect"
+                                    class="block text-xs uppercase tracking-wide text-gray-500">
+                                    Provider
+                                </label>
+                                <select
+                                    id="practiceQuestionAgentProviderSelect"
+                                    class="dark:bg-dark-900 mt-2 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                </select>
+                                <p
+                                    id="practiceQuestionAgentProviderValue"
+                                    class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                    Current route: Auto
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Conversation</p>
+                            <div id="practiceQuestionAgentMessages" class="mt-3 flex min-h-[180px] max-h-[260px] flex-col gap-4 overflow-y-auto pr-1"></div>
+                        </div>
+
+                        <div class="mt-5">
+                            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Quick Actions</p>
+                            <div id="practiceQuestionAgentQuickActions" class="mt-3 flex flex-wrap gap-2"></div>
+                        </div>
+
+                        <div class="mt-5 rounded-2xl border border-dashed border-gray-300 px-4 py-4 dark:border-gray-700">
+                            <label for="practiceQuestionAgentInput" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Instruction For The Chatbot
+                            </label>
+                            <textarea
+                                id="practiceQuestionAgentInput"
+                                rows="4"
+                                class="mt-3 min-h-[120px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                placeholder="Example: Generate harder job interview questions for a fresh graduate applying for a remote role."></textarea>
+
+                            <div class="mt-4 flex flex-wrap gap-3">
+                                <button
+                                    id="practiceQuestionAgentGenerateBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
+                                    Generate Questions
+                                </button>
+
+                                <button
+                                    id="practiceQuestionAgentRegenerateBtn"
+                                    type="button"
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                    Regenerate Set
+                                </button>
+                            </div>
+
+                            <p id="practiceQuestionAgentSummaryText" class="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                Select a category and the chatbot will build a fresh question set for the workspace.
+                            </p>
+                        </div>
+                    </article>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
