@@ -130,6 +130,17 @@ class InterviewChatbotService
             );
         }
 
+        if ($mode === 'field_builder') {
+            return $this->generateFieldBuilderReply(
+                message: $message,
+                requestedProviderId: $requestedProviderId,
+                providers: $providers,
+                context: $context,
+                suggestions: $suggestions,
+                availableProviders: $bootstrap['providers'],
+            );
+        }
+
         if ($mode === 'feedback_review') {
             return $this->generateFeedbackReviewReply(
                 message: $message,
@@ -201,7 +212,8 @@ class InterviewChatbotService
         array $suggestions,
         array $availableProviders,
         array $generatedQuestions = [],
-        array $feedbackSummary = []
+        array $feedbackSummary = [],
+        array $fieldPlan = []
     ): array {
         return [
             'reply' => $reply,
@@ -213,6 +225,7 @@ class InterviewChatbotService
             'availableProviders' => $availableProviders,
             'generatedQuestions' => array_values($generatedQuestions),
             'feedbackSummary' => $feedbackSummary,
+            'fieldPlan' => $fieldPlan,
         ];
     }
 
@@ -220,6 +233,7 @@ class InterviewChatbotService
     {
         return match ($value) {
             'question_set' => 'question_set',
+            'field_builder' => 'field_builder',
             'feedback_review' => 'feedback_review',
             default => 'chat',
         };
@@ -297,6 +311,57 @@ class InterviewChatbotService
             suggestions: $suggestions,
             availableProviders: $availableProviders,
             generatedQuestions: $questions,
+        );
+    }
+
+    protected function generateFieldBuilderReply(
+        string $message,
+        string $requestedProviderId,
+        array $providers,
+        array $context,
+        array $suggestions,
+        array $availableProviders
+    ): array {
+        $fieldBuilderPrompt = $this->buildFieldBuilderPrompt($context, $message);
+
+        foreach ($this->providerAttemptOrder($requestedProviderId, $providers) as $providerId) {
+            if ($providerId === 'local') {
+                break;
+            }
+
+            try {
+                $reply = $this->requestProviderReply($providerId, $fieldBuilderPrompt, $context, null, null, []);
+                $fieldPlan = $this->extractFieldPlan($reply['reply'] ?? null, $context);
+
+                if ($reply !== null && $fieldPlan !== []) {
+                    return $this->buildResponsePayload(
+                        reply: $this->buildFieldPlanSummary($fieldPlan, $context, $reply['provider']),
+                        providerId: $reply['providerId'],
+                        providerLabel: $reply['provider'],
+                        requestedProviderId: $requestedProviderId,
+                        usedFallback: false,
+                        suggestions: $suggestions,
+                        availableProviders: $availableProviders,
+                        fieldPlan: $fieldPlan,
+                    );
+                }
+            } catch (Throwable $error) {
+                $this->recordProviderThrowable($providerId, $error);
+                $this->safeReport($error);
+            }
+        }
+
+        $fieldPlan = $this->buildLocalFieldPlan($context, $message);
+
+        return $this->buildResponsePayload(
+            reply: $this->buildFieldPlanSummary($fieldPlan, $context, 'Local PH coach'),
+            providerId: 'local',
+            providerLabel: 'Local PH coach',
+            requestedProviderId: $requestedProviderId,
+            usedFallback: true,
+            suggestions: $suggestions,
+            availableProviders: $availableProviders,
+            fieldPlan: $fieldPlan,
         );
     }
 
@@ -943,6 +1008,26 @@ class InterviewChatbotService
         ]);
     }
 
+    protected function buildFieldBuilderPrompt(array $context, string $message = ''): string
+    {
+        $baseInstruction = $message !== ''
+            ? $message
+            : 'Create a focused practice field for this interview category.';
+
+        return implode("\n", [
+            'Create a focused practice field for the active Philippine interview category.',
+            'Return ONLY a valid JSON object.',
+            'Use this schema exactly: {"title":"string","summary":"string","instruction":"string","suggestions":["string"]}',
+            'The "title" must be a short field, role, course, or specialization name.',
+            'The "summary" must explain what the practice should focus on in 1 to 2 sentences.',
+            'The "instruction" must be a direct instruction that another AI can use to generate interview questions for that field.',
+            'The "suggestions" array must contain 3 to 4 short alternatives related to the same category.',
+            'Keep the result grounded in the Philippines and the selected interview category only.',
+            'Use clear English suitable for Filipino students, fresh graduates, and early-career applicants.',
+            'Instruction: '.$baseInstruction,
+        ]);
+    }
+
     protected function extractGeneratedQuestions(?string $reply, int $questionCount): array
     {
         if (! is_string($reply) || trim($reply) === '') {
@@ -1019,12 +1104,69 @@ class InterviewChatbotService
         return [];
     }
 
+    protected function extractFieldPlan(?string $reply, array $context): array
+    {
+        if (! is_string($reply) || trim($reply) === '') {
+            return [];
+        }
+
+        $decoded = $this->decodeFieldPlanJson(trim($reply));
+
+        if ($decoded === []) {
+            return [];
+        }
+
+        $title = $this->sanitizeText($decoded['title'] ?? $decoded['field'] ?? $decoded['name'] ?? null, 120);
+        $summary = $this->sanitizeText($decoded['summary'] ?? $decoded['description'] ?? null, 500);
+        $instruction = $this->sanitizeText($decoded['instruction'] ?? $decoded['prompt'] ?? null, 700);
+        $suggestions = collect($decoded['suggestions'] ?? $decoded['alternatives'] ?? [])
+            ->map(fn ($item) => $this->sanitizeText($item, 120))
+            ->filter()
+            ->unique()
+            ->take(4)
+            ->values()
+            ->all();
+
+        if (! $title) {
+            return [];
+        }
+
+        $fallback = $this->buildLocalFieldPlan($context, $title);
+
+        return [
+            'title' => $title,
+            'summary' => $summary ?? $fallback['summary'],
+            'instruction' => $instruction ?? $fallback['instruction'],
+            'suggestions' => $suggestions !== [] ? $suggestions : $fallback['suggestions'],
+        ];
+    }
+
+    protected function decodeFieldPlanJson(string $reply): array
+    {
+        $candidates = [$reply];
+
+        if (preg_match('/```(?:json)?\s*(.*?)```/si', $reply, $matches) === 1) {
+            $candidates[] = trim((string) ($matches[1] ?? ''));
+        }
+
+        foreach ($candidates as $candidate) {
+            $decoded = json_decode($candidate, true);
+
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+        }
+
+        return [];
+    }
+
     protected function buildLocalQuestionSet(array $context, int $questionCount, string $message = ''): array
     {
         $seedQuestions = collect($context['questions'] ?? [])
             ->map(fn ($question) => $this->sanitizeText($question, 300))
             ->filter()
             ->values();
+        $fieldFocus = $this->extractFieldFocusLabel($message);
         $instruction = Str::lower($message);
         $questions = [];
 
@@ -1035,7 +1177,8 @@ class InterviewChatbotService
                 $context,
                 $instruction,
                 $index,
-                (int) floor($index / 5)
+                (int) floor($index / 5),
+                $fieldFocus
             );
         }
 
@@ -1048,7 +1191,136 @@ class InterviewChatbotService
             ->all();
     }
 
-    protected function adaptLocalQuestion(string $baseQuestion, array $context, string $instruction, int $index, int $cycle = 0): string
+    protected function buildLocalFieldPlan(array $context, string $message = ''): array
+    {
+        $categoryId = $context['id'] ?? null;
+        $suggestions = $this->defaultFieldSuggestions($categoryId);
+        $requestedTitle = $this->sanitizeText($message, 120);
+        $title = $this->selectLocalFieldTitle($requestedTitle, $suggestions);
+        $summary = match ($categoryId) {
+            'job' => "Practice as a candidate applying for {$title} in the Philippines, with questions about fit, experience, strengths, and day-to-day responsibilities.",
+            'scholarship' => "Practice scholarship answers around {$title} so the coaching stays aligned with your study goals, motivation, financial need, and future contribution.",
+            'admission' => "Practice admission answers for {$title}, focusing on course fit, readiness, personal motivation, and long-term goals in the Philippines.",
+            'it' => "Practice IT interview questions focused on {$title}, including projects, tools, debugging, teamwork, and the kind of junior role you want to pursue.",
+            default => "Practice interview questions focused on {$title} in the Philippine setting.",
+        };
+        $instruction = match ($categoryId) {
+            'job' => "Generate interview questions for a Philippine job interview focused on the {$title} field. Match the responsibilities, strengths, and hiring expectations of that role.",
+            'scholarship' => "Generate scholarship interview questions for a student pursuing {$title} in the Philippines. Focus on motivation, need, discipline, service, and future contribution.",
+            'admission' => "Generate college admission interview questions for a student applying to {$title} in the Philippines. Focus on course fit, readiness, values, and future plans.",
+            'it' => "Generate Philippine IT interview questions focused on {$title}. Include projects, technical problem-solving, communication, teamwork, and role fit.",
+            default => "Generate interview questions focused on {$title} in the Philippine setting.",
+        };
+
+        return [
+            'title' => $title,
+            'summary' => $summary,
+            'instruction' => $instruction,
+            'suggestions' => $suggestions,
+        ];
+    }
+
+    protected function defaultFieldSuggestions(?string $categoryId): array
+    {
+        return match ($categoryId) {
+            'job' => [
+                'Customer Service Representative',
+                'Administrative Assistant',
+                'Virtual Assistant',
+                'Sales Associate',
+            ],
+            'scholarship' => [
+                'Nursing',
+                'Education',
+                'Information Technology',
+                'Accountancy',
+            ],
+            'admission' => [
+                'BS Information Technology',
+                'BS Nursing',
+                'BS Accountancy',
+                'BS Education',
+            ],
+            'it' => [
+                'Junior Web Developer',
+                'QA Tester',
+                'Technical Support Specialist',
+                'Junior Data Analyst',
+            ],
+            default => [
+                'General Interview Practice',
+                'Entry-Level Role',
+                'Student Leadership',
+                'Community Service',
+            ],
+        };
+    }
+
+    protected function selectLocalFieldTitle(?string $requestedTitle, array $suggestions): string
+    {
+        $cleaned = trim((string) $requestedTitle);
+
+        if ($cleaned !== '' && str_word_count($cleaned) <= 10 && mb_strlen($cleaned) <= 80) {
+            return $cleaned;
+        }
+
+        if ($cleaned !== '') {
+            foreach ($suggestions as $suggestion) {
+                if (Str::contains(Str::lower($cleaned), Str::lower($suggestion))) {
+                    return $suggestion;
+                }
+            }
+        }
+
+        return $suggestions[0] ?? 'General Interview Practice';
+    }
+
+    protected function extractFieldFocusLabel(?string $message): ?string
+    {
+        $text = trim((string) $message);
+
+        if ($text === '') {
+            return null;
+        }
+
+        $patterns = [
+            '/Field:\s*([^\.]+)\./i',
+            '/for a student pursuing\s+([^\.]+?)\s+in the philippines/i',
+            '/student applying to\s+([^\.]+?)\s+in the philippines/i',
+            '/focused on\s+(?:the\s+)?([^\.]+?)\./i',
+        ];
+
+        foreach ($patterns as $pattern) {
+            if (preg_match($pattern, $text, $matches) !== 1) {
+                continue;
+            }
+
+            $focus = $this->sanitizeText($matches[1] ?? null, 120);
+
+            if ($focus === null) {
+                continue;
+            }
+
+            $focus = preg_replace('/^(?:the|a|an)\s+/i', '', $focus) ?? $focus;
+            $focus = preg_replace('/\s+(?:role|field|course|program)\s*$/i', '', $focus) ?? $focus;
+            $focus = trim($focus);
+
+            if ($focus !== '') {
+                return $focus;
+            }
+        }
+
+        return null;
+    }
+
+    protected function adaptLocalQuestion(
+        string $baseQuestion,
+        array $context,
+        string $instruction,
+        int $index,
+        int $cycle = 0,
+        ?string $fieldFocus = null
+    ): string
     {
         $categoryId = $context['id'] ?? null;
         $remoteHint = Str::contains($instruction, ['remote', 'online', 'virtual', 'home-based'])
@@ -1069,32 +1341,32 @@ class InterviewChatbotService
 
         $question = match ($categoryId) {
             'job' => match ($index % 5) {
-                0 => "Walk me through the background and experience that make you a fit{$remoteHint}{$freshGraduateHint} in the Philippine job market.",
-                1 => "What strengths from your OJT, internship, student leadership, or part-time work would you bring to this employer{$remoteHint}?",
+                0 => "Walk me through the background and experience that make you a fit".($fieldFocus ? " for the {$fieldFocus} role" : '')."{$remoteHint}{$freshGraduateHint} in the Philippine job market.",
+                1 => "What strengths from your OJT, internship, student leadership, or part-time work would you bring to ".($fieldFocus ? "a {$fieldFocus} role" : 'this employer')."{$remoteHint}?",
                 2 => "Describe a real challenge you handled in school, work, or your community and explain your actions and the result.{$harderHint}",
-                3 => "Why do you want this role, and how does it match the kind of career you want to build in the Philippines{$remoteHint}?",
-                default => "If we hire you today, what value would you bring to our team during your first few months{$remoteHint}{$freshGraduateHint}?",
+                3 => "Why do you want ".($fieldFocus ? "the {$fieldFocus} role" : 'this role').", and how does it match the kind of career you want to build in the Philippines{$remoteHint}?",
+                default => "If we hire you today".($fieldFocus ? " as a {$fieldFocus}" : '').", what value would you bring to our team during your first few months{$remoteHint}{$freshGraduateHint}?",
             },
             'scholarship' => match ($index % 5) {
-                0 => "Why are you a strong candidate for this scholarship, and what makes your situation and goals worth supporting in the Philippines?",
-                1 => "How would this scholarship change your studies, responsibilities at home, and long-term plans?",
+                0 => "Why are you a strong candidate for ".($fieldFocus ? "scholarship support in {$fieldFocus}" : 'this scholarship').", and what makes your situation and goals worth supporting in the Philippines?",
+                1 => "How would this scholarship change ".($fieldFocus ? "your path in {$fieldFocus}" : 'your studies').", responsibilities at home, and long-term plans?",
                 2 => "Tell me about a time you showed discipline, leadership, or service even without many resources.",
                 3 => "How do you stay focused on academics while handling family or community responsibilities?",
                 default => "If we invest in your education now, how do you plan to give back in the future?",
             },
             'admission' => match ($index % 5) {
-                0 => "What made you choose this course, and why do you believe this program fits your strengths and goals?",
-                1 => "Which senior high school, family, or community experiences prepared you for this course?",
+                0 => "What made you choose ".($fieldFocus ?: 'this course').", and why do you believe ".($fieldFocus ? 'that program' : 'this program')." fits your strengths and goals?",
+                1 => "Which senior high school, family, or community experiences prepared you for ".($fieldFocus ?: 'this course')."?",
                 2 => "How do you handle pressure, deadlines, and competing responsibilities at home and in school?",
                 3 => "What kind of student and classmate do you think you will be if you are admitted?",
                 default => "What do you hope to achieve in college, and how does that connect to the future you want in the Philippines?",
             },
             'it' => match ($index % 5) {
-                0 => "Tell me about a project, system, or capstone you built and the part of the work you personally owned.",
+                0 => "Tell me about a project, system, or capstone that prepared you for ".($fieldFocus ?: 'the type of IT role you want')." and the part of the work you personally owned.",
                 1 => "How do you debug a technical problem when time is limited and the issue is affecting a deadline?",
-                2 => "Which languages, tools, or frameworks do you use most confidently, and where have you applied them?",
+                2 => "Which languages, tools, or frameworks do you use most confidently".($fieldFocus ? " for {$fieldFocus}" : '').", and where have you applied them?",
                 3 => "Describe how you collaborate with teammates when building software or finishing technical requirements.",
-                default => "Why do you want to grow your IT career in the Philippines, and what role do you want to prepare for next?",
+                default => "Why do you want to grow your IT career in the Philippines".($fieldFocus ? " as a {$fieldFocus}" : '').", and what role do you want to prepare for next?",
             },
             default => $baseQuestion,
         };
@@ -1113,6 +1385,21 @@ class InterviewChatbotService
             $count,
             $count === 1 ? '' : 's',
             $categoryName
+        );
+    }
+
+    protected function buildFieldPlanSummary(array $fieldPlan, array $context, string $providerLabel): string
+    {
+        $categoryName = $context['name'] ?? 'your selected category';
+        $title = $fieldPlan['title'] ?? 'your chosen field';
+        $summary = $fieldPlan['summary'] ?? 'Your practice field is ready.';
+
+        return sprintf(
+            '%s prepared the %s field for %s. %s',
+            $providerLabel,
+            $title,
+            $categoryName,
+            $summary
         );
     }
 

@@ -13,6 +13,9 @@ export function initPractice() {
     const rawChatbotBootstrap = window.__INTERVIEW_CHATBOT__ || {};
     const state = {
         selectedCategory: null,
+        selectedFieldPlan: null,
+        pendingCategory: null,
+        fieldPlanByCategoryId: {},
         sessionId: null,
         questionIndex: 0,
         questionCount: 3,
@@ -47,7 +50,12 @@ export function initPractice() {
         questionAgentProviderCatalog: normalizeQuestionAgentProviders(rawChatbotBootstrap.providers),
         questionAgentSelectedProviderId: resolveQuestionAgentDefaultProvider(rawChatbotBootstrap),
         questionAgentResolvedProviderLabel: null,
-        questionAgentRequestId: 0
+        questionAgentRequestId: 0,
+        fieldBuilderHistory: [],
+        fieldBuilderLoading: false,
+        fieldBuilderStatusText: "Waiting for details",
+        fieldBuilderStatusTone: "neutral",
+        fieldBuilderRequestId: 0
     };
 
     const elements = {
@@ -55,9 +63,29 @@ export function initPractice() {
         focusModeSelect: document.getElementById("focusModeSelect"),
         pacingModeSelect: document.getElementById("pacingModeSelect"),
         practiceCategoryList: document.getElementById("practiceCategoryList"),
+        practiceFieldModal: document.getElementById("practiceFieldModal"),
+        practiceFieldModalBackdrop: document.getElementById("practiceFieldModalBackdrop"),
+        closePracticeFieldModalBtn: document.getElementById("closePracticeFieldModalBtn"),
+        practiceFieldModalStatusTag: document.getElementById("practiceFieldModalStatusTag"),
+        practiceFieldProviderValue: document.getElementById("practiceFieldProviderValue"),
+        practiceFieldProviderSelect: document.getElementById("practiceFieldProviderSelect"),
+        practiceFieldProviderHelpText: document.getElementById("practiceFieldProviderHelpText"),
+        practiceFieldModalCategoryName: document.getElementById("practiceFieldModalCategoryName"),
+        practiceFieldModalCategoryDescription: document.getElementById("practiceFieldModalCategoryDescription"),
+        practiceFieldSuggestionChips: document.getElementById("practiceFieldSuggestionChips"),
+        practiceFieldPreviewTitle: document.getElementById("practiceFieldPreviewTitle"),
+        practiceFieldPreviewSummary: document.getElementById("practiceFieldPreviewSummary"),
+        practiceFieldChatMessages: document.getElementById("practiceFieldChatMessages"),
+        practiceFieldInput: document.getElementById("practiceFieldInput"),
+        practiceFieldNeedInput: document.getElementById("practiceFieldNeedInput"),
+        practiceFieldGenerateBtn: document.getElementById("practiceFieldGenerateBtn"),
+        practiceFieldResetBtn: document.getElementById("practiceFieldResetBtn"),
+        practiceFieldApplyBtn: document.getElementById("practiceFieldApplyBtn"),
+        practiceFieldChatStatus: document.getElementById("practiceFieldChatStatus"),
         practiceSessionModal: document.getElementById("practiceSessionModal"),
         practiceSessionModalBackdrop: document.getElementById("practiceSessionModalBackdrop"),
         openPracticeModalBtn: document.getElementById("openPracticeModalBtn"),
+        editPracticeFieldBtn: document.getElementById("editPracticeFieldBtn"),
         closePracticeModalBtn: document.getElementById("closePracticeModalBtn"),
         practiceModalCategoryName: document.getElementById("practiceModalCategoryName"),
         practiceModalSummaryText: document.getElementById("practiceModalSummaryText"),
@@ -65,11 +93,14 @@ export function initPractice() {
         practiceModalActiveCategory: document.getElementById("practiceModalActiveCategory"),
         practiceModalAnsweredValue: document.getElementById("practiceModalAnsweredValue"),
         practiceModalWorkspaceValue: document.getElementById("practiceModalWorkspaceValue"),
+        practiceModalFieldValue: document.getElementById("practiceModalFieldValue"),
+        practiceModalFieldMeta: document.getElementById("practiceModalFieldMeta"),
         selectedCategoryName: document.getElementById("selectedCategoryName"),
         selectedCategoryDescription: document.getElementById("selectedCategoryDescription"),
         questionCounter: document.getElementById("questionCounter"),
         practiceStatusTag: document.getElementById("practiceStatusTag"),
         practiceLabelTag: document.getElementById("practiceLabelTag"),
+        selectedPracticeFieldTag: document.getElementById("selectedPracticeFieldTag"),
         coachModeValue: document.getElementById("coachModeValue"),
         timerTargetValue: document.getElementById("timerTargetValue"),
         questionTimerValue: document.getElementById("questionTimerValue"),
@@ -211,29 +242,143 @@ export function initPractice() {
         elements.practiceModalStateTag.className = tones[tone] || tones.neutral;
     }
 
+    function isFieldModalOpen() {
+        return Boolean(elements.practiceFieldModal) && !elements.practiceFieldModal.classList.contains("hidden");
+    }
+
+    function setFieldBuilderStatusTag(text, tone = "neutral") {
+        const tones = {
+            neutral: "inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300",
+            success: "inline-flex items-center rounded-full bg-success-100 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-300",
+            warning: "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+            error: "inline-flex items-center rounded-full bg-error-100 px-3 py-1 text-xs font-medium text-error-700 dark:bg-error-500/10 dark:text-error-300"
+        };
+
+        state.fieldBuilderStatusText = text;
+        state.fieldBuilderStatusTone = tone;
+        elements.practiceFieldModalStatusTag.textContent = text;
+        elements.practiceFieldModalStatusTag.className = tones[tone] || tones.neutral;
+    }
+
+    function showFieldChatStatus(type, text) {
+        const baseClass = "mt-5 rounded-2xl border px-4 py-3 text-sm";
+        const tones = {
+            success: "border-success-200 bg-success-50 text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300",
+            warning: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+            error: "border-error-200 bg-error-50 text-error-700 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-300",
+            info: "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300"
+        };
+
+        elements.practiceFieldChatStatus.className = `${baseClass} ${tones[type] || tones.info}`;
+        elements.practiceFieldChatStatus.textContent = text;
+        elements.practiceFieldChatStatus.classList.remove("hidden");
+    }
+
+    function clearFieldChatStatus() {
+        elements.practiceFieldChatStatus.classList.add("hidden");
+        elements.practiceFieldChatStatus.textContent = "";
+    }
+
+    function getSelectedFieldTitle() {
+        const activePlan = state.selectedCategory ? (getFieldPlanForCategory(state.selectedCategory) || state.selectedFieldPlan) : state.selectedFieldPlan;
+        return String(activePlan?.title || "").trim();
+    }
+
+    function getSelectedFieldSummary() {
+        const activePlan = state.selectedCategory ? (getFieldPlanForCategory(state.selectedCategory) || state.selectedFieldPlan) : state.selectedFieldPlan;
+        return String(activePlan?.summary || "").trim();
+    }
+
+    function buildFieldSummaryLine(fieldPlan = state.selectedFieldPlan) {
+        const activePlan = fieldPlan || (state.selectedCategory ? getFieldPlanForCategory(state.selectedCategory) : null);
+        const title = String(activePlan?.title || "").trim();
+        const summary = String(activePlan?.summary || "").trim();
+
+        if (!title) {
+            return "";
+        }
+
+        return summary ? `Field: ${title}. ${summary}` : `Field: ${title}.`;
+    }
+
+    function buildFieldInstructionSuffix(fieldPlan = state.selectedFieldPlan) {
+        const activePlan = fieldPlan || (state.selectedCategory ? getFieldPlanForCategory(state.selectedCategory) : null);
+        const instruction = String(activePlan?.instruction || "").trim();
+        const summaryLine = buildFieldSummaryLine(activePlan);
+
+        return [instruction, summaryLine]
+            .filter(Boolean)
+            .join(" ");
+    }
+
+    function getFieldPlanForCategory(category = state.selectedCategory) {
+        const categoryId = String(category?.id || "").trim();
+
+        if (!categoryId) {
+            return null;
+        }
+
+        return state.fieldPlanByCategoryId[categoryId] || null;
+    }
+
+    function updateFieldSummaryUI() {
+        const activePlan = state.selectedCategory ? (getFieldPlanForCategory(state.selectedCategory) || state.selectedFieldPlan) : state.selectedFieldPlan;
+        const fieldTitle = String(activePlan?.title || "").trim();
+        const fieldSummary = String(activePlan?.summary || "").trim();
+        const fieldMeta = fieldSummary || "Choose a category to create a field with the chatbot.";
+
+        elements.practiceModalFieldValue.textContent = fieldTitle || "Not set";
+        elements.practiceModalFieldMeta.textContent = fieldMeta;
+        elements.selectedPracticeFieldTag.textContent = fieldTitle ? `Field: ${fieldTitle}` : "Field not set";
+        elements.editPracticeFieldBtn.disabled = !state.selectedCategory && !state.pendingCategory;
+    }
+
+    function getQuestionAgentProviderLabel() {
+        const provider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId) || getQuestionAgentProviderById("auto");
+        return getQuestionAgentProviderSummary(provider) || "Auto";
+    }
+
     function updatePracticeModalSummary() {
         const modalIsOpen = isPracticeModalOpen();
         const questionTotal = state.selectedCategory ? (getActiveQuestionCount() || state.questionCount) : 0;
         const answeredLabel = `${state.answeredCount} / ${questionTotal}`;
+        const fieldTitle = getSelectedFieldTitle();
+        const fieldSummary = getSelectedFieldSummary();
 
         elements.practiceModalAnsweredValue.textContent = answeredLabel;
         elements.practiceModalWorkspaceValue.textContent = modalIsOpen ? "Open" : "Closed";
+        elements.practiceModalFieldValue.textContent = fieldTitle || "Not set";
+        elements.practiceModalFieldMeta.textContent = fieldSummary || "Choose a category to create a field with the chatbot.";
+        elements.editPracticeFieldBtn.disabled = !state.selectedCategory && !state.pendingCategory;
 
         if (!state.selectedCategory) {
+            if (state.pendingCategory) {
+                elements.practiceModalCategoryName.textContent = `${state.pendingCategory.name} selected`;
+                elements.practiceModalSummaryText.textContent = `Finish the field builder for ${state.pendingCategory.name} before opening the interview modal.`;
+                elements.practiceModalActiveCategory.textContent = state.pendingCategory.name;
+                elements.openPracticeModalBtn.textContent = "Open Interview Modal";
+                elements.openPracticeModalBtn.disabled = true;
+                elements.editPracticeFieldBtn.disabled = false;
+                setPracticeModalStateTag("Field setup", "warning");
+                return;
+            }
+
             elements.practiceModalCategoryName.textContent = "Select a category to launch";
             elements.practiceModalSummaryText.textContent = "Choose a category from the left panel. The interview flow and AI interviewer will open in a modal.";
             elements.practiceModalActiveCategory.textContent = "None selected";
             elements.openPracticeModalBtn.textContent = "Open Interview Modal";
             elements.openPracticeModalBtn.disabled = true;
+            elements.editPracticeFieldBtn.disabled = true;
             setPracticeModalStateTag("Waiting", "neutral");
             return;
         }
 
         elements.practiceModalCategoryName.textContent = `${state.selectedCategory.name} workspace`;
         elements.practiceModalActiveCategory.textContent = state.selectedCategory.name;
+        elements.editPracticeFieldBtn.disabled = false;
 
         if (state.questionAgentLoading) {
-            elements.practiceModalSummaryText.textContent = `Generating a fresh ${state.questionCount}-question set for ${state.selectedCategory.name} inside the Interview Workspace modal.`;
+            elements.practiceModalSummaryText.textContent = `Generating a fresh ${state.questionCount}-question set for ${state.selectedCategory.name}${fieldTitle ? ` focused on ${fieldTitle}` : ""} inside the Interview Workspace modal.`;
             elements.openPracticeModalBtn.textContent = modalIsOpen ? "Interview Modal Open" : "Continue Interview Modal";
             elements.openPracticeModalBtn.disabled = modalIsOpen;
             setPracticeModalStateTag("Preparing", "warning");
@@ -243,7 +388,7 @@ export function initPractice() {
         if (modalIsOpen) {
             elements.practiceModalSummaryText.textContent = getActiveQuestionCount() > 0
                 ? `${state.questionSetSummary} Continue your session in the modal.`
-                : `${state.selectedCategory.name} is open in the modal. Generate a fresh question set to begin.`;
+                : `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is open in the modal. Generate a fresh question set to begin.`;
             elements.openPracticeModalBtn.textContent = "Interview Modal Open";
             elements.openPracticeModalBtn.disabled = true;
             setPracticeModalStateTag("Live", "success");
@@ -254,14 +399,14 @@ export function initPractice() {
         elements.openPracticeModalBtn.textContent = "Continue Interview Modal";
 
         if (state.timerPaused) {
-            elements.practiceModalSummaryText.textContent = `${state.selectedCategory.name} is paused. Reopen the modal to continue from the current question.`;
+            elements.practiceModalSummaryText.textContent = `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is paused. Reopen the modal to continue from the current question.`;
             setPracticeModalStateTag("Paused", "warning");
             return;
         }
 
         elements.practiceModalSummaryText.textContent = getActiveQuestionCount() > 0
             ? `${state.questionSetSummary} Reopen the modal to continue the interview and AI interviewer tools.`
-            : `${state.selectedCategory.name} is ready. Reopen the modal to generate your next AI question set.`;
+            : `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is ready. Reopen the modal to generate your next AI question set.`;
         setPracticeModalStateTag("Ready", "neutral");
     }
 
@@ -433,12 +578,438 @@ export function initPractice() {
         });
     }
 
+    function buildFieldBuilderWelcomeMessage(category, fieldPlan = null) {
+        if (!category) {
+            return "Choose a category first, then I can help you create a focused practice field before the interview workspace opens.";
+        }
+
+        if (fieldPlan?.title) {
+            return `Your current field for ${category.name} is ${fieldPlan.title}. Refine it or build a new one with the chatbot before continuing to practice.`;
+        }
+
+        return `Tell me the ${String(category.fieldLabel || "field").toLowerCase()} you want for ${category.name}, and I will turn it into a focused practice setup before the interview modal opens.`;
+    }
+
+    function buildFallbackFieldSummary(category, title, userNeed = "") {
+        const detail = String(userNeed || "").trim();
+        const detailLine = detail ? ` ${truncateText(detail, 140)}` : "";
+
+        if (!category) {
+            return `${title} is ready for interview practice.${detailLine}`;
+        }
+
+        if (category.id === "job") {
+            return `${title} is set as your job target, so practice will focus on hiring-fit, strengths, experience, and role expectations in the Philippines.${detailLine}`;
+        }
+
+        if (category.id === "scholarship") {
+            return `${title} is set as your scholarship study focus, so practice will stay aligned with your goals, discipline, need, and future contribution.${detailLine}`;
+        }
+
+        if (category.id === "admission") {
+            return `${title} is set as your admission course focus, so practice will cover course fit, readiness, motivation, and future plans.${detailLine}`;
+        }
+
+        return `${title} is set as your IT practice focus, so questions will center on projects, tools, problem-solving, and junior-role fit.${detailLine}`;
+    }
+
+    function buildFallbackFieldInstruction(category, title, userNeed = "") {
+        const detail = String(userNeed || "").trim();
+        const baseInstruction = category?.id === "scholarship"
+            ? `Generate scholarship interview questions for a student pursuing ${title} in the Philippines.`
+            : category?.id === "admission"
+                ? `Generate college admission interview questions for a student applying to ${title} in the Philippines.`
+                : category?.id === "it"
+                    ? `Generate Philippine IT interview questions focused on ${title}.`
+                    : `Generate Philippine job interview questions focused on ${title}.`;
+
+        return detail ? `${baseInstruction} Use this additional context: ${detail}` : baseInstruction;
+    }
+
+    function normalizeFieldPlan(category, fieldPlan = {}, fallback = {}) {
+        const title = String(fieldPlan?.title || fallback.title || "").replace(/\s+/g, " ").trim();
+
+        if (!title) {
+            return null;
+        }
+
+        const userNeed = String(fieldPlan?.userNeed || fallback.userNeed || "").replace(/\s+/g, " ").trim();
+        const summary = String(
+            fieldPlan?.summary
+            || fallback.summary
+            || buildFallbackFieldSummary(category, title, userNeed)
+        ).replace(/\s+/g, " ").trim();
+        const instruction = String(
+            fieldPlan?.instruction
+            || fallback.instruction
+            || buildFallbackFieldInstruction(category, title, userNeed)
+        ).replace(/\s+/g, " ").trim();
+        const suggestionSource = [
+            title,
+            ...(Array.isArray(fieldPlan?.suggestions) ? fieldPlan.suggestions : []),
+            ...(Array.isArray(category?.fieldSuggestions) ? category.fieldSuggestions : [])
+        ];
+        const suggestions = Array.from(new Set(
+            suggestionSource
+                .map((item) => String(item || "").replace(/\s+/g, " ").trim())
+                .filter(Boolean)
+        )).slice(0, 4);
+
+        return {
+            title,
+            summary,
+            instruction,
+            suggestions,
+            userNeed,
+            provider: String(fieldPlan?.provider || fallback.provider || "").trim(),
+            categoryId: String(category?.id || "")
+        };
+    }
+
+    function createFieldPlanFromInputs(category = state.pendingCategory || state.selectedCategory) {
+        return normalizeFieldPlan(category, {}, {
+            title: elements.practiceFieldInput.value,
+            userNeed: elements.practiceFieldNeedInput.value
+        });
+    }
+
+    function renderFieldSuggestionChips(category = state.pendingCategory || state.selectedCategory) {
+        const activeCategory = category;
+        const activePlan = activeCategory ? getFieldPlanForCategory(activeCategory) : null;
+        const suggestions = Array.from(new Set([
+            ...(activePlan?.suggestions || []),
+            ...(activeCategory?.fieldSuggestions || [])
+        ])).filter(Boolean);
+
+        elements.practiceFieldSuggestionChips.innerHTML = suggestions.length === 0
+            ? `<span class="text-sm text-gray-500 dark:text-gray-400">Choose a category to unlock field suggestions.</span>`
+            : suggestions.map((suggestion) => `
+                <button
+                    type="button"
+                    data-field-suggestion="${escapeHtml(suggestion)}"
+                    class="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
+                >
+                    ${escapeHtml(suggestion)}
+                </button>
+            `).join("");
+
+        elements.practiceFieldSuggestionChips.querySelectorAll("[data-field-suggestion]").forEach((button) => {
+            button.addEventListener("click", () => {
+                elements.practiceFieldInput.value = String(button.dataset.fieldSuggestion || "");
+                const preview = createFieldPlanFromInputs(activeCategory);
+
+                if (preview) {
+                    elements.practiceFieldPreviewTitle.textContent = preview.title;
+                    elements.practiceFieldPreviewSummary.textContent = preview.summary;
+                }
+
+                clearFieldChatStatus();
+                syncFieldBuilderControls();
+                elements.practiceFieldInput.focus();
+            });
+        });
+    }
+
+    function renderFieldBuilderMessages() {
+        if (state.fieldBuilderHistory.length === 0) {
+            elements.practiceFieldChatMessages.innerHTML = `
+                <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    Share the role, course, or specialization you want, and the chatbot will prepare a focused field before practice starts.
+                </div>
+            `;
+            return;
+        }
+
+        elements.practiceFieldChatMessages.innerHTML = state.fieldBuilderHistory.map((item) => {
+            const isAssistant = item.role === "assistant";
+            const wrapperClass = isAssistant ? "items-start" : "items-end";
+            const bubbleClass = isAssistant
+                ? "border-gray-200 bg-white text-gray-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-300"
+                : "border-brand-200 bg-brand-50 text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-200";
+
+            return `
+                <div class="flex flex-col ${wrapperClass} gap-2">
+                    <span class="text-xs font-medium uppercase tracking-wide text-gray-400">${isAssistant ? "Field Chatbot" : "Your Goal"}</span>
+                    <div class="max-w-full rounded-2xl border px-4 py-3 text-sm leading-6 ${bubbleClass}">
+                        ${escapeHtml(item.text).replace(/\n/g, "<br>")}
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        elements.practiceFieldChatMessages.scrollTo({
+            top: elements.practiceFieldChatMessages.scrollHeight,
+            behavior: "auto"
+        });
+    }
+
+    function syncFieldBuilderControls() {
+        const hasCategory = Boolean(state.pendingCategory || state.selectedCategory);
+        const hasDraft = Boolean(String(elements.practiceFieldInput.value || "").trim());
+
+        if (elements.practiceFieldProviderSelect) {
+            elements.practiceFieldProviderSelect.disabled = state.fieldBuilderLoading;
+        }
+        elements.practiceFieldGenerateBtn.disabled = !hasCategory || state.fieldBuilderLoading;
+        elements.practiceFieldGenerateBtn.textContent = state.fieldBuilderLoading ? "Building..." : "Build With Chatbot";
+        elements.practiceFieldResetBtn.disabled = !hasCategory || state.fieldBuilderLoading;
+        elements.practiceFieldApplyBtn.disabled = !hasCategory || state.fieldBuilderLoading || !hasDraft;
+    }
+
+    function syncFieldBuilderModal(category = state.pendingCategory || state.selectedCategory) {
+        const activeCategory = category;
+        const activePlan = activeCategory ? getFieldPlanForCategory(activeCategory) : null;
+        const previewPlan = createFieldPlanFromInputs(activeCategory) || activePlan;
+        const selectedProvider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId) || getQuestionAgentProviderById("auto");
+        const allApiLabels = state.questionAgentProviderCatalog
+            .filter((provider) => provider.type === "remote")
+            .map((provider) => getQuestionAgentProviderSummary(provider))
+            .filter(Boolean)
+            .join(", ");
+        const configuredApiCount = state.questionAgentProviderCatalog.filter((provider) => provider.type === "remote" && provider.configured).length;
+        let providerHelpText = "Choose which API should build the field plan.";
+
+        if (selectedProvider?.id === "auto") {
+            providerHelpText = configuredApiCount > 0
+                ? `Available APIs: ${allApiLabels}. Auto uses your configured provider order before local fallback.`
+                : `Available APIs: ${allApiLabels}. Add API keys in .env to enable them, or keep using the local PH coach.`;
+        } else if (selectedProvider?.id === "local") {
+            providerHelpText = "Use the built-in local PH coach without calling an external API.";
+        } else if (selectedProvider?.configured) {
+            providerHelpText = `${selectedProvider.description}${selectedProvider.model ? ` Model: ${selectedProvider.model}.` : ""}`;
+        } else if (selectedProvider) {
+            providerHelpText = `${selectedProvider.description} Add its API key in .env to enable it.`;
+        }
+
+        elements.practiceFieldProviderValue.textContent = `Provider: ${getQuestionAgentProviderLabel()}`;
+        if (elements.practiceFieldProviderSelect) {
+            elements.practiceFieldProviderSelect.value = state.questionAgentSelectedProviderId;
+        }
+        if (elements.practiceFieldProviderHelpText) {
+            elements.practiceFieldProviderHelpText.textContent = providerHelpText;
+        }
+        elements.practiceFieldModalCategoryName.textContent = activeCategory ? activeCategory.name : "Choose a category first";
+        elements.practiceFieldModalCategoryDescription.textContent = activeCategory
+            ? activeCategory.description
+            : "Your selected category will appear here together with starter suggestions for the chatbot.";
+        if (activeCategory) {
+            elements.practiceFieldInput.placeholder = activeCategory.fieldPlaceholder || "Example: Junior Laravel Developer";
+            elements.practiceFieldNeedInput.placeholder = activeCategory.fieldNeedPlaceholder || "Describe what you need from this practice.";
+        }
+
+        elements.practiceFieldPreviewTitle.textContent = previewPlan?.title || "No field created yet";
+        elements.practiceFieldPreviewSummary.textContent = previewPlan?.summary
+            || "Tell the chatbot what role, course, or specialization you want so the practice questions can be tailored before the interview modal opens.";
+
+        renderFieldSuggestionChips(activeCategory);
+        renderFieldBuilderMessages();
+        syncFieldBuilderControls();
+        updateFieldSummaryUI();
+    }
+
+    function resetFieldBuilderForCategory(category, { prefillNeed = "", preserveInputs = false } = {}) {
+        const activePlan = getFieldPlanForCategory(category);
+
+        state.pendingCategory = category;
+        if (state.selectedCategory?.id === category?.id) {
+            state.selectedFieldPlan = activePlan || state.selectedFieldPlan;
+        }
+        state.fieldBuilderHistory = [{
+            role: "assistant",
+            text: buildFieldBuilderWelcomeMessage(category, activePlan)
+        }];
+
+        if (!preserveInputs) {
+            elements.practiceFieldInput.value = activePlan?.title || "";
+            elements.practiceFieldNeedInput.value = activePlan?.userNeed || String(prefillNeed || "").trim();
+        }
+
+        clearFieldChatStatus();
+        setFieldBuilderStatusTag(activePlan ? "Field draft ready" : "Waiting for details", activePlan ? "success" : "neutral");
+        updateSelectedCategoryButtons();
+        updatePracticeModalSummary();
+        syncFieldBuilderModal(category);
+    }
+
+    function openPracticeFieldModal(category, { prefillNeed = "", preserveInputs = false, focusInput = true } = {}) {
+        if (!elements.practiceFieldModal || !category) {
+            return;
+        }
+
+        resetFieldBuilderForCategory(category, { prefillNeed, preserveInputs });
+
+        if (!isFieldModalOpen()) {
+            elements.practiceFieldModal.classList.remove("hidden");
+            elements.practiceFieldModal.classList.add("flex");
+            elements.practiceFieldModal.setAttribute("aria-hidden", "false");
+            lockBodyScroll();
+        }
+
+        if (focusInput) {
+            window.setTimeout(() => {
+                if (String(elements.practiceFieldInput.value || "").trim()) {
+                    elements.practiceFieldNeedInput.focus();
+                    return;
+                }
+
+                elements.practiceFieldInput.focus();
+            }, 0);
+        }
+    }
+
+    function closePracticeFieldModal({ returnFocus = true, preservePending = false } = {}) {
+        if (!elements.practiceFieldModal || !isFieldModalOpen()) {
+            return;
+        }
+
+        elements.practiceFieldModal.classList.add("hidden");
+        elements.practiceFieldModal.classList.remove("flex");
+        elements.practiceFieldModal.setAttribute("aria-hidden", "true");
+        unlockBodyScroll();
+
+        if (!preservePending) {
+            state.pendingCategory = state.selectedCategory || null;
+            state.selectedFieldPlan = state.selectedCategory
+                ? getFieldPlanForCategory(state.selectedCategory) || state.selectedFieldPlan
+                : null;
+        }
+
+        updateSelectedCategoryButtons();
+        updateFieldSummaryUI();
+        updatePracticeModalSummary();
+
+        if (returnFocus) {
+            if (state.selectedCategory || state.pendingCategory) {
+                elements.editPracticeFieldBtn.focus();
+            } else if (!elements.openPracticeModalBtn.disabled) {
+                elements.openPracticeModalBtn.focus();
+            }
+        }
+    }
+
+    async function buildFieldPlanWithChatbot() {
+        const category = state.pendingCategory || state.selectedCategory;
+
+        if (!category || state.fieldBuilderLoading) {
+            return;
+        }
+
+        const draftTitle = String(elements.practiceFieldInput.value || "").replace(/\s+/g, " ").trim();
+        const draftNeed = String(elements.practiceFieldNeedInput.value || "").replace(/\s+/g, " ").trim();
+        const message = [
+            draftTitle ? `${category.fieldLabel || "Field"}: ${draftTitle}.` : "",
+            draftNeed || `Create a focused ${String(category.fieldLabel || "field").toLowerCase()} for ${category.name}.`
+        ].filter(Boolean).join(" ");
+        const requestId = state.fieldBuilderRequestId + 1;
+
+        state.fieldBuilderRequestId = requestId;
+        state.fieldBuilderLoading = true;
+        state.fieldBuilderHistory.push({ role: "user", text: message });
+        setFieldBuilderStatusTag("Building field plan", "warning");
+        renderFieldBuilderMessages();
+        syncFieldBuilderControls();
+        clearFieldChatStatus();
+
+        try {
+            const payload = await requestWorkspace("chatbot", {
+                method: "POST",
+                body: {
+                    message,
+                    mode: "field_builder",
+                    providerId: state.questionAgentSelectedProviderId,
+                    categoryId: category.id
+                }
+            });
+
+            if (requestId !== state.fieldBuilderRequestId) {
+                return;
+            }
+
+            applyQuestionAgentProviderCatalog(payload.availableProviders, payload.requestedProviderId || state.questionAgentSelectedProviderId);
+
+            const fieldPlan = normalizeFieldPlan(category, payload.fieldPlan || {}, {
+                title: draftTitle || category.fieldSuggestions?.[0] || category.name,
+                userNeed: draftNeed,
+                provider: payload.provider
+            });
+
+            if (!fieldPlan) {
+                throw new Error("The field chatbot returned an empty field plan.");
+            }
+
+            state.fieldPlanByCategoryId[category.id] = fieldPlan;
+            if (!state.selectedCategory || state.selectedCategory.id === category.id) {
+                state.selectedFieldPlan = fieldPlan;
+            }
+            state.fieldBuilderHistory.push({
+                role: "assistant",
+                text: String(payload.reply || fieldPlan.summary || `${fieldPlan.title} is ready for practice.`)
+            });
+            elements.practiceFieldInput.value = fieldPlan.title;
+            syncFieldBuilderModal(category);
+            setFieldBuilderStatusTag(payload.usedFallback ? "Field plan ready" : "AI field ready", payload.usedFallback ? "neutral" : "success");
+            showFieldChatStatus("success", `${fieldPlan.title} is ready. Continue to practice when you are ready.`);
+        } catch (error) {
+            console.error(error);
+
+            const fallbackPlan = normalizeFieldPlan(category, {}, {
+                title: draftTitle || category.fieldSuggestions?.[0] || category.name,
+                userNeed: draftNeed
+            });
+
+            if (fallbackPlan) {
+                state.fieldPlanByCategoryId[category.id] = fallbackPlan;
+                if (!state.selectedCategory || state.selectedCategory.id === category.id) {
+                    state.selectedFieldPlan = fallbackPlan;
+                }
+                state.fieldBuilderHistory.push({
+                    role: "assistant",
+                    text: `${fallbackPlan.title} is ready using the local field builder fallback. You can continue to practice or refine the draft.`
+                });
+                elements.practiceFieldInput.value = fallbackPlan.title;
+                syncFieldBuilderModal(category);
+            }
+
+            setFieldBuilderStatusTag("Field builder unavailable", "error");
+            showFieldChatStatus("warning", "The chatbot could not finish the field plan right now, but you can still continue with the current draft.");
+        } finally {
+            if (requestId === state.fieldBuilderRequestId) {
+                state.fieldBuilderLoading = false;
+                syncFieldBuilderControls();
+                updatePracticeModalSummary();
+            }
+        }
+    }
+
+    async function applyFieldPlanAndContinue() {
+        const category = state.pendingCategory || state.selectedCategory;
+        const fieldPlan = createFieldPlanFromInputs(category);
+
+        if (!category) {
+            showFieldChatStatus("warning", "Choose a category first.");
+            return;
+        }
+
+        if (!fieldPlan) {
+            showFieldChatStatus("warning", "Enter a field, role, or course first, or let the chatbot build one for you.");
+            return;
+        }
+
+        state.fieldPlanByCategoryId[category.id] = fieldPlan;
+        state.selectedFieldPlan = fieldPlan;
+        setFieldBuilderStatusTag("Field confirmed", "success");
+        updateFieldSummaryUI();
+        closePracticeFieldModal({ returnFocus: false, preservePending: true });
+        await selectCategory(category, { skipFieldModal: true });
+    }
+
     function updateTipsPanel() {
         elements.inputModeValue.textContent = state.currentMode;
         elements.answeredCountValue.textContent = String(state.answeredCount);
 
         const pacing = getSelectedPacingMode();
         elements.paceModeValue.textContent = pacing.label;
+        updateFieldSummaryUI();
         updatePracticeModalSummary();
     }
 
@@ -478,6 +1049,7 @@ export function initPractice() {
         elements.endSessionBtn.disabled = !state.selectedCategory || state.savingSession || state.feedbackLoading;
         elements.printFeedbackBtn.disabled = state.feedbackHistory.length === 0;
         syncQuestionAgentControls();
+        syncFieldBuilderControls();
     }
 
     function combineTranscriptSegments(...segments) {
@@ -674,14 +1246,15 @@ export function initPractice() {
             });
 
         renderQuestionAgentProviderOptions();
+        syncFieldBuilderModal();
     }
 
     function renderQuestionAgentProviderOptions() {
-        if (!elements.practiceQuestionAgentProviderSelect) {
+        if (!elements.practiceQuestionAgentProviderSelect && !elements.practiceFieldProviderSelect) {
             return;
         }
 
-        elements.practiceQuestionAgentProviderSelect.innerHTML = state.questionAgentProviderCatalog.map((provider) => {
+        const optionMarkup = state.questionAgentProviderCatalog.map((provider) => {
             const isAvailable = provider.configured || provider.id === "auto" || provider.id === "local";
             const selected = provider.id === state.questionAgentSelectedProviderId ? " selected" : "";
             const disabled = isAvailable ? "" : " disabled";
@@ -691,6 +1264,14 @@ export function initPractice() {
 
             return `<option value="${escapeHtml(provider.id)}"${selected}${disabled}>${escapeHtml(optionLabel)}</option>`;
         }).join("");
+
+        if (elements.practiceQuestionAgentProviderSelect) {
+            elements.practiceQuestionAgentProviderSelect.innerHTML = optionMarkup;
+        }
+
+        if (elements.practiceFieldProviderSelect) {
+            elements.practiceFieldProviderSelect.innerHTML = optionMarkup;
+        }
     }
 
     function setQuestionAgentStatus(text, tone = "neutral") {
@@ -712,11 +1293,24 @@ export function initPractice() {
             return "Select a category and I will generate a fresh Philippine-style interview question set for the workspace.";
         }
 
-        return `I am ready to build ${state.questionCount} fresh ${category.name} questions for this workspace. Add an instruction or use a quick action to tailor the set.`;
+        const fieldPlan = getFieldPlanForCategory(category) || (state.selectedCategory?.id === category.id ? state.selectedFieldPlan : null);
+        const fieldTitle = String(fieldPlan?.title || "").trim();
+
+        return `I am ready to build ${state.questionCount} fresh ${category.name} questions${fieldTitle ? ` for ${fieldTitle}` : ""} for this workspace. Add an instruction or use a quick action to tailor the set.`;
     }
 
     function buildDefaultQuestionAgentInstruction(category) {
         return `Generate ${state.questionCount} fresh interview questions for ${category.name} in the Philippine setting.`;
+    }
+
+    function buildQuestionGenerationInstruction(category, instruction = "") {
+        const baseInstruction = String(instruction || "").trim() || buildDefaultQuestionAgentInstruction(category);
+        const fieldPlan = getFieldPlanForCategory(category) || (state.selectedCategory?.id === category.id ? state.selectedFieldPlan : null);
+        const fieldSuffix = buildFieldInstructionSuffix(fieldPlan);
+
+        return [baseInstruction, fieldSuffix]
+            .filter(Boolean)
+            .join(" ");
     }
 
     function getQuestionAgentQuickActions(category = state.selectedCategory) {
@@ -847,10 +1441,13 @@ export function initPractice() {
     }
 
     function resetQuestionAgentConversation(category = null) {
+        const fieldPlan = getFieldPlanForCategory(category) || (state.selectedCategory?.id === category?.id ? state.selectedFieldPlan : null);
+        const fieldTitle = String(fieldPlan?.title || "").trim();
+
         state.questionAgentHistory = [{ role: "assistant", text: buildQuestionAgentWelcomeMessage(category) }];
         state.questionAgentResolvedProviderLabel = null;
         state.questionSetSummary = category
-            ? `Select or refine an instruction to generate ${state.questionCount} fresh questions for ${category.name}.`
+            ? `Select or refine an instruction to generate ${state.questionCount} fresh questions for ${category.name}${fieldTitle ? ` focused on ${fieldTitle}` : ""}.`
             : "Select a category and the chatbot will build a fresh question set for the workspace.";
         state.questionSourceLabel = category ? "Ready to generate" : "Awaiting category";
         elements.practiceQuestionAgentInput.value = "";
@@ -896,15 +1493,19 @@ export function initPractice() {
     }
 
     function showQuestionSetLoadingState(category) {
+        const fieldTitle = getSelectedFieldTitle();
+
         elements.selectedCategoryName.textContent = category.name;
-        elements.selectedCategoryDescription.textContent = `Generating ${state.questionCount} fresh AI interview questions for ${category.name}.`;
+        elements.selectedCategoryDescription.textContent = `Generating ${state.questionCount} fresh AI interview questions for ${category.name}${fieldTitle ? ` focused on ${fieldTitle}` : ""}.`;
         elements.currentQuestionText.textContent = "The AI question generator is preparing your first interview question.";
         elements.practiceStatusTag.textContent = "Generating questions";
         elements.practiceStatusTag.className = "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
         elements.practiceLabelTag.textContent = "AI question set loading";
+        elements.selectedPracticeFieldTag.textContent = fieldTitle ? `Field: ${fieldTitle}` : "Field not set";
         renderKeywords(category.keywords);
         updateFocusModeDisplay();
         updateQuestionProgress();
+        updateFieldSummaryUI();
     }
 
     function applyGeneratedQuestionSet(questions, payload, category) {
@@ -916,7 +1517,10 @@ export function initPractice() {
         state.sessionStartedAt = new Date().toISOString();
         state.sessionSaved = false;
         state.questionSourceLabel = payload?.usedFallback ? "Local generated set" : "AI-generated set";
-        state.questionSetSummary = String(payload?.reply || `${questions.length} AI-generated interview questions are ready.`);
+        state.questionSetSummary = [
+            String(payload?.reply || `${questions.length} AI-generated interview questions are ready.`).trim(),
+            getSelectedFieldTitle() ? `Focus: ${getSelectedFieldTitle()}.` : ""
+        ].filter(Boolean).join(" ");
         state.questionAgentResolvedProviderLabel = String(payload?.provider || "");
         loadCurrentQuestion();
     }
@@ -928,7 +1532,7 @@ export function initPractice() {
 
         const category = state.selectedCategory;
         const hasExistingProgress = state.feedbackHistory.length > 0;
-        const message = String(instruction || elements.practiceQuestionAgentInput.value || "").trim() || buildDefaultQuestionAgentInstruction(category);
+        const message = buildQuestionGenerationInstruction(category, instruction || elements.practiceQuestionAgentInput.value || "");
         const requestId = state.questionAgentRequestId + 1;
 
         state.questionAgentRequestId = requestId;
@@ -1037,8 +1641,10 @@ export function initPractice() {
     }
 
     function updateSelectedCategoryButtons() {
+        const activeCategoryId = state.pendingCategory?.id || state.selectedCategory?.id;
+
         document.querySelectorAll(".category-btn").forEach((button) => {
-            const isActive = button.dataset.categoryId === state.selectedCategory?.id;
+            const isActive = button.dataset.categoryId === activeCategoryId;
             button.className = getCategoryButtonClass(isActive);
         });
     }
@@ -1094,18 +1700,29 @@ export function initPractice() {
         elements.practiceStatusTag.textContent = "Session active";
         elements.practiceStatusTag.className = "inline-flex items-center rounded-full bg-success-100 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-300";
         elements.practiceLabelTag.textContent = "Ready for answer";
+        elements.selectedPracticeFieldTag.textContent = getSelectedFieldTitle() ? `Field: ${getSelectedFieldTitle()}` : "Field not set";
 
         renderKeywords(state.selectedCategory.keywords);
         updateQuestionProgress();
         elements.responseInput.value = "";
         clearMessage();
         startTimer();
+        updateFieldSummaryUI();
         updateSessionActionButtons();
     }
 
-    async function selectCategory(category) {
+    async function selectCategory(category, { skipFieldModal = false, prefillNeed = "" } = {}) {
+        const fieldPlan = getFieldPlanForCategory(category);
+
+        if (!skipFieldModal) {
+            openPracticeFieldModal(category, { prefillNeed });
+            return;
+        }
+
         stopVoiceInput({ commitTranscript: false });
         state.selectedCategory = category;
+        state.pendingCategory = category;
+        state.selectedFieldPlan = fieldPlan || state.selectedFieldPlan;
         state.questionCount = Number(elements.questionCountSelect.value);
 
         const selectedPacing = getSelectedPacingMode();
@@ -1217,7 +1834,10 @@ export function initPractice() {
             savedAt: new Date().toISOString(),
             categoryId: state.selectedCategory.id,
             categoryName: state.selectedCategory.name,
-            categoryDescription: state.questionSetSummary,
+            categoryDescription: [
+                buildFieldSummaryLine(),
+                state.questionSetSummary
+            ].filter(Boolean).join(" "),
             questionCount: getActiveQuestionCount(),
             answeredCount: answerCount,
             focusMode: focusMode.label,
@@ -1506,6 +2126,8 @@ export function initPractice() {
         resetFeedbackPlaceholder();
 
         state.selectedCategory = null;
+        state.selectedFieldPlan = null;
+        state.pendingCategory = null;
         state.sessionId = null;
         state.questionIndex = 0;
         state.activeQuestions = [];
@@ -1521,6 +2143,7 @@ export function initPractice() {
 
         resetRecognitionDraft();
         resetQuestionAgentConversation();
+        updateFieldSummaryUI();
         setVoiceStatus(
             state.speechRecognition
                 ? "Voice input is idle."
@@ -1667,7 +2290,7 @@ export function initPractice() {
         const preferredCategory = practiceData.categories.find((item) => item.id === savedSetup.preferredCategoryId);
 
         if (preferredCategory) {
-            selectCategory(preferredCategory);
+            selectCategory(preferredCategory, { prefillNeed: savedSetup.notes || "" });
         }
 
         const responsePreferenceLabel = {
@@ -1694,7 +2317,10 @@ export function initPractice() {
 
         showMessage("success", message);
 
-        if (savedSetup.voiceMode === "voice") {
+        if (isFieldModalOpen()) {
+            setVoiceStatus("Complete the field setup first, then the interview workspace will open with your saved defaults.", "idle");
+            elements.practiceFieldInput.focus();
+        } else if (savedSetup.voiceMode === "voice") {
             setVoiceStatus(
                 state.speechRecognition
                     ? "Voice First is selected. Click Start Voice Input when you are ready."
@@ -1771,7 +2397,7 @@ export function initPractice() {
     elements.questionCountSelect.addEventListener("change", () => {
         state.questionCount = Number(elements.questionCountSelect.value);
         if (state.selectedCategory) {
-            selectCategory(state.selectedCategory);
+            selectCategory(state.selectedCategory, { skipFieldModal: true });
         }
     });
 
@@ -1805,8 +2431,74 @@ export function initPractice() {
         updateManualResponseState();
     });
 
+    elements.practiceFieldInput.addEventListener("input", () => {
+        syncFieldBuilderModal();
+        clearFieldChatStatus();
+    });
+
+    elements.practiceFieldNeedInput.addEventListener("input", () => {
+        syncFieldBuilderModal();
+        clearFieldChatStatus();
+    });
+
+    elements.practiceFieldProviderSelect?.addEventListener("change", (event) => {
+        state.questionAgentSelectedProviderId = String(event.target.value || "auto");
+        state.questionAgentResolvedProviderLabel = null;
+        syncQuestionAgentPresentation();
+        syncFieldBuilderModal();
+
+        const provider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId);
+        showFieldChatStatus("info", `${getQuestionAgentProviderSummary(provider) || "Auto"} will be used for the field builder and the next question generation.`);
+    });
+
+    elements.practiceFieldGenerateBtn.addEventListener("click", () => {
+        buildFieldPlanWithChatbot();
+    });
+
+    elements.practiceFieldResetBtn.addEventListener("click", () => {
+        const category = state.pendingCategory || state.selectedCategory;
+
+        if (!category) {
+            return;
+        }
+
+        elements.practiceFieldInput.value = "";
+        elements.practiceFieldNeedInput.value = "";
+        state.fieldBuilderHistory = [{
+            role: "assistant",
+            text: buildFieldBuilderWelcomeMessage(category)
+        }];
+        setFieldBuilderStatusTag("Waiting for details", "neutral");
+        clearFieldChatStatus();
+        syncFieldBuilderModal(category);
+    });
+
+    elements.practiceFieldApplyBtn.addEventListener("click", () => {
+        applyFieldPlanAndContinue();
+    });
+
+    elements.closePracticeFieldModalBtn.addEventListener("click", () => {
+        closePracticeFieldModal();
+    });
+
+    elements.practiceFieldModalBackdrop.addEventListener("click", () => {
+        closePracticeFieldModal({ returnFocus: false });
+    });
+
     elements.openPracticeModalBtn.addEventListener("click", () => {
         openPracticeModal({ focusResponse: Boolean(state.selectedCategory && getActiveQuestionCount() > 0) });
+    });
+
+    elements.editPracticeFieldBtn.addEventListener("click", () => {
+        const category = state.pendingCategory || state.selectedCategory;
+
+        if (!category) {
+            return;
+        }
+
+        openPracticeFieldModal(category, {
+            prefillNeed: getFieldPlanForCategory(category)?.userNeed || ""
+        });
     });
 
     elements.closePracticeModalBtn.addEventListener("click", () => {
@@ -1819,6 +2511,11 @@ export function initPractice() {
 
     window.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
+            if (isFieldModalOpen()) {
+                closePracticeFieldModal();
+                return;
+            }
+
             closePracticeModal();
         }
     });
@@ -1846,6 +2543,7 @@ export function initPractice() {
         state.questionAgentSelectedProviderId = String(event.target.value || "auto");
         state.questionAgentResolvedProviderLabel = null;
         syncQuestionAgentPresentation();
+        syncFieldBuilderModal();
 
         const provider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId);
         if (state.selectedCategory) {
@@ -1860,6 +2558,7 @@ export function initPractice() {
     applyQuestionAgentProviderCatalog(state.questionAgentProviderCatalog, state.questionAgentSelectedProviderId);
     resetQuestionAgentConversation();
     updateTipsPanel();
+    syncFieldBuilderModal();
     updateSessionActionButtons();
     launchSavedSetup(savedSetup);
 

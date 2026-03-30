@@ -115,7 +115,7 @@ class WorkspaceController extends Controller
     {
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:2000'],
-            'mode' => ['nullable', 'string', 'in:chat,question_set,feedback_review'],
+            'mode' => ['nullable', 'string', 'in:chat,question_set,feedback_review,field_builder'],
             'questionCount' => ['nullable', 'integer', 'min:1', 'max:20'],
             'providerId' => ['nullable', 'string', 'max:50'],
             'categoryId' => ['nullable', 'string', 'max:50'],

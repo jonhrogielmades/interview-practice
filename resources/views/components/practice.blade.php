@@ -100,7 +100,7 @@
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Categories</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Choose an interview scenario to begin.
+                    Choose an interview scenario, then create the specific field you want before practice begins.
                 </p>
             </div>
 
@@ -139,10 +139,18 @@
                             class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
                             Open Interview Modal
                         </button>
+
+                        <button
+                            id="editPracticeFieldBtn"
+                            type="button"
+                            disabled
+                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                            Edit Target Field
+                        </button>
                     </div>
                 </div>
 
-                <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                     <div
                         class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
                         <p class="text-xs uppercase tracking-wide text-gray-500">Active Category</p>
@@ -171,6 +179,21 @@
                             class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
                             Closed
                         </strong>
+                    </div>
+
+                    <div
+                        class="flex h-full flex-col justify-between rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Target Field</p>
+                        <strong
+                            id="practiceModalFieldValue"
+                            class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                            Not set
+                        </strong>
+                        <p
+                            id="practiceModalFieldMeta"
+                            class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                            Choose a category to create a field with the chatbot.
+                        </p>
                     </div>
                 </div>
             </article>
@@ -302,6 +325,239 @@
 </div>
 
 <div
+    id="practiceFieldModal"
+    x-data="{
+        viewportWidth: window.innerWidth,
+        handleResize: null,
+        init() {
+            this.handleResize = () => {
+                this.viewportWidth = window.innerWidth;
+            };
+
+            this.handleResize();
+            window.addEventListener('resize', this.handleResize);
+        },
+        destroy() {
+            if (this.handleResize) {
+                window.removeEventListener('resize', this.handleResize);
+            }
+        },
+        get isDesktop() {
+            return this.viewportWidth >= 1280;
+        },
+        get sidebarOffset() {
+            if (!this.isDesktop) {
+                return 0;
+            }
+
+            return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
+        },
+        get topOffset() {
+            return this.viewportWidth >= 640 ? 88 : 72;
+        },
+        get wrapperPadding() {
+            if (this.viewportWidth >= 1280) {
+                return 24;
+            }
+
+            if (this.viewportWidth >= 640) {
+                return 20;
+            }
+
+            return 12;
+        },
+        get wrapperStyle() {
+            return `top: ${this.topOffset}px; left: ${this.sidebarOffset}px; right: 0; bottom: 0; padding: ${this.wrapperPadding}px;`;
+        }
+    }"
+    class="fixed z-[10010] hidden items-start justify-center"
+    :style="wrapperStyle"
+    aria-hidden="true"
+    aria-labelledby="practiceFieldModalTitle"
+    aria-modal="true"
+    role="dialog">
+    <div id="practiceFieldModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+    <div
+        class="relative z-10 flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        <div
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
+            <div class="max-w-2xl">
+                <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
+                    Field Builder
+                </p>
+                <h2 id="practiceFieldModalTitle" class="mt-1 text-lg font-semibold text-gray-900 dark:text-white/90">
+                    Create your practice field
+                </h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Use the chatbot to turn your chosen category into a specific role, course, or focus before opening the interview workspace.
+                </p>
+            </div>
+
+            <button
+                id="closePracticeFieldModalBtn"
+                type="button"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white sm:h-11 sm:w-11">
+                <span class="sr-only">Close field builder modal</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                        fill="currentColor" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+            <div class="grid gap-6 xl:grid-cols-12">
+                <section class="space-y-5 xl:col-span-5">
+                    <article class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span
+                                id="practiceFieldModalStatusTag"
+                                class="inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                                Waiting for details
+                            </span>
+                            <span
+                                id="practiceFieldProviderValue"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Provider: Auto
+                            </span>
+                        </div>
+
+                        <h3
+                            id="practiceFieldModalCategoryName"
+                            class="mt-4 text-xl font-semibold text-gray-900 dark:text-white/90">
+                            Choose a category first
+                        </h3>
+                        <p
+                            id="practiceFieldModalCategoryDescription"
+                            class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            Your selected category will appear here together with starter suggestions for the chatbot.
+                        </p>
+
+                        <div class="mt-5">
+                            <label
+                                class="mb-1.5 block text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400"
+                                for="practiceFieldProviderSelect">
+                                Provider
+                            </label>
+                            <select
+                                id="practiceFieldProviderSelect"
+                                class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            </select>
+                            <p
+                                id="practiceFieldProviderHelpText"
+                                class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                Choose which API should build the field plan.
+                            </p>
+                        </div>
+                    </article>
+
+                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Quick Picks</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                    Start with a field suggestion, then refine it with the chatbot.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div id="practiceFieldSuggestionChips" class="mt-4 flex flex-wrap gap-2"></div>
+                    </article>
+
+                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Current Field Plan</h3>
+                        <strong
+                            id="practiceFieldPreviewTitle"
+                            class="mt-4 block text-lg font-semibold text-gray-900 dark:text-white/90">
+                            No field created yet
+                        </strong>
+                        <p
+                            id="practiceFieldPreviewSummary"
+                            class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            Tell the chatbot what role, course, or specialization you want so the practice questions can be tailored before the interview modal opens.
+                        </p>
+                    </article>
+                </section>
+
+                <section class="xl:col-span-7">
+                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
+                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Field Chatbot</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                Describe what you need, let the chatbot shape the field, then continue to the interview workspace.
+                            </p>
+                        </div>
+
+                        <div
+                            id="practiceFieldChatMessages"
+                            class="mt-5 flex min-h-[220px] max-h-[320px] flex-col gap-4 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70"></div>
+
+                        <div class="mt-5 space-y-4">
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    for="practiceFieldInput">
+                                    Target field, role, or course
+                                </label>
+                                <input
+                                    id="practiceFieldInput"
+                                    type="text"
+                                    class="dark:bg-dark-900 h-12 w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                    placeholder="Example: Junior Laravel Developer" />
+                            </div>
+
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    for="practiceFieldNeedInput">
+                                    What do you need from this practice?
+                                </label>
+                                <textarea
+                                    id="practiceFieldNeedInput"
+                                    rows="4"
+                                    class="min-h-[130px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                    placeholder="Example: I want remote-entry-level questions that focus on APIs, debugging, and explaining my capstone clearly."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 flex flex-wrap gap-3">
+                            <button
+                                id="practiceFieldGenerateBtn"
+                                type="button"
+                                class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:w-auto">
+                                Build With Chatbot
+                            </button>
+
+                            <button
+                                id="practiceFieldResetBtn"
+                                type="button"
+                                class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
+                                Reset
+                            </button>
+
+                            <button
+                                id="practiceFieldApplyBtn"
+                                type="button"
+                                class="inline-flex w-full items-center justify-center rounded-lg border border-brand-300 px-4 py-3 text-sm font-medium text-brand-600 transition hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10 sm:w-auto">
+                                Continue To Practice
+                            </button>
+                        </div>
+
+                        <div
+                            id="practiceFieldChatStatus"
+                            class="mt-5 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+                    </article>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div
     id="practiceSessionModal"
     x-data="{
         viewportWidth: window.innerWidth,
@@ -421,6 +677,11 @@
                                 id="practiceLabelTag"
                                 class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
                                 No active session
+                            </span>
+                            <span
+                                id="selectedPracticeFieldTag"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Field not set
                             </span>
                         </div>
 

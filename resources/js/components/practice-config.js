@@ -29,6 +29,10 @@ export const practiceData = {
             id: "job",
             name: "Job Interview",
             description: "Philippine hiring questions for fresh graduates, career shifters, and office or remote roles.",
+            fieldLabel: "Target role",
+            fieldPlaceholder: "Example: Customer Service Representative",
+            fieldNeedPlaceholder: "Example: I want entry-level questions for a BPO or office role where I can highlight communication, teamwork, and internship experience.",
+            fieldSuggestions: ["Customer Service Representative", "Administrative Assistant", "Virtual Assistant", "Sales Associate"],
             keywords: ["ojt", "experience", "skills", "responsibility", "results", "teamwork"],
             quickPrompts: [
                 "Give me 3 Philippine-style follow-up questions for this category.",
@@ -47,6 +51,10 @@ export const practiceData = {
             id: "scholarship",
             name: "Scholarship Interview",
             description: "Philippine scholarship questions about academic goals, financial need, service, and future contribution.",
+            fieldLabel: "Target study field",
+            fieldPlaceholder: "Example: Nursing",
+            fieldNeedPlaceholder: "Example: I need scholarship questions that connect my chosen field to financial need, service, discipline, and long-term goals.",
+            fieldSuggestions: ["Nursing", "Education", "Information Technology", "Accountancy"],
             keywords: ["goals", "leadership", "service", "achievement", "family", "community"],
             quickPrompts: [
                 "Give me 3 scholarship interview questions used in the Philippines.",
@@ -65,6 +73,10 @@ export const practiceData = {
             id: "admission",
             name: "College Admission",
             description: "Philippine college and university admission questions focused on motivation, readiness, and program fit.",
+            fieldLabel: "Target course",
+            fieldPlaceholder: "Example: BS Information Technology",
+            fieldNeedPlaceholder: "Example: I want admission questions that help me explain why this course fits my strengths, interests, and future plans.",
+            fieldSuggestions: ["BS Information Technology", "BS Nursing", "BS Accountancy", "BS Education"],
             keywords: ["motivation", "program", "interest", "future", "readiness", "education"],
             quickPrompts: [
                 "Give me 3 Philippine college admission follow-up questions.",
@@ -83,6 +95,10 @@ export const practiceData = {
             id: "it",
             name: "IT / Programming",
             description: "Philippine tech interview questions about coding, capstone work, debugging, and teamwork.",
+            fieldLabel: "Target IT role",
+            fieldPlaceholder: "Example: Junior Laravel Developer",
+            fieldNeedPlaceholder: "Example: I want junior developer questions that focus on APIs, debugging, teamwork, and explaining my capstone project clearly.",
+            fieldSuggestions: ["Junior Web Developer", "QA Tester", "Technical Support Specialist", "Junior Data Analyst"],
             keywords: ["project", "problem-solving", "technology", "teamwork", "capstone", "debugging"],
             quickPrompts: [
                 "Give me 3 Philippine IT interview follow-up questions.",

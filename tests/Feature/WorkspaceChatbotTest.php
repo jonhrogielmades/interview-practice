@@ -74,6 +74,37 @@ class WorkspaceChatbotTest extends TestCase
             ->assertJsonCount(10, 'generatedQuestions');
     }
 
+    public function test_local_generated_question_set_uses_the_selected_field_focus(): void
+    {
+        config()->set('services.gemini.api_key', null);
+        config()->set('services.groq.api_key', null);
+        config()->set('services.openrouter.api_key', null);
+        config()->set('services.wisdomgate.api_key', null);
+        config()->set('services.cohere.api_key', null);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot'), [
+            'message' => 'Generate Philippine IT interview questions focused on Junior Laravel Developer. Field: Junior Laravel Developer.',
+            'mode' => 'question_set',
+            'questionCount' => 5,
+            'providerId' => 'auto',
+            'categoryId' => 'it',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'provider' => 'Local PH coach',
+                'providerId' => 'local',
+                'requestedProviderId' => 'auto',
+                'usedFallback' => true,
+            ]);
+
+        $this->assertTrue(
+            collect($response->json('generatedQuestions'))
+                ->contains(fn ($question) => is_string($question) && str_contains($question, 'Junior Laravel Developer'))
+        );
+    }
+
     public function test_chatbot_endpoint_returns_local_feedback_review_summary(): void
     {
         config()->set('services.gemini.api_key', null);
@@ -115,6 +146,39 @@ class WorkspaceChatbotTest extends TestCase
                     'criteria' => ['clarity', 'relevance', 'grammar', 'professionalism'],
                     'nextStep',
                     'provider',
+                ],
+            ]);
+    }
+
+    public function test_chatbot_endpoint_returns_local_field_builder_plan(): void
+    {
+        config()->set('services.gemini.api_key', null);
+        config()->set('services.groq.api_key', null);
+        config()->set('services.openrouter.api_key', null);
+        config()->set('services.wisdomgate.api_key', null);
+        config()->set('services.cohere.api_key', null);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot'), [
+            'message' => 'Remote customer service role in a BPO company.',
+            'mode' => 'field_builder',
+            'providerId' => 'auto',
+            'categoryId' => 'job',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'provider' => 'Local PH coach',
+                'providerId' => 'local',
+                'requestedProviderId' => 'auto',
+                'usedFallback' => true,
+            ])
+            ->assertJsonStructure([
+                'fieldPlan' => [
+                    'title',
+                    'summary',
+                    'instruction',
+                    'suggestions',
                 ],
             ]);
     }
@@ -229,6 +293,56 @@ class WorkspaceChatbotTest extends TestCase
                 'usedFallback' => false,
             ])
             ->assertJsonPath('feedbackSummary.criteria.clarity', 'Your structure is mostly clear, though the ending could be sharper.');
+    }
+
+    public function test_chatbot_endpoint_returns_provider_field_builder_plan_when_configured(): void
+    {
+        config()->set('services.groq.api_key', 'groq-test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-20b');
+        config()->set('services.gemini.api_key', null);
+        config()->set('services.openrouter.api_key', null);
+        config()->set('services.wisdomgate.api_key', null);
+        config()->set('services.cohere.api_key', null);
+
+        Http::fake([
+            'https://api.groq.com/openai/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                'title' => 'Junior Laravel Developer',
+                                'summary' => 'Practice around entry-level backend web development, API work, debugging, and teamwork in the Philippine hiring market.',
+                                'instruction' => 'Generate Philippine IT interview questions focused on a Junior Laravel Developer role. Include backend APIs, debugging, teamwork, and project ownership.',
+                                'suggestions' => [
+                                    'Junior Laravel Developer',
+                                    'Junior Full-Stack Developer',
+                                    'Backend PHP Developer',
+                                    'Web Application Developer',
+                                ],
+                            ]),
+                        ],
+                    ],
+                ],
+                'model' => 'openai/gpt-oss-20b',
+            ]),
+        ]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot'), [
+            'message' => 'I want an entry-level Laravel backend role.',
+            'mode' => 'field_builder',
+            'providerId' => 'groq',
+            'categoryId' => 'it',
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'provider' => 'Groq API (openai/gpt-oss-20b)',
+                'providerId' => 'groq',
+                'requestedProviderId' => 'groq',
+                'usedFallback' => false,
+            ])
+            ->assertJsonPath('fieldPlan.title', 'Junior Laravel Developer');
     }
 
     public function test_chatbot_endpoint_uses_selected_groq_provider_when_configured(): void
