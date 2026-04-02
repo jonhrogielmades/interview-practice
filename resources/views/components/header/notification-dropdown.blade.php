@@ -61,7 +61,7 @@
         x-transition:leave="transition ease-in duration-75"
         x-transition:leave-start="transform opacity-100 scale-100"
         x-transition:leave-end="transform opacity-0 scale-95"
-        class="absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
+        class="absolute right-0 mt-[17px] flex h-[min(30rem,calc(100vh-7rem))] w-[min(22rem,calc(100vw-1.5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-[361px] dark:border-gray-800 dark:bg-gray-dark"
         style="display: none;"
     >
         <!-- Dropdown Header -->
@@ -88,7 +88,7 @@
         </div>
 
         <!-- Notification List -->
-        <ul class="flex flex-col h-auto overflow-y-auto custom-scrollbar">
+        <ul class="custom-scrollbar flex h-auto min-h-0 flex-1 flex-col overflow-y-auto">
             @php
                 $notifications = [
                     [
@@ -177,7 +177,7 @@
             @foreach ($notifications as $notification)
                 <li @click="handleItemClick()">
                     <a
-                        class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                        class="flex min-w-0 gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
                         href="#"
                     >
                         <span class="relative block w-full h-10 rounded-full z-1 max-w-10">
@@ -187,8 +187,8 @@
                             ></span>
                         </span>
 
-                        <span class="block">
-                            <span class="mb-1.5 block text-theme-sm text-gray-500 dark:text-gray-400">
+                        <span class="block min-w-0">
+                            <span class="content-break mb-1.5 block text-theme-sm text-gray-500 dark:text-gray-400">
                                 <span class="font-medium text-gray-800 dark:text-white/90">
                                     {{ $notification['userName'] }}
                                 </span>
@@ -198,7 +198,7 @@
                                 </span>
                             </span>
 
-                            <span class="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
+                            <span class="flex flex-wrap items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
                                 <span>{{ $notification['type'] }}</span>
                                 <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
                                 <span>{{ $notification['time'] }}</span>

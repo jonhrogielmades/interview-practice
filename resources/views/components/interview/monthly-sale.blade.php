@@ -11,7 +11,6 @@
     </div>
 
     <div class="max-w-full overflow-x-auto custom-scrollbar">
-        <div id="chartOne" class="-ml-5 h-full min-w-[690px] pl-2 xl:min-w-full"></div>
+        <div id="chartOne" class="-ml-4 h-full min-w-[560px] pl-2 sm:-ml-5 sm:min-w-[690px] xl:min-w-full"></div>
     </div>
 </div>
-

@@ -548,10 +548,10 @@ export function initPractice() {
 
     function getCategoryButtonClass(isActive = false) {
         if (isActive) {
-            return "category-btn flex h-full min-h-[140px] w-full flex-col rounded-xl border border-brand-300 bg-brand-50 px-4 py-4 text-left transition dark:border-brand-500/30 dark:bg-brand-500/10";
+            return "category-btn flex h-full min-h-[120px] w-full flex-col rounded-xl border border-brand-300 bg-brand-50 px-4 py-4 text-left transition sm:min-h-[140px] dark:border-brand-500/30 dark:bg-brand-500/10";
         }
 
-        return "category-btn flex h-full min-h-[140px] w-full flex-col rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-left transition hover:border-brand-300 hover:bg-brand-50 dark:border-gray-800 dark:bg-gray-900/60 dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10";
+        return "category-btn flex h-full min-h-[120px] w-full flex-col rounded-xl border border-gray-200 bg-gray-50 px-4 py-4 text-left transition sm:min-h-[140px] hover:border-brand-300 hover:bg-brand-50 dark:border-gray-800 dark:bg-gray-900/60 dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10";
     }
 
     function renderCategories() {
@@ -562,8 +562,8 @@ export function initPractice() {
                     data-category-id="${category.id}"
                     class="${getCategoryButtonClass()}"
                 >
-                    <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">${category.name}</strong>
-                    <span class="mt-2 block text-sm leading-6 text-gray-600 dark:text-gray-400">${category.description}</span>
+                    <strong class="content-break block text-sm font-semibold text-gray-900 dark:text-white/90">${category.name}</strong>
+                    <span class="content-break mt-2 block text-sm leading-6 text-gray-600 dark:text-gray-400">${category.description}</span>
                 </button>
             `)
             .join("");
@@ -687,7 +687,7 @@ export function initPractice() {
                 <button
                     type="button"
                     data-field-suggestion="${escapeHtml(suggestion)}"
-                    class="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
+                    class="content-break inline-flex max-w-full items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-left text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
                 >
                     ${escapeHtml(suggestion)}
                 </button>
@@ -713,7 +713,7 @@ export function initPractice() {
     function renderFieldBuilderMessages() {
         if (state.fieldBuilderHistory.length === 0) {
             elements.practiceFieldChatMessages.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                <div class="content-break rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
                     Share the role, course, or specialization you want, and the chatbot will prepare a focused field before practice starts.
                 </div>
             `;
@@ -730,7 +730,7 @@ export function initPractice() {
             return `
                 <div class="flex flex-col ${wrapperClass} gap-2">
                     <span class="text-xs font-medium uppercase tracking-wide text-gray-400">${isAssistant ? "Field Chatbot" : "Your Goal"}</span>
-                    <div class="max-w-full rounded-2xl border px-4 py-3 text-sm leading-6 ${bubbleClass}">
+                    <div class="content-break max-w-full rounded-2xl border px-4 py-3 text-sm leading-6 ${bubbleClass}">
                         ${escapeHtml(item.text).replace(/\n/g, "<br>")}
                     </div>
                 </div>
@@ -1363,7 +1363,7 @@ export function initPractice() {
                     type="button"
                     data-question-agent-prompt="${escapeHtml(prompt)}"
                     title="${escapeHtml(prompt)}"
-                    class="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
+                    class="content-break inline-flex max-w-full items-center rounded-full border border-gray-200 bg-white px-3 py-1.5 text-left text-xs font-medium text-gray-600 transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300 dark:hover:border-brand-500/40 dark:hover:bg-brand-500/10 dark:hover:text-brand-200"
                 >
                     ${escapeHtml(truncateForButton(prompt))}
                 </button>
@@ -1380,7 +1380,7 @@ export function initPractice() {
     function renderQuestionAgentMessages() {
         if (state.questionAgentHistory.length === 0) {
             elements.practiceQuestionAgentMessages.innerHTML = `
-                <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                <div class="content-break rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
                     Select a category to start the AI question generator.
                 </div>
             `;
@@ -1398,7 +1398,7 @@ export function initPractice() {
             return `
                 <div class="flex flex-col ${wrapperClass} gap-2">
                     <span class="text-xs font-medium uppercase tracking-wide text-gray-400">${label}</span>
-                    <div class="max-w-full rounded-2xl border px-4 py-3 text-sm leading-6 ${bubbleClass}">
+                    <div class="content-break max-w-full rounded-2xl border px-4 py-3 text-sm leading-6 ${bubbleClass}">
                         ${escapeHtml(item.text).replace(/\n/g, "<br>")}
                     </div>
                 </div>
@@ -1787,7 +1787,7 @@ export function initPractice() {
                     <p class="text-xs uppercase tracking-wide text-gray-500">${label}</p>
                     <p class="text-sm font-semibold text-gray-900 dark:text-white/90">${value} / 10</p>
                 </div>
-                <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">${description}</p>
+                <p class="content-break mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">${description}</p>
             </div>
         `;
     }
@@ -1932,14 +1932,14 @@ export function initPractice() {
                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
                     <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Strengths</strong>
                     <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                        ${normalizedSummary.strengths.length ? normalizedSummary.strengths.map((item) => `<li>${item}</li>`).join("") : "<li>Your answer has a good starting point.</li>"}
+                        ${normalizedSummary.strengths.length ? normalizedSummary.strengths.map((item) => `<li class="content-break">${item}</li>`).join("") : '<li class="content-break">Your answer has a good starting point.</li>'}
                     </ul>
                 </div>
 
                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
                     <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Improvement Areas</strong>
                     <ul class="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                        ${normalizedSummary.improvements.length ? normalizedSummary.improvements.map((item) => `<li>${item}</li>`).join("") : "<li>Keep practicing to improve consistency.</li>"}
+                        ${normalizedSummary.improvements.length ? normalizedSummary.improvements.map((item) => `<li class="content-break">${item}</li>`).join("") : '<li class="content-break">Keep practicing to improve consistency.</li>'}
                     </ul>
                 </div>
 
@@ -1948,10 +1948,10 @@ export function initPractice() {
                         <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Feedback Summary</strong>
                         ${providerMeta}
                     </div>
-                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    <p class="content-break mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
                         ${normalizedSummary.overall}
                     </p>
-                    <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    <p class="content-break mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
                         <strong>Next step:</strong> ${normalizedSummary.nextStep}
                     </p>
                 </div>

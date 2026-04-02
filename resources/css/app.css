@@ -177,6 +177,9 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   *,
   ::after,
   ::before,
@@ -189,7 +192,7 @@
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative z-1 overflow-x-hidden bg-gray-50 font-normal font-outfit;
   }
   [x-cloak] {
     display: none !important;
@@ -343,6 +346,11 @@
   &::-webkit-scrollbar-thumb {
     @apply bg-gray-200 rounded-full dark:bg-gray-700;
   }
+}
+
+@utility content-break {
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .dark .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #344054;

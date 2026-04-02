@@ -4,8 +4,8 @@
     <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
         {{ $pageTitle }}
     </h2>
-    <nav>
-        <ol class="flex items-center gap-1.5">
+    <nav class="min-w-0">
+        <ol class="flex flex-wrap items-center gap-1.5">
             <li>
                 <a
                     class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"

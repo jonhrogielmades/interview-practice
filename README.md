@@ -55,6 +55,20 @@ COHERE_API_KEY=
 npm run build
 ```
 
+## Mobile LAN Access
+
+To open the app from a phone on the same Wi-Fi network, set `APP_URL` and
+`VITE_DEV_SERVER_HOST` in `.env` to your computer's LAN IP, then start:
+
+```bash
+composer run dev:lan
+```
+
+Open `http://YOUR-LAN-IP:8000` on the phone.
+
+Camera, microphone, and speech APIs on mobile browsers usually require HTTPS
+or `localhost`, so those features may stay blocked on plain LAN HTTP.
+
 ## Project Structure
 
 ```text

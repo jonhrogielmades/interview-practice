@@ -104,7 +104,7 @@
                 </p>
             </div>
 
-            <div id="practiceCategoryList" class="grid grid-cols-2 gap-3"></div>
+            <div id="practiceCategoryList" class="grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
         </article>
     </section>
 
@@ -125,7 +125,7 @@
                         </p>
                     </div>
 
-                    <div class="flex flex-col items-start gap-3 md:items-end">
+                    <div class="flex w-full flex-col items-start gap-3 md:w-auto md:items-end">
                         <span
                             id="practiceModalStateTag"
                             class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
@@ -136,7 +136,7 @@
                             id="openPracticeModalBtn"
                             type="button"
                             disabled
-                            class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50">
+                            class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto">
                             Open Interview Modal
                         </button>
 
@@ -144,7 +144,7 @@
                             id="editPracticeFieldBtn"
                             type="button"
                             disabled
-                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                            class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
                             Edit Target Field
                         </button>
                     </div>
@@ -214,7 +214,7 @@
                         <button
                             id="printFeedbackBtn"
                             type="button"
-                            class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                            class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
                             Print Summary
                         </button>
                     </div>
@@ -353,7 +353,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 72;
+            return this.viewportWidth >= 640 ? 88 : 64;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {
@@ -433,7 +433,7 @@
                         </h3>
                         <p
                             id="practiceFieldModalCategoryDescription"
-                            class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            class="content-break mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
                             Your selected category will appear here together with starter suggestions for the chatbot.
                         </p>
 
@@ -449,7 +449,7 @@
                             </select>
                             <p
                                 id="practiceFieldProviderHelpText"
-                                class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                class="content-break mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
                                 Choose which API should build the field plan.
                             </p>
                         </div>
@@ -472,12 +472,12 @@
                         <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Current Field Plan</h3>
                         <strong
                             id="practiceFieldPreviewTitle"
-                            class="mt-4 block text-lg font-semibold text-gray-900 dark:text-white/90">
+                            class="content-break mt-4 block text-lg font-semibold text-gray-900 dark:text-white/90">
                             No field created yet
                         </strong>
                         <p
                             id="practiceFieldPreviewSummary"
-                            class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            class="content-break mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
                             Tell the chatbot what role, course, or specialization you want so the practice questions can be tailored before the interview modal opens.
                         </p>
                     </article>
@@ -494,7 +494,7 @@
 
                         <div
                             id="practiceFieldChatMessages"
-                            class="mt-5 flex min-h-[220px] max-h-[320px] flex-col gap-4 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70"></div>
+                            class="mt-5 flex min-h-[180px] max-h-[280px] flex-col gap-4 overflow-y-auto rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70 sm:min-h-[220px] sm:max-h-[320px]"></div>
 
                         <div class="mt-5 space-y-4">
                             <div>
@@ -586,7 +586,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 72;
+            return this.viewportWidth >= 640 ? 88 : 64;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {
@@ -642,7 +642,7 @@
             </button>
         </div>
 
-        <div class="min-h-0 overflow-y-auto p-4 sm:p-5 lg:p-6">
+        <div class="min-h-0 overflow-y-auto p-3 sm:p-5 lg:p-6">
             <div class="grid items-stretch gap-4 lg:gap-6 xl:grid-cols-12">
                 <section class="min-w-0 xl:col-span-7">
                     <article
@@ -655,7 +655,7 @@
                                 </h3>
                                 <p
                                     id="selectedCategoryDescription"
-                                    class="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                    class="content-break mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
                                     Your chosen interview type will load a fresh AI-generated question set.
                                 </p>
                             </div>
@@ -729,7 +729,7 @@
                                 <p class="mb-2 text-xs font-medium uppercase tracking-wide text-gray-500">Current question</p>
                                 <h2
                                     id="currentQuestionText"
-                                    class="text-xl font-semibold leading-8 text-gray-900 dark:text-white/90">
+                                    class="content-break text-lg font-semibold leading-7 text-gray-900 sm:text-xl sm:leading-8 dark:text-white/90">
                                     Choose a category from the left panel to begin your interview simulation.
                                 </h2>
                             </div>
@@ -764,7 +764,7 @@
 
                                 <textarea
                                     id="responseInput"
-                                    class="dark:bg-dark-900 min-h-[220px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                    class="dark:bg-dark-900 min-h-[180px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30 sm:min-h-[220px]"
                                     placeholder="Type your answer here or use voice input if supported by your browser."></textarea>
 
                                 <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
@@ -812,9 +812,9 @@
                             <div
                                 id="voiceStatus"
                                 aria-live="polite"
-                                class="flex items-center gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-400">
+                                class="flex items-start gap-3 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-600 sm:items-center dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-400">
                                 <span id="voiceStatusDot" class="h-2.5 w-2.5 rounded-full bg-gray-400"></span>
-                                <span id="voiceStatusText">Voice input is idle.</span>
+                                <span id="voiceStatusText" class="content-break">Voice input is idle.</span>
                             </div>
 
                             <p class="text-xs text-gray-500 dark:text-gray-400">
@@ -849,7 +849,7 @@
                         <div class="mt-5 space-y-4">
                             <div
                                 class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
-                                <div class="flex items-center gap-4">
+                                <div class="flex min-w-0 items-start gap-4">
                                     <div
                                         id="avatarOrb"
                                         class="flex h-16 w-16 items-center justify-center rounded-full bg-brand-50 text-base font-semibold text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
@@ -862,7 +862,7 @@
                                             class="block text-sm font-semibold text-gray-900 dark:text-white/90">
                                             Avatar idle
                                         </strong>
-                                        <p id="avatarLineText" class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                        <p id="avatarLineText" class="content-break mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
                                             Start the camera, then choose a category. I will read each interview question aloud.
                                         </p>
                                     </div>
@@ -973,7 +973,7 @@
                                 </select>
                                 <p
                                     id="practiceQuestionAgentProviderValue"
-                                    class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                    class="content-break mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
                                     Current route: Auto
                                 </p>
                             </div>
@@ -981,7 +981,7 @@
 
                         <div class="mt-5 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
                             <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Conversation</p>
-                            <div id="practiceQuestionAgentMessages" class="mt-3 flex min-h-[180px] max-h-[260px] flex-col gap-4 overflow-y-auto pr-1"></div>
+                            <div id="practiceQuestionAgentMessages" class="mt-3 flex min-h-[160px] max-h-[240px] flex-col gap-4 overflow-y-auto pr-1 sm:min-h-[180px] sm:max-h-[260px]"></div>
                         </div>
 
                         <div class="mt-5">
@@ -1015,7 +1015,7 @@
                                 </button>
                             </div>
 
-                            <p id="practiceQuestionAgentSummaryText" class="mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                            <p id="practiceQuestionAgentSummaryText" class="content-break mt-3 text-sm leading-6 text-gray-500 dark:text-gray-400">
                                 Select a category and the chatbot will build a fresh question set for the workspace.
                             </p>
                         </div>

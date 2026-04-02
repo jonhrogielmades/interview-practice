@@ -10,11 +10,11 @@
 
 <div class="relative" x-data="{ dropdownOpen: false }" @click.away="dropdownOpen = false">
     <button
-        class="flex items-center text-gray-700 dark:text-gray-400"
+        class="flex w-full items-center justify-between text-gray-700 sm:w-auto dark:text-gray-400"
         @click.prevent="dropdownOpen = !dropdownOpen"
         type="button"
     >
-        <span class="mr-3 flex h-11 w-11 items-center justify-center overflow-hidden rounded-full bg-brand-500/10 text-sm font-semibold text-brand-600 dark:bg-brand-500/20 dark:text-brand-300">
+        <span class="mr-3 flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-brand-500/10 text-sm font-semibold text-brand-600 dark:bg-brand-500/20 dark:text-brand-300">
             @if ($avatar)
                 <img src="{{ $avatar }}" alt="{{ $fullName }}" class="h-full w-full object-cover object-top" />
             @else
@@ -22,10 +22,10 @@
             @endif
         </span>
 
-        <span class="mr-1 block font-medium text-theme-sm">{{ $firstName }}</span>
+        <span class="mr-1 block max-w-[9rem] truncate font-medium text-theme-sm">{{ $firstName }}</span>
 
         <svg
-            class="h-5 w-5 transition-transform duration-200"
+            class="h-5 w-5 shrink-0 transition-transform duration-200"
             :class="{ 'rotate-180': dropdownOpen }"
             fill="none"
             stroke="currentColor"
@@ -43,12 +43,12 @@
         x-transition:leave="transition ease-in duration-75"
         x-transition:leave-start="transform opacity-100 scale-100"
         x-transition:leave-end="transform opacity-0 scale-95"
-        class="z-50 absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        class="z-50 absolute right-0 mt-[17px] flex w-[min(16.25rem,calc(100vw-1.5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-[260px] dark:border-gray-800 dark:bg-gray-dark"
         style="display: none;"
     >
         <div>
-            <span class="block text-theme-sm font-medium text-gray-700 dark:text-gray-300">{{ $fullName }}</span>
-            <span class="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">{{ $user?->email }}</span>
+            <span class="content-break block text-theme-sm font-medium text-gray-700 dark:text-gray-300">{{ $fullName }}</span>
+            <span class="content-break mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">{{ $user?->email }}</span>
         </div>
 
         <ul class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800">

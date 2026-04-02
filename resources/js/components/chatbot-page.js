@@ -458,7 +458,7 @@ export function initChatbotPage() {
                 <button
                     type="button"
                     data-prompt="${escapeHtml(prompt)}"
-                    class="rounded-full border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                    class="content-break max-w-full rounded-full border border-gray-300 px-3 py-2 text-left text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
                     ${escapeHtml(prompt)}
                 </button>
             `)
@@ -485,7 +485,7 @@ export function initChatbotPage() {
                     <div class="flex ${alignClass}">
                         <div class="flex ${rowClass} w-full max-w-4xl items-end gap-3">
                             ${renderConversationAvatar(isAssistant, profileConfig)}
-                            <article class="w-full max-w-3xl px-4 py-4 shadow-theme-xs ${bubbleClass}">
+                            <article class="content-break w-full max-w-3xl px-4 py-4 shadow-theme-xs ${bubbleClass}">
                                 <div class="mb-3 flex flex-wrap items-center gap-2">
                                     <span class="text-xs font-semibold uppercase tracking-wide ${isAssistant ? "text-gray-500 dark:text-gray-400" : "text-white/80"}">
                                         ${escapeHtml(isAssistant ? profileConfig.assistantName : profileConfig.userName)}
@@ -574,21 +574,21 @@ export function initChatbotPage() {
             elements.generatedQuestions.innerHTML = "";
             elements.feedbackPanel.innerHTML = `
                 <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
-                    <p class="text-sm leading-6 text-gray-700 dark:text-gray-300">${escapeHtml(state.feedbackSummary.overall || "No review summary was returned.")}</p>
+                    <p class="content-break text-sm leading-6 text-gray-700 dark:text-gray-300">${escapeHtml(state.feedbackSummary.overall || "No review summary was returned.")}</p>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/40">
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Strengths</h4>
                         <ul class="mt-3 space-y-2">
-                            ${strengths.map((item) => `<li class="rounded-xl bg-success-50 px-3 py-2 text-sm leading-6 text-success-700 dark:bg-success-500/10 dark:text-success-300">${escapeHtml(item)}</li>`).join("") || `<li class="rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No strengths returned yet.</li>`}
+                            ${strengths.map((item) => `<li class="content-break rounded-xl bg-success-50 px-3 py-2 text-sm leading-6 text-success-700 dark:bg-success-500/10 dark:text-success-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No strengths returned yet.</li>`}
                         </ul>
                     </div>
 
                     <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/40">
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Improvements</h4>
                         <ul class="mt-3 space-y-2">
-                            ${improvements.map((item) => `<li class="rounded-xl bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">${escapeHtml(item)}</li>`).join("") || `<li class="rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No improvement items returned yet.</li>`}
+                            ${improvements.map((item) => `<li class="content-break rounded-xl bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No improvement items returned yet.</li>`}
                         </ul>
                     </div>
                 </div>
@@ -601,7 +601,7 @@ export function initChatbotPage() {
                         ${renderCriterionNote("Grammar", criteria.grammar)}
                         ${renderCriterionNote("Professionalism", criteria.professionalism)}
                     </div>
-                    <div class="mt-4 rounded-xl bg-brand-50 px-3 py-3 text-sm leading-6 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                    <div class="content-break mt-4 rounded-xl bg-brand-50 px-3 py-3 text-sm leading-6 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                         <strong class="font-semibold">Next step:</strong> ${escapeHtml(state.feedbackSummary.nextStep || "Keep refining your answer with a more specific example and stronger closing statement.")}
                     </div>
                 </div>
@@ -619,7 +619,7 @@ export function initChatbotPage() {
                 .map((question, index) => `
                     <article class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Question ${index + 1}</p>
-                        <p class="mt-2 text-sm leading-7 text-gray-700 dark:text-gray-300">${escapeHtml(question)}</p>
+                        <p class="content-break mt-2 text-sm leading-7 text-gray-700 dark:text-gray-300">${escapeHtml(question)}</p>
                     </article>
                 `)
                 .join("");
@@ -634,7 +634,7 @@ export function initChatbotPage() {
 
     function renderCriterionNote(label, value) {
         return `
-            <div class="rounded-xl bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 dark:bg-gray-900/70 dark:text-gray-300">
+            <div class="content-break rounded-xl bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 dark:bg-gray-900/70 dark:text-gray-300">
                 <strong class="font-semibold">${escapeHtml(label)}:</strong> ${escapeHtml(value || "No note returned yet.")}
             </div>
         `;

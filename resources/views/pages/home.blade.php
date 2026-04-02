@@ -629,16 +629,32 @@
                                             placeholder="you@example.com">
                                     </div>
 
-                                    <div>
+                                    <div x-data="{ showPassword: false }">
                                         <label for="home_signin_password" class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">Password</label>
-                                        <input
-                                            id="home_signin_password"
-                                            name="password"
-                                            type="password"
-                                            required
-                                            autocomplete="current-password"
-                                            class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
-                                            placeholder="Enter your password">
+                                        <div class="relative">
+                                            <input
+                                                id="home_signin_password"
+                                                name="password"
+                                                x-bind:type="showPassword ? 'text' : 'password'"
+                                                required
+                                                autocomplete="current-password"
+                                                class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
+                                                placeholder="Enter your password">
+                                            <button
+                                                type="button"
+                                                class="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:text-blue-light-600 focus:outline-none focus:text-blue-light-600 dark:text-gray-500 dark:hover:text-blue-light-300 dark:focus:text-blue-light-300"
+                                                @click="showPassword = ! showPassword"
+                                                x-bind:aria-label="showPassword ? 'Hide password' : 'Show password'">
+                                                <svg x-show="! showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                    <path d="M1.667 10S4.583 4.167 10 4.167 18.333 10 18.333 10 15.417 15.833 10 15.833 1.667 10 1.667 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M10 12.188a2.188 2.188 0 1 0 0-4.376 2.188 2.188 0 0 0 0 4.376Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                                <svg x-show="showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                    <path d="M2.5 2.5 17.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    <path d="M8.939 4.246A8.85 8.85 0 0 1 10 4.167c5.417 0 8.333 5.833 8.333 5.833a13.16 13.16 0 0 1-2.169 2.953M11.767 11.768A2.188 2.188 0 0 1 8.232 8.233M5.192 5.192A13.599 13.599 0 0 0 1.667 10S4.583 15.833 10 15.833a8.815 8.815 0 0 0 4.808-1.416" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -721,28 +737,60 @@
                                     </div>
 
                                     <div class="grid gap-5 sm:grid-cols-2">
-                                        <div>
+                                        <div x-data="{ showPassword: false }">
                                             <label for="home_signup_password" class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">Password</label>
-                                            <input
-                                                id="home_signup_password"
-                                                name="password"
-                                                type="password"
-                                                required
-                                                autocomplete="new-password"
-                                                class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
-                                                placeholder="At least 8 characters">
+                                            <div class="relative">
+                                                <input
+                                                    id="home_signup_password"
+                                                    name="password"
+                                                    x-bind:type="showPassword ? 'text' : 'password'"
+                                                    required
+                                                    autocomplete="new-password"
+                                                    class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
+                                                    placeholder="At least 8 characters">
+                                                <button
+                                                    type="button"
+                                                    class="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:text-blue-light-600 focus:outline-none focus:text-blue-light-600 dark:text-gray-500 dark:hover:text-blue-light-300 dark:focus:text-blue-light-300"
+                                                    @click="showPassword = ! showPassword"
+                                                    x-bind:aria-label="showPassword ? 'Hide password' : 'Show password'">
+                                                    <svg x-show="! showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                        <path d="M1.667 10S4.583 4.167 10 4.167 18.333 10 18.333 10 15.417 15.833 10 15.833 1.667 10 1.667 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M10 12.188a2.188 2.188 0 1 0 0-4.376 2.188 2.188 0 0 0 0 4.376Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                    <svg x-show="showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                        <path d="M2.5 2.5 17.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M8.939 4.246A8.85 8.85 0 0 1 10 4.167c5.417 0 8.333 5.833 8.333 5.833a13.16 13.16 0 0 1-2.169 2.953M11.767 11.768A2.188 2.188 0 0 1 8.232 8.233M5.192 5.192A13.599 13.599 0 0 0 1.667 10S4.583 15.833 10 15.833a8.815 8.815 0 0 0 4.808-1.416" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
 
-                                        <div>
+                                        <div x-data="{ showPassword: false }">
                                             <label for="home_signup_password_confirmation" class="mb-2 block text-sm font-semibold text-gray-800 dark:text-gray-200">Confirm Password</label>
-                                            <input
-                                                id="home_signup_password_confirmation"
-                                                name="password_confirmation"
-                                                type="password"
-                                                required
-                                                autocomplete="new-password"
-                                                class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
-                                                placeholder="Repeat your password">
+                                            <div class="relative">
+                                                <input
+                                                    id="home_signup_password_confirmation"
+                                                    name="password_confirmation"
+                                                    x-bind:type="showPassword ? 'text' : 'password'"
+                                                    required
+                                                    autocomplete="new-password"
+                                                    class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-blue-light-400 focus:ring-4 focus:ring-blue-light-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-blue-light-500"
+                                                    placeholder="Repeat your password">
+                                                <button
+                                                    type="button"
+                                                    class="absolute right-3 top-1/2 inline-flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition hover:text-blue-light-600 focus:outline-none focus:text-blue-light-600 dark:text-gray-500 dark:hover:text-blue-light-300 dark:focus:text-blue-light-300"
+                                                    @click="showPassword = ! showPassword"
+                                                    x-bind:aria-label="showPassword ? 'Hide password' : 'Show password'">
+                                                    <svg x-show="! showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                        <path d="M1.667 10S4.583 4.167 10 4.167 18.333 10 18.333 10 15.417 15.833 10 15.833 1.667 10 1.667 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M10 12.188a2.188 2.188 0 1 0 0-4.376 2.188 2.188 0 0 0 0 4.376Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                    <svg x-show="showPassword" x-cloak class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                        <path d="M2.5 2.5 17.5 17.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                        <path d="M8.939 4.246A8.85 8.85 0 0 1 10 4.167c5.417 0 8.333 5.833 8.333 5.833a13.16 13.16 0 0 1-2.169 2.953M11.767 11.768A2.188 2.188 0 0 1 8.232 8.233M5.192 5.192A13.599 13.599 0 0 0 1.667 10S4.583 15.833 10 15.833a8.815 8.815 0 0 0 4.808-1.416" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                                                    </svg>
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="pt-1">

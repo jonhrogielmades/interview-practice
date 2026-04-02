@@ -67,6 +67,6 @@
         </div>
     </div>
     <div class="max-w-full overflow-x-auto custom-scrollbar">
-        <div id="chartThree" class="-ml-4 min-w-[700px] pl-2 xl:min-w-full"></div>
+        <div id="chartThree" class="-ml-3 min-w-[560px] pl-2 sm:-ml-4 sm:min-w-[700px] xl:min-w-full"></div>
     </div>
 </div>
