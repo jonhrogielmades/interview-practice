@@ -10,6 +10,9 @@ test('guest homepage promotes account creation and sign in', function () {
         ->assertOk()
         ->assertSeeText('Create Free Account')
         ->assertSeeText('Sign In')
+        ->assertSeeText('Platform features')
+        ->assertSeeText('Category-based mock interview practice')
+        ->assertSeeText('Multi-provider interview chatbot')
         ->assertSeeText('Job Interview')
         ->assertSeeText('IT / Programming');
 });

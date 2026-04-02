@@ -14,15 +14,15 @@
                 </h1>
 
                 <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
-                    Select a category, answer naturally, and review automated feedback in real time without leaving the
-                    interview practice workspace.
+                    Launch a track from the sidebar, answer naturally, and keep your interview flow focused inside one
+                    practice workspace.
                 </p>
             </div>
 
             <div class="grid gap-3 sm:grid-cols-3">
                 <div
                     class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-                    <p class="text-xs uppercase tracking-wide text-gray-500">Categories</p>
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Tracks</p>
                     <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">4 Tracks</p>
                 </div>
 
@@ -34,8 +34,8 @@
 
                 <div
                     class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
-                    <p class="text-xs uppercase tracking-wide text-gray-500">Feedback</p>
-                    <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Instant Review</p>
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Review</p>
+                    <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Saved To Workspace</p>
                 </div>
             </div>
         </div>
@@ -98,13 +98,19 @@
 
         <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="mb-5">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Categories</h3>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Start From Sidebar</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Choose an interview scenario, then create the specific field you want before practice begins.
+                    Use the Practice submenu in the sidebar to choose a track, then this workspace will open the field
+                    builder and interview modal for that selection.
                 </p>
             </div>
 
-            <div id="practiceCategoryList" class="grid grid-cols-1 gap-3 sm:grid-cols-2"></div>
+            <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-4 dark:border-gray-700">
+                <p class="text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    Session Setup can also preload your saved defaults. Once a sidebar track is selected, the AI
+                    question generator and interview modal will continue from here.
+                </p>
+            </div>
         </article>
     </section>
 
@@ -118,10 +124,10 @@
                             Interview Workspace Modal
                         </p>
                         <h3 id="practiceModalCategoryName" class="mt-2 text-xl font-semibold text-gray-900 dark:text-white/90">
-                            Select a category to launch
+                            Select a track to launch
                         </h3>
                         <p id="practiceModalSummaryText" class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                            Choose a category from the left panel. The interview flow and AI interviewer will open in a modal.
+                            Choose a track from the sidebar. The interview flow and AI interviewer will open in a modal.
                         </p>
                     </div>
 
@@ -192,104 +198,18 @@
                         <p
                             id="practiceModalFieldMeta"
                             class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                            Choose a category to create a field with the chatbot.
+                            Choose a sidebar track to create a field with the chatbot.
                         </p>
                     </div>
                 </div>
             </article>
 
-            <div class="grid gap-6 lg:grid-cols-2">
-                <article
-                    id="practiceFeedbackSection"
-                    class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                    <div
-                        class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
-                        <div>
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Automated Feedback</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Evaluation appears here after you submit an answer.
-                            </p>
-                        </div>
-
-                        <button
-                            id="printFeedbackBtn"
-                            type="button"
-                            class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
-                            Print Summary
-                        </button>
-                    </div>
-
-                    <div id="feedbackContent" class="mt-5 flex-1">
-                        <div
-                            class="flex h-full min-h-[240px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">No answer evaluated yet</h3>
-                            <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                                Once you submit a response, the system will generate detailed scores, strengths,
-                                improvement areas, and suggestions.
-                            </p>
-                        </div>
-                    </div>
-                </article>
-
-                <article class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
-                    <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
-                        <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Session Tips</h3>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                            Helpful guidance while answering interview questions.
-                        </p>
-                    </div>
-
-                    <div class="mt-5 flex-1">
-                        <div
-                            class="flex h-full min-h-[180px] flex-col items-center justify-center rounded-2xl border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-700">
-                            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Practice Reminder</h3>
-                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                                Speak clearly, answer directly, and include concrete examples whenever the question calls
-                                for proof.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-                        <div
-                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
-                            <p class="text-xs uppercase tracking-wide text-gray-500">Mode</p>
-                            <strong
-                                id="inputModeValue"
-                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
-                                Text
-                            </strong>
-                        </div>
-
-                        <div
-                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
-                            <p class="text-xs uppercase tracking-wide text-gray-500">Answered</p>
-                            <strong
-                                id="answeredCountValue"
-                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
-                                0
-                            </strong>
-                        </div>
-
-                        <div
-                            class="flex h-full flex-col justify-between rounded-xl border border-white/70 bg-white/80 px-4 py-3 dark:border-white/10 dark:bg-gray-900/70">
-                            <p class="text-xs uppercase tracking-wide text-gray-500">Pacing</p>
-                            <strong
-                                id="paceModeValue"
-                                class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
-                                Standard
-                            </strong>
-                        </div>
-                    </div>
-                </article>
-            </div>
-
             <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Question Generator</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                        After you choose a category, the Interview Workspace modal will use the AI question chatbot to
-                        create a fresh set of interview questions for that category and sync the active question with
+                        After you choose a sidebar track, the Interview Workspace modal will use the AI question chatbot to
+                        create a fresh set of interview questions for that track and sync the active question with
                         the interviewer voice.
                     </p>
                 </div>
@@ -651,7 +571,7 @@
                             class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
                             <div>
                                 <h3 id="selectedCategoryName" class="text-lg font-semibold text-gray-900 dark:text-white/90">
-                                    Select a category to start
+                                    Select a track to start
                                 </h3>
                                 <p
                                     id="selectedCategoryDescription"
@@ -730,7 +650,7 @@
                                 <h2
                                     id="currentQuestionText"
                                     class="content-break text-lg font-semibold leading-7 text-gray-900 sm:text-xl sm:leading-8 dark:text-white/90">
-                                    Choose a category from the left panel to begin your interview simulation.
+                                    Choose a track from the sidebar to begin your interview simulation.
                                 </h2>
                             </div>
 
@@ -749,7 +669,7 @@
                                 </div>
 
                                 <p id="coachTipText" class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                                    Choose a category to load your coach guidance and answer keywords.
+                                    Choose a track from the sidebar to load your coach guidance and answer keywords.
                                 </p>
 
                                 <div id="questionKeywordTags" class="mt-4 flex flex-wrap gap-2"></div>
@@ -835,7 +755,8 @@
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Interviewer</h3>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Avatar asks the question aloud and checks if your face is visible on camera.
+                                    Avatar asks the question aloud, then evaluates live body language and facial
+                                    expressions from the camera feed.
                                 </p>
                             </div>
 
@@ -896,7 +817,7 @@
                                 <video id="faceCameraVideo" autoplay muted playsinline class="h-56 w-full object-cover sm:h-64"></video>
                             </div>
 
-                            <div class="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+                            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-2">
                                 <div
                                     class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
                                     <p class="text-xs uppercase tracking-wide text-gray-500">Camera</p>
@@ -925,6 +846,69 @@
                                         class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
                                         Ready
                                     </strong>
+                                </div>
+
+                                <div
+                                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Body Language</p>
+                                    <strong
+                                        id="bodyLanguageValue"
+                                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                        Waiting
+                                    </strong>
+                                </div>
+
+                                <div
+                                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Facial Expression</p>
+                                    <strong
+                                        id="facialExpressionValue"
+                                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                        Waiting
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                <div class="flex flex-wrap items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Live Presence Coaching</p>
+                                        <strong
+                                            id="livePresenceSummary"
+                                            class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                            Camera coaching is waiting
+                                        </strong>
+                                    </div>
+
+                                    <span
+                                        id="livePresenceTag"
+                                        class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                                        Standby
+                                    </span>
+                                </div>
+
+                                <p id="livePresenceTip" class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                                    Start the camera to unlock live body-language and facial-expression coaching.
+                                </p>
+                            </div>
+
+                            <div class="grid gap-4 xl:grid-cols-2">
+                                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Body Language Algorithms</h4>
+                                        <span class="text-xs uppercase tracking-wide text-gray-500">3+ checks</span>
+                                    </div>
+
+                                    <div id="bodyLanguageAlgorithms" class="mt-4 space-y-3"></div>
+                                </div>
+
+                                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Facial Expression Algorithms</h4>
+                                        <span class="text-xs uppercase tracking-wide text-gray-500">3+ checks</span>
+                                    </div>
+
+                                    <div id="facialExpressionAlgorithms" class="mt-4 space-y-3"></div>
                                 </div>
                             </div>
                         </div>

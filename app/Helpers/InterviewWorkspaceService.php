@@ -259,6 +259,12 @@ class InterviewWorkspaceService
                             'grammar' => $this->sanitizeText(data_get($feedbackSummary, 'criteria.grammar'), 500),
                             'professionalism' => $this->sanitizeText(data_get($feedbackSummary, 'criteria.professionalism'), 500),
                         ],
+                        'processEvaluations' => $this->normalizeProcessEvaluations(
+                            (array) ($feedbackSummary['processEvaluations'] ?? [])
+                        ),
+                        'visualSnapshot' => $this->normalizeVisualSnapshot(
+                            (array) ($feedbackSummary['visualSnapshot'] ?? [])
+                        ),
                     ],
                 ];
             })->all(),
@@ -329,8 +335,94 @@ class InterviewWorkspaceService
                     'grammar' => $this->sanitizeText(data_get($input, 'feedbackSummary.criteria.grammar'), 500),
                     'professionalism' => $this->sanitizeText(data_get($input, 'feedbackSummary.criteria.professionalism'), 500),
                 ],
+                'processEvaluations' => $this->normalizeProcessEvaluations(
+                    (array) data_get($input, 'feedbackSummary.processEvaluations', [])
+                ),
+                'visualSnapshot' => $this->normalizeVisualSnapshot(
+                    (array) data_get($input, 'feedbackSummary.visualSnapshot', [])
+                ),
             ],
         ];
+    }
+
+    protected function normalizeProcessEvaluations(array $input): array
+    {
+        $normalized = collect(['response', 'bodyLanguage', 'facialExpressions'])
+            ->mapWithKeys(function (string $key) use ($input) {
+                $process = $this->normalizeProcessEvaluation(
+                    is_array($input[$key] ?? null) ? $input[$key] : []
+                );
+
+                return $process === [] ? [] : [$key => $process];
+            })
+            ->all();
+
+        return $normalized;
+    }
+
+    protected function normalizeProcessEvaluation(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $algorithms = collect(Arr::wrap($input['algorithms'] ?? []))
+            ->filter(fn ($algorithm) => is_array($algorithm))
+            ->take(8)
+            ->map(function (array $algorithm) {
+                $normalized = [
+                    'name' => $this->sanitizeText($algorithm['name'] ?? null, 120),
+                    'score' => array_key_exists('score', $algorithm) && $algorithm['score'] !== null
+                        ? $this->normalizeScore($algorithm['score'])
+                        : null,
+                    'detail' => $this->sanitizeText($algorithm['detail'] ?? null, 500),
+                    'status' => $this->sanitizeText($algorithm['status'] ?? null, 50),
+                    'available' => (bool) ($algorithm['available'] ?? true),
+                ];
+
+                return array_filter($normalized, fn ($value) => $value !== null);
+            })
+            ->filter(fn (array $algorithm) => $algorithm !== [])
+            ->values()
+            ->all();
+
+        $normalized = [
+            'label' => $this->sanitizeText($input['label'] ?? null, 120),
+            'average' => array_key_exists('average', $input) && $input['average'] !== null
+                ? $this->normalizeScore($input['average'])
+                : null,
+            'summary' => $this->sanitizeText($input['summary'] ?? null, 500),
+            'status' => $this->sanitizeText($input['status'] ?? null, 50),
+            'available' => (bool) ($input['available'] ?? true),
+            'algorithms' => $algorithms,
+        ];
+
+        $filtered = array_filter($normalized, fn ($value) => $value !== null && $value !== []);
+
+        return $filtered === [] ? [] : $filtered;
+    }
+
+    protected function normalizeVisualSnapshot(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $normalized = [
+            'bodyLanguageScore' => array_key_exists('bodyLanguageScore', $input) && $input['bodyLanguageScore'] !== null
+                ? $this->normalizeScore($input['bodyLanguageScore'])
+                : null,
+            'facialExpressionScore' => array_key_exists('facialExpressionScore', $input) && $input['facialExpressionScore'] !== null
+                ? $this->normalizeScore($input['facialExpressionScore'])
+                : null,
+            'bodyLanguageLabel' => $this->sanitizeText($input['bodyLanguageLabel'] ?? null, 255),
+            'facialExpressionLabel' => $this->sanitizeText($input['facialExpressionLabel'] ?? null, 255),
+            'tip' => $this->sanitizeText($input['tip'] ?? null, 500),
+        ];
+
+        $filtered = array_filter($normalized, fn ($value) => $value !== null);
+
+        return $filtered === [] ? [] : $filtered;
     }
 
     protected function normalizeCriteria(array $criteria): array

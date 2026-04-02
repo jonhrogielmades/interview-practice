@@ -10,6 +10,31 @@ InterviewPilot is an AI-based interview practice system built with Laravel 12, T
 - Progress tracking and category insights
 - Responsive dashboard UI with dark mode support
 - Voice-ready practice workflow
+- Text, voice, and hybrid response modes
+- Job interview practice track for hiring scenarios
+- Scholarship interview practice track for academic and grant applications
+- College admission interview practice track for university applicants
+- IT / programming interview track for technical candidates
+- AI-generated question sets per selected category
+- Field builder flow for tailoring the target role, course, or specialization
+- AI answer review summaries with strengths, improvements, and next steps
+- Criteria-based scoring for clarity, relevance, grammar, and professionalism
+- Printable feedback summaries from the practice workspace
+- Saved session setup persistence for returning users
+- Saved session history with question-by-question answer records
+- Session cleanup tools for deleting one session or clearing all saved history
+- Quick prompts that adapt to the active interview category
+- Live provider health checks for configured AI services
+- Auto routing across provider priority with graceful fallback
+- Local PH coach fallback when external AI keys are unavailable
+- AI interviewer voice playback for reading questions aloud
+- Camera preview with face visibility status during mock interviews
+- Google OAuth sign-in support
+- Email sign-in and sign-up flows from the homepage
+- Profile management for personal details, address, role, location, and avatar
+- Weekly dashboard signals and latest evaluation snapshot
+- Dedicated feedback center, session review, and category insights pages
+- Mobile LAN access workflow for testing on phones over the same network
 
 ## Requirements
 

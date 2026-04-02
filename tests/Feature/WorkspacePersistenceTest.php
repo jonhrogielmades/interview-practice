@@ -68,6 +68,105 @@ it('stores and returns setup and session data through workspace endpoints', func
                         'grammar' => 'The wording is mostly polished.',
                         'professionalism' => 'The tone sounds professional and confident.',
                     ],
+                    'processEvaluations' => [
+                        'response' => [
+                            'label' => 'Answer Process',
+                            'average' => 8.6,
+                            'summary' => 'The answer process is structured and well supported.',
+                            'status' => 'Ready',
+                            'available' => true,
+                            'algorithms' => [
+                                [
+                                    'name' => 'Keyword Coverage',
+                                    'score' => 8.2,
+                                    'detail' => 'The answer matches the active category language.',
+                                    'status' => 'Ready',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'STAR Structure',
+                                    'score' => 8.8,
+                                    'detail' => 'The answer follows a clear situation-action-result flow.',
+                                    'status' => 'Ready',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'Outcome Evidence',
+                                    'score' => 8.7,
+                                    'detail' => 'The answer includes visible project impact.',
+                                    'status' => 'Ready',
+                                    'available' => true,
+                                ],
+                            ],
+                        ],
+                        'bodyLanguage' => [
+                            'label' => 'Body Language',
+                            'average' => 7.9,
+                            'summary' => 'Camera presence is steady overall.',
+                            'status' => 'Live',
+                            'available' => true,
+                            'algorithms' => [
+                                [
+                                    'name' => 'Frame Centering',
+                                    'score' => 8.0,
+                                    'detail' => 'The face stays close to the center of the frame.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'Head Balance',
+                                    'score' => 7.6,
+                                    'detail' => 'Head position is mostly level on camera.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'Movement Stability',
+                                    'score' => 8.1,
+                                    'detail' => 'Movement is controlled during the answer.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                            ],
+                        ],
+                        'facialExpressions' => [
+                            'label' => 'Facial Expressions',
+                            'average' => 7.4,
+                            'summary' => 'Expression is professional with room for more warmth.',
+                            'status' => 'Live',
+                            'available' => true,
+                            'algorithms' => [
+                                [
+                                    'name' => 'Smile Warmth',
+                                    'score' => 7.2,
+                                    'detail' => 'The expression is welcoming but could be warmer.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'Eye Engagement',
+                                    'score' => 7.8,
+                                    'detail' => 'Eye focus is mostly steady.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                                [
+                                    'name' => 'Jaw Relaxation',
+                                    'score' => 7.3,
+                                    'detail' => 'The jaw is mostly relaxed during delivery.',
+                                    'status' => 'Live',
+                                    'available' => true,
+                                ],
+                            ],
+                        ],
+                    ],
+                    'visualSnapshot' => [
+                        'bodyLanguageScore' => 7.9,
+                        'facialExpressionScore' => 7.4,
+                        'bodyLanguageLabel' => 'Camera presence is steady overall.',
+                        'facialExpressionLabel' => 'Expression is professional with room for more warmth.',
+                        'tip' => 'Relax the face slightly more before the next answer.',
+                    ],
                 ],
             ],
         ],
@@ -84,7 +183,10 @@ it('stores and returns setup and session data through workspace endpoints', func
         ->assertJsonPath('workspace.sessions.0.id', 'session-test-001')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.strengths.0', 'Your answer is clear and easy to follow.')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.criteria.clarity', 'The structure is easy to follow.')
-        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.provider', 'Groq API (openai/gpt-oss-20b)');
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.provider', 'Groq API (openai/gpt-oss-20b)')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.processEvaluations.response.label', 'Answer Process')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.processEvaluations.bodyLanguage.algorithms.1.name', 'Head Balance')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.tip', 'Relax the face slightly more before the next answer.');
 });
 
 it('clears setup and sessions independently', function () {

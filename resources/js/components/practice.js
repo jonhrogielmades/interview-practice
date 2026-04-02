@@ -55,7 +55,9 @@ export function initPractice() {
         fieldBuilderLoading: false,
         fieldBuilderStatusText: "Waiting for details",
         fieldBuilderStatusTone: "neutral",
-        fieldBuilderRequestId: 0
+        fieldBuilderRequestId: 0,
+        liveVisualSnapshot: null,
+        lastProcessEvaluations: null
     };
 
     const elements = {
@@ -120,9 +122,21 @@ export function initPractice() {
         practiceMessage: document.getElementById("practiceMessage"),
         feedbackContent: document.getElementById("feedbackContent"),
         printFeedbackBtn: document.getElementById("printFeedbackBtn"),
+        learningHighlightTitle: document.getElementById("learningHighlightTitle"),
+        learningHighlightText: document.getElementById("learningHighlightText"),
+        learningHighlightTag: document.getElementById("learningHighlightTag"),
+        learningModulesList: document.getElementById("learningModulesList"),
+        learningActivitiesList: document.getElementById("learningActivitiesList"),
         inputModeValue: document.getElementById("inputModeValue"),
         answeredCountValue: document.getElementById("answeredCountValue"),
         paceModeValue: document.getElementById("paceModeValue"),
+        bodyLanguageValue: document.getElementById("bodyLanguageValue"),
+        facialExpressionValue: document.getElementById("facialExpressionValue"),
+        livePresenceSummary: document.getElementById("livePresenceSummary"),
+        livePresenceTip: document.getElementById("livePresenceTip"),
+        livePresenceTag: document.getElementById("livePresenceTag"),
+        bodyLanguageAlgorithms: document.getElementById("bodyLanguageAlgorithms"),
+        facialExpressionAlgorithms: document.getElementById("facialExpressionAlgorithms"),
         practiceQuestionAgentStatusTag: document.getElementById("practiceQuestionAgentStatusTag"),
         practiceQuestionAgentSourceValue: document.getElementById("practiceQuestionAgentSourceValue"),
         practiceQuestionAgentProviderSelect: document.getElementById("practiceQuestionAgentProviderSelect"),
@@ -136,6 +150,8 @@ export function initPractice() {
     };
 
     const interviewerControls = {
+        startCamera: () => {},
+        askCurrentQuestion: () => {},
         stopCamera: () => {},
         stopSpeaking: () => {}
     };
@@ -206,6 +222,205 @@ export function initPractice() {
             .replace(/>/g, "&gt;")
             .replace(/\"/g, "&quot;")
             .replace(/'/g, "&#39;");
+    }
+
+    const RESPONSE_ALGORITHM_NAMES = [
+        "Keyword Coverage",
+        "STAR Structure",
+        "Outcome Evidence",
+        "Professional Tone"
+    ];
+    const BODY_LANGUAGE_ALGORITHM_NAMES = [
+        "Frame Centering",
+        "Head Balance",
+        "Movement Stability",
+        "Presence Framing"
+    ];
+    const FACIAL_EXPRESSION_ALGORITHM_NAMES = [
+        "Smile Warmth",
+        "Eye Engagement",
+        "Jaw Relaxation",
+        "Brow Calmness"
+    ];
+
+    function clampScore(value, fallback = 0) {
+        const numeric = Number(value);
+
+        if (!Number.isFinite(numeric)) {
+            return fallback;
+        }
+
+        return Math.max(0, Math.min(10, numeric));
+    }
+
+    function roundScore(value, fallback = 0) {
+        return Number(clampScore(value, fallback).toFixed(1));
+    }
+
+    function averageScore(values, fallback = 0) {
+        const numericValues = values
+            .filter((value) => value !== null && value !== undefined && value !== "")
+            .map((value) => Number(value))
+            .filter((value) => Number.isFinite(value));
+
+        if (!numericValues.length) {
+            return roundScore(fallback);
+        }
+
+        return roundScore(numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length);
+    }
+
+    function getScoreTone(score, { available = true } = {}) {
+        if (!available || score === null || score === undefined) {
+            return "neutral";
+        }
+
+        const normalized = clampScore(score);
+
+        if (normalized >= 8) return "success";
+        if (normalized >= 6) return "neutral";
+        if (normalized >= 4) return "warning";
+        return "error";
+    }
+
+    function getToneBadgeClass(tone = "neutral", subtle = false) {
+        const baseClass = subtle
+            ? "inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium"
+            : "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium";
+        const tones = {
+            success: "bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-300",
+            neutral: "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300",
+            warning: "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300",
+            error: "bg-error-100 text-error-700 dark:bg-error-500/10 dark:text-error-300"
+        };
+
+        return `${baseClass} ${tones[tone] || tones.neutral}`;
+    }
+
+    function getScoreLabel(score, fallback = "Waiting") {
+        if (score === null || score === undefined || score === "") {
+            return fallback;
+        }
+
+        return `${roundScore(score).toFixed(1)} / 10`;
+    }
+
+    function createUnavailableAlgorithms(names, detail, status = "Waiting") {
+        return names.map((name) => ({
+            name,
+            score: null,
+            detail,
+            status,
+            available: false
+        }));
+    }
+
+    function createUnavailableProcessEvaluation(label, summary, algorithmNames) {
+        return {
+            label,
+            average: null,
+            summary,
+            status: "Waiting",
+            available: false,
+            algorithms: createUnavailableAlgorithms(algorithmNames, summary)
+        };
+    }
+
+    function createDefaultVisualSnapshot(reason = "Start the camera to unlock live body-language and facial-expression coaching.") {
+        return {
+            headline: "Camera coaching is waiting",
+            tip: reason,
+            tag: "Standby",
+            tagTone: "neutral",
+            bodyLanguage: createUnavailableProcessEvaluation(
+                "Body Language",
+                reason,
+                BODY_LANGUAGE_ALGORITHM_NAMES
+            ),
+            facialExpressions: createUnavailableProcessEvaluation(
+                "Facial Expressions",
+                reason,
+                FACIAL_EXPRESSION_ALGORITHM_NAMES
+            )
+        };
+    }
+
+    function getLiveVisualSnapshot() {
+        return state.liveVisualSnapshot || createDefaultVisualSnapshot();
+    }
+
+    function getPersistedVisualSnapshot() {
+        const visualSnapshot = getLiveVisualSnapshot();
+
+        return {
+            bodyLanguageScore: visualSnapshot.bodyLanguage.average,
+            facialExpressionScore: visualSnapshot.facialExpressions.average,
+            bodyLanguageLabel: visualSnapshot.bodyLanguage.available
+                ? visualSnapshot.bodyLanguage.summary
+                : visualSnapshot.bodyLanguage.status,
+            facialExpressionLabel: visualSnapshot.facialExpressions.available
+                ? visualSnapshot.facialExpressions.summary
+                : visualSnapshot.facialExpressions.status,
+            tip: visualSnapshot.tip
+        };
+    }
+
+    function summarizeScoreBand(score, high, medium, low) {
+        const normalized = clampScore(score);
+
+        if (normalized >= 8) return high;
+        if (normalized >= 6) return medium;
+        return low;
+    }
+
+    function renderAlgorithmCards(algorithms, emptyText = "No algorithms available yet.") {
+        if (!Array.isArray(algorithms) || algorithms.length === 0) {
+            return `
+                <div class="rounded-xl border border-dashed border-gray-300 px-4 py-4 text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    ${escapeHtml(emptyText)}
+                </div>
+            `;
+        }
+
+        return algorithms.map((algorithm) => {
+            const tone = getScoreTone(algorithm.score, { available: algorithm.available !== false });
+            const label = algorithm.available === false
+                ? escapeHtml(String(algorithm.status || "Waiting"))
+                : escapeHtml(getScoreLabel(algorithm.score, "0.0 / 10"));
+
+            return `
+                <div class="rounded-xl border border-gray-200 bg-white/80 px-4 py-3 dark:border-gray-700 dark:bg-gray-950/40">
+                    <div class="flex items-start justify-between gap-3">
+                        <strong class="text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(algorithm.name || "Algorithm")}</strong>
+                        <span class="${getToneBadgeClass(tone, true)}">${label}</span>
+                    </div>
+                    <p class="mt-2 text-xs leading-5 text-gray-600 dark:text-gray-400">${escapeHtml(algorithm.detail || "No detail available.")}</p>
+                </div>
+            `;
+        }).join("");
+    }
+
+    function renderProcessEvaluationPanel(process) {
+        const tone = getScoreTone(process?.average, { available: process?.available !== false });
+        const valueLabel = process?.available === false
+            ? escapeHtml(String(process?.status || "Waiting"))
+            : escapeHtml(getScoreLabel(process?.average, "0.0 / 10"));
+
+        return `
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500">${escapeHtml(process?.label || "Process")}</p>
+                        <strong class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(process?.summary || "No process summary yet.")}</strong>
+                    </div>
+                    <span class="${getToneBadgeClass(tone)}">${valueLabel}</span>
+                </div>
+
+                <div class="mt-4 space-y-3">
+                    ${renderAlgorithmCards(process?.algorithms || [], "Process algorithms will appear here.")}
+                </div>
+            </div>
+        `;
     }
 
     function isPracticeModalOpen() {
@@ -325,7 +540,7 @@ export function initPractice() {
         const activePlan = state.selectedCategory ? (getFieldPlanForCategory(state.selectedCategory) || state.selectedFieldPlan) : state.selectedFieldPlan;
         const fieldTitle = String(activePlan?.title || "").trim();
         const fieldSummary = String(activePlan?.summary || "").trim();
-        const fieldMeta = fieldSummary || "Choose a category to create a field with the chatbot.";
+        const fieldMeta = fieldSummary || "Choose a sidebar track to create a field with the chatbot.";
 
         elements.practiceModalFieldValue.textContent = fieldTitle || "Not set";
         elements.practiceModalFieldMeta.textContent = fieldMeta;
@@ -348,7 +563,7 @@ export function initPractice() {
         elements.practiceModalAnsweredValue.textContent = answeredLabel;
         elements.practiceModalWorkspaceValue.textContent = modalIsOpen ? "Open" : "Closed";
         elements.practiceModalFieldValue.textContent = fieldTitle || "Not set";
-        elements.practiceModalFieldMeta.textContent = fieldSummary || "Choose a category to create a field with the chatbot.";
+        elements.practiceModalFieldMeta.textContent = fieldSummary || "Choose a sidebar track to create a field with the chatbot.";
         elements.editPracticeFieldBtn.disabled = !state.selectedCategory && !state.pendingCategory;
 
         if (!state.selectedCategory) {
@@ -363,8 +578,8 @@ export function initPractice() {
                 return;
             }
 
-            elements.practiceModalCategoryName.textContent = "Select a category to launch";
-            elements.practiceModalSummaryText.textContent = "Choose a category from the left panel. The interview flow and AI interviewer will open in a modal.";
+            elements.practiceModalCategoryName.textContent = "Select a track to launch";
+            elements.practiceModalSummaryText.textContent = "Choose a track from the sidebar. The interview flow and AI interviewer will open in a modal.";
             elements.practiceModalActiveCategory.textContent = "None selected";
             elements.openPracticeModalBtn.textContent = "Open Interview Modal";
             elements.openPracticeModalBtn.disabled = true;
@@ -555,6 +770,10 @@ export function initPractice() {
     }
 
     function renderCategories() {
+        if (!elements.practiceCategoryList) {
+            return;
+        }
+
         elements.practiceCategoryList.innerHTML = practiceData.categories
             .map((category) => `
                 <button
@@ -1003,12 +1222,288 @@ export function initPractice() {
         await selectCategory(category, { skipFieldModal: true });
     }
 
+    function buildAnswerOutlineTemplate() {
+        const focus = getSelectedFocusMode();
+        const categoryName = state.selectedCategory?.name || "interview";
+        const fieldTitle = getSelectedFieldTitle();
+        const question = getActiveQuestion();
+
+        return [
+            question ? `Question: ${question}` : "Question: Add your answer focus.",
+            "",
+            "1. Direct answer:",
+            "2. Situation or context:",
+            "3. Action you took:",
+            "4. Result or lesson:",
+            `5. Why this fits ${fieldTitle || categoryName}:`,
+            "",
+            `Coach reminder: ${focus.tip}`
+        ].join("\n");
+    }
+
+    function applyLearningAction(action) {
+        if (action === "load-outline") {
+            if (!state.selectedCategory || getActiveQuestionCount() === 0) {
+                showMessage("warning", "Select a category and generate a question set first.");
+                return;
+            }
+
+            const template = buildAnswerOutlineTemplate();
+            const currentText = elements.responseInput.value.trim();
+
+            elements.responseInput.value = currentText
+                ? `${currentText}\n\n${template}`
+                : template;
+            elements.responseInput.focus();
+            updateManualResponseState();
+            showMessage("info", "A guided answer outline was added to help structure the next response.");
+            return;
+        }
+
+        if (action === "start-camera") {
+            interviewerControls.startCamera();
+            showMessage("info", "Camera coaching has been requested so you can review body language and facial expressions.");
+            return;
+        }
+
+        if (action === "replay-question") {
+            interviewerControls.askCurrentQuestion();
+            showMessage("info", "The current question is being replayed aloud by the interviewer.");
+            return;
+        }
+
+        if (action === "start-voice") {
+            if (!state.speechRecognition) {
+                showMessage("warning", "Voice input is not supported in this browser. Use Chrome or Edge on localhost or HTTPS.");
+                return;
+            }
+
+            startVoiceInput();
+        }
+    }
+
+    function buildLearningModules() {
+        const categoryName = state.selectedCategory?.name || "next interview";
+        const fieldTitle = getSelectedFieldTitle();
+        const pacing = getSelectedPacingMode();
+        const visualSnapshot = getLiveVisualSnapshot();
+        const responseProcess = state.lastProcessEvaluations?.response || createUnavailableProcessEvaluation(
+            "Answer Process",
+            "Submit an answer to unlock answer-process analysis.",
+            RESPONSE_ALGORITHM_NAMES
+        );
+        const bodyScore = visualSnapshot.bodyLanguage.average;
+        const faceScore = visualSnapshot.facialExpressions.average;
+        const totalQuestions = getActiveQuestionCount() || state.questionCount;
+
+        return [
+            {
+                title: "Answer Blueprint",
+                tag: responseProcess.available === false ? "Ready" : getScoreLabel(responseProcess.average, "Ready"),
+                tone: responseProcess.available === false ? "neutral" : getScoreTone(responseProcess.average),
+                summary: state.selectedCategory
+                    ? `Build a ${getSelectedFocusMode().label.toLowerCase()} response for ${categoryName}${fieldTitle ? ` focused on ${fieldTitle}` : ""}.`
+                    : "Select a category to generate a guided answer blueprint for the current prompt.",
+                meta: state.selectedCategory
+                    ? `Question ${Math.min(state.questionIndex + 1, Math.max(totalQuestions, 1))} of ${Math.max(totalQuestions, 1)}`
+                    : "Waiting for category",
+                action: "load-outline",
+                actionLabel: "Load Outline",
+                enabled: Boolean(state.selectedCategory && getActiveQuestionCount() > 0)
+            },
+            {
+                title: "Delivery Rehearsal",
+                tag: `${pacing.label} pace`,
+                tone: state.currentMode === "Hybrid" ? "success" : "neutral",
+                summary: state.selectedCategory
+                    ? `Rehearse with ${state.currentMode.toLowerCase()} mode, ${formatTime(state.timerTarget)} timing, and one concise example per answer.`
+                    : "Open a session to rehearse answer pacing, flow, and spoken delivery.",
+                meta: state.speechRecognition
+                    ? "Voice rehearsal is available"
+                    : "Use text rehearsal in this browser",
+                action: state.speechRecognition ? "start-voice" : "replay-question",
+                actionLabel: state.speechRecognition ? "Start Voice" : "Replay Question",
+                enabled: Boolean(state.selectedCategory)
+            },
+            {
+                title: "Visual Presence",
+                tag: bodyScore === null && faceScore === null
+                    ? "Standby"
+                    : `${averageScore([bodyScore, faceScore]).toFixed(1)} / 10`,
+                tone: bodyScore === null && faceScore === null
+                    ? "neutral"
+                    : getScoreTone(averageScore([bodyScore, faceScore])),
+                summary: visualSnapshot.tip,
+                meta: bodyScore === null && faceScore === null
+                    ? "Start the camera for live coaching"
+                    : `Body ${getScoreLabel(bodyScore, "0.0 / 10")} • Face ${getScoreLabel(faceScore, "0.0 / 10")}`,
+                action: "start-camera",
+                actionLabel: "Start Camera",
+                enabled: true
+            }
+        ];
+    }
+
+    function buildLearningActivities() {
+        const visualSnapshot = getLiveVisualSnapshot();
+        const responseProcess = state.lastProcessEvaluations?.response;
+
+        return [
+            {
+                title: "Outline The Next Answer",
+                tag: "Structure drill",
+                tone: "neutral",
+                summary: responseProcess?.available
+                    ? `The latest answer process scored ${getScoreLabel(responseProcess.average, "0.0 / 10")}. Load an outline before you answer again.`
+                    : "Prepare the next response with a direct answer, one example, and a clear result.",
+                action: "load-outline",
+                actionLabel: "Add Outline",
+                enabled: Boolean(state.selectedCategory && getActiveQuestionCount() > 0)
+            },
+            {
+                title: "Replay The Interviewer",
+                tag: "Listening drill",
+                tone: "success",
+                summary: "Hear the active question again so you can answer more naturally before typing or speaking.",
+                action: "replay-question",
+                actionLabel: "Replay Question",
+                enabled: Boolean(state.selectedCategory)
+            },
+            {
+                title: "Voice Rehearsal Sprint",
+                tag: state.speechRecognition ? "Speech ready" : "Browser limited",
+                tone: state.speechRecognition ? "success" : "warning",
+                summary: state.speechRecognition
+                    ? "Practice your answer aloud and let the browser capture a first draft in real time."
+                    : "Switch to Chrome or Edge on localhost or HTTPS to unlock voice-first rehearsal.",
+                action: "start-voice",
+                actionLabel: "Start Voice",
+                enabled: Boolean(state.selectedCategory && state.speechRecognition)
+            },
+            {
+                title: "Mirror And Posture Reset",
+                tag: visualSnapshot.bodyLanguage.available
+                    ? getScoreLabel(visualSnapshot.bodyLanguage.average, "0.0 / 10")
+                    : "Standby",
+                tone: visualSnapshot.bodyLanguage.available
+                    ? getScoreTone(visualSnapshot.bodyLanguage.average)
+                    : "neutral",
+                summary: visualSnapshot.bodyLanguage.available
+                    ? visualSnapshot.bodyLanguage.summary
+                    : "Turn on the camera to check centering, head balance, movement stability, and frame presence.",
+                action: "start-camera",
+                actionLabel: visualSnapshot.bodyLanguage.available ? "Refresh Camera" : "Start Camera",
+                enabled: true
+            }
+        ];
+    }
+
+    function renderLearningCards(items, variant = "module") {
+        return items.map((item) => `
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                <div class="flex items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(item.title)}</strong>
+                        <p class="content-break mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">${escapeHtml(item.summary)}</p>
+                    </div>
+                    <span class="${getToneBadgeClass(item.tone || "neutral", true)}">${escapeHtml(item.tag || "Ready")}</span>
+                </div>
+
+                <div class="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <p class="text-xs leading-5 text-gray-500 dark:text-gray-400">${escapeHtml(item.meta || (variant === "module" ? "Adaptive module" : "Practice drill"))}</p>
+                    <button
+                        type="button"
+                        data-learning-action="${escapeHtml(item.action || "")}"
+                        ${item.enabled ? "" : "disabled"}
+                        class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                        ${escapeHtml(item.actionLabel || "Open")}
+                    </button>
+                </div>
+            </div>
+        `).join("");
+    }
+
+    function renderLearningLab() {
+        if (
+            !elements.learningHighlightTitle
+            || !elements.learningHighlightText
+            || !elements.learningHighlightTag
+            || !elements.learningModulesList
+            || !elements.learningActivitiesList
+        ) {
+            return;
+        }
+
+        const modules = buildLearningModules();
+        const activities = buildLearningActivities();
+        const visualSnapshot = getLiveVisualSnapshot();
+        const responseProcess = state.lastProcessEvaluations?.response;
+
+        let highlightedModule = modules[0];
+
+        if (visualSnapshot.bodyLanguage.available && clampScore(visualSnapshot.bodyLanguage.average, 10) < 6.5) {
+            highlightedModule = modules[2];
+        } else if (responseProcess?.available && clampScore(responseProcess.average, 10) < 7) {
+            highlightedModule = modules[0];
+        } else if (state.selectedCategory) {
+            highlightedModule = modules[1];
+        }
+
+        elements.learningHighlightTitle.textContent = highlightedModule?.title || "Choose a category to begin";
+        elements.learningHighlightText.textContent = highlightedModule?.summary || "Adaptive modules will appear here.";
+        elements.learningHighlightTag.textContent = highlightedModule?.tag || "Standby";
+        elements.learningHighlightTag.className = getToneBadgeClass(highlightedModule?.tone || "neutral");
+        elements.learningModulesList.innerHTML = renderLearningCards(modules, "module");
+        elements.learningActivitiesList.innerHTML = renderLearningCards(activities, "activity");
+    }
+
+    function renderLivePresenceCoaching(snapshot = getLiveVisualSnapshot()) {
+        const bodyLanguage = snapshot.bodyLanguage || createDefaultVisualSnapshot().bodyLanguage;
+        const facialExpressions = snapshot.facialExpressions || createDefaultVisualSnapshot().facialExpressions;
+        const combinedScore = averageScore([
+            bodyLanguage.average,
+            facialExpressions.average
+        ], 0);
+        const combinedAvailable = bodyLanguage.available || facialExpressions.available;
+
+        elements.bodyLanguageValue.textContent = bodyLanguage.available
+            ? getScoreLabel(bodyLanguage.average, "0.0 / 10")
+            : String(bodyLanguage.status || "Waiting");
+        elements.facialExpressionValue.textContent = facialExpressions.available
+            ? getScoreLabel(facialExpressions.average, "0.0 / 10")
+            : String(facialExpressions.status || "Waiting");
+        elements.livePresenceSummary.textContent = snapshot.headline || "Camera coaching is waiting";
+        elements.livePresenceTip.textContent = snapshot.tip || "Start the camera to unlock live coaching.";
+        elements.livePresenceTag.textContent = snapshot.tag || (combinedAvailable ? getScoreLabel(combinedScore, "0.0 / 10") : "Standby");
+        elements.livePresenceTag.className = getToneBadgeClass(
+            snapshot.tagTone || (combinedAvailable ? getScoreTone(combinedScore) : "neutral")
+        );
+        elements.bodyLanguageAlgorithms.innerHTML = renderAlgorithmCards(
+            bodyLanguage.algorithms || [],
+            "Body-language algorithms will appear once the camera is ready."
+        );
+        elements.facialExpressionAlgorithms.innerHTML = renderAlgorithmCards(
+            facialExpressions.algorithms || [],
+            "Facial-expression algorithms will appear once the camera is ready."
+        );
+    }
+
     function updateTipsPanel() {
-        elements.inputModeValue.textContent = state.currentMode;
-        elements.answeredCountValue.textContent = String(state.answeredCount);
+        if (elements.inputModeValue) {
+            elements.inputModeValue.textContent = state.currentMode;
+        }
+
+        if (elements.answeredCountValue) {
+            elements.answeredCountValue.textContent = String(state.answeredCount);
+        }
 
         const pacing = getSelectedPacingMode();
-        elements.paceModeValue.textContent = pacing.label;
+        if (elements.paceModeValue) {
+            elements.paceModeValue.textContent = pacing.label;
+        }
+
+        renderLivePresenceCoaching();
+        renderLearningLab();
         updateFieldSummaryUI();
         updatePracticeModalSummary();
     }
@@ -1047,7 +1542,9 @@ export function initPractice() {
         elements.submitAnswerBtn.disabled = !hasActiveSession || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
         elements.nextQuestionBtn.disabled = !hasActiveSession || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
         elements.endSessionBtn.disabled = !state.selectedCategory || state.savingSession || state.feedbackLoading;
-        elements.printFeedbackBtn.disabled = state.feedbackHistory.length === 0;
+        if (elements.printFeedbackBtn) {
+            elements.printFeedbackBtn.disabled = state.feedbackHistory.length === 0;
+        }
         syncQuestionAgentControls();
         syncFieldBuilderControls();
     }
@@ -1483,6 +1980,7 @@ export function initPractice() {
         state.activeQuestions = [];
         state.answeredCount = 0;
         state.feedbackHistory = [];
+        state.lastProcessEvaluations = null;
         state.sessionStartedAt = new Date().toISOString();
         state.sessionSaved = false;
         state.feedbackLoading = false;
@@ -1513,6 +2011,7 @@ export function initPractice() {
         state.questionIndex = 0;
         state.answeredCount = 0;
         state.feedbackHistory = [];
+        state.lastProcessEvaluations = null;
         state.sessionId = createSessionId();
         state.sessionStartedAt = new Date().toISOString();
         state.sessionSaved = false;
@@ -1637,7 +2136,7 @@ export function initPractice() {
             ? getActiveQuestionCount() > 0
                 ? selectedFocus.tip
                 : `${selectedFocus.tip} Your AI question set is still being prepared.`
-            : `${selectedFocus.tip} Choose a category to begin practicing.`;
+            : `${selectedFocus.tip} Choose a track from the sidebar to begin practicing.`;
     }
 
     function updateSelectedCategoryButtons() {
@@ -1707,7 +2206,7 @@ export function initPractice() {
         elements.responseInput.value = "";
         clearMessage();
         startTimer();
-        updateFieldSummaryUI();
+        updateTipsPanel();
         updateSessionActionButtons();
     }
 
@@ -1764,6 +2263,120 @@ export function initPractice() {
         };
     }
 
+    function cloneProcessEvaluation(process) {
+        return {
+            label: String(process?.label || "Process"),
+            average: process?.average === null || process?.average === undefined ? null : roundScore(process.average),
+            summary: String(process?.summary || "No process summary yet."),
+            status: String(process?.status || "Ready"),
+            available: process?.available !== false,
+            algorithms: Array.isArray(process?.algorithms)
+                ? process.algorithms.map((algorithm) => ({
+                    name: String(algorithm?.name || "Algorithm"),
+                    score: algorithm?.score === null || algorithm?.score === undefined ? null : roundScore(algorithm.score),
+                    detail: String(algorithm?.detail || "No detail available."),
+                    status: String(algorithm?.status || "Ready"),
+                    available: algorithm?.available !== false
+                }))
+                : []
+        };
+    }
+
+    function buildResponseProcessEvaluation(answer, keywords, scoreData) {
+        const trimmed = answer.trim();
+        const lower = trimmed.toLowerCase();
+        const words = trimmed.split(/\s+/).filter(Boolean);
+        const sentences = trimmed
+            .split(/[.!?]+/)
+            .map((sentence) => sentence.trim())
+            .filter(Boolean);
+        const keywordMatches = keywords.filter((keyword) => lower.includes(String(keyword).toLowerCase())).length;
+        const keywordCoverageScore = roundScore(
+            keywords.length
+                ? Math.max(3, (keywordMatches / keywords.length) * 10)
+                : 6
+        );
+
+        const starSignals = [
+            /\b(when|during|while|at that time|in my internship|in my project|in our team)\b/i.test(trimmed),
+            /\b(task|goal|needed to|was responsible|was asked|objective)\b/i.test(trimmed),
+            /\b(created|built|led|solved|organized|improved|handled|developed|designed|implemented|debugged)\b/i.test(trimmed),
+            /\b(result|improved|reduced|increased|delivered|achieved|learned|outcome|therefore|because of that)\b/i.test(trimmed)
+        ].filter(Boolean).length;
+        const starStructureScore = roundScore(Math.max(3, (starSignals / 4) * 10));
+
+        const outcomeMatches = (trimmed.match(/\b(\d+%?|\d+\.\d+|increase|reduced|improved|completed|delivered|result|impact|outcome|faster|better)\b/gi) || []).length;
+        const outcomeEvidenceScore = roundScore(Math.min(10, Math.max(3, (outcomeMatches * 2) + (sentences.length >= 3 ? 2 : 0))));
+
+        const fillerMatches = (trimmed.match(/\b(um|uh|maybe|probably|kind of|sort of|i think)\b/gi) || []).length;
+        const confidenceMatches = (trimmed.match(/\b(led|built|delivered|improved|learned|organized|supported|resolved|collaborated|achieved|completed)\b/gi) || []).length;
+        const toneScore = roundScore(Math.max(3, Math.min(10, 6 + confidenceMatches - (fillerMatches * 1.5))));
+
+        const algorithms = [
+            {
+                name: "Keyword Coverage",
+                score: keywordCoverageScore,
+                detail: keywordMatches > 0
+                    ? `Matched ${keywordMatches} category keyword${keywordMatches === 1 ? "" : "s"} from the active interview track.`
+                    : "Add more category-specific language so the answer sounds closer to the prompt.",
+                status: "Ready",
+                available: true
+            },
+            {
+                name: "STAR Structure",
+                score: starStructureScore,
+                detail: starSignals >= 3
+                    ? "The answer shows a clear situation, action, and result flow."
+                    : "Use a stronger situation-task-action-result structure so the story lands cleanly.",
+                status: "Ready",
+                available: true
+            },
+            {
+                name: "Outcome Evidence",
+                score: outcomeEvidenceScore,
+                detail: outcomeMatches > 0
+                    ? "The answer includes concrete outcomes or measurable evidence."
+                    : "Add a result, metric, or visible impact to make the answer more credible.",
+                status: "Ready",
+                available: true
+            },
+            {
+                name: "Professional Tone",
+                score: toneScore,
+                detail: fillerMatches === 0
+                    ? "The wording stays direct and interview-appropriate."
+                    : "Remove tentative filler phrases so the answer sounds more confident.",
+                status: "Ready",
+                available: true
+            }
+        ];
+        const average = averageScore(algorithms.map((algorithm) => algorithm.score));
+
+        return {
+            label: "Answer Process",
+            average,
+            summary: summarizeScoreBand(
+                average,
+                "Your answer process is structured, relevant, and convincingly supported.",
+                "Your answer process is workable, but stronger structure and evidence would improve it.",
+                "Your answer process needs a clearer structure, stronger evidence, and more direct language."
+            ),
+            status: "Ready",
+            available: true,
+            algorithms
+        };
+    }
+
+    function buildProcessEvaluations(answer, keywords, scoreData) {
+        const visualSnapshot = getLiveVisualSnapshot();
+
+        return {
+            response: buildResponseProcessEvaluation(answer, keywords, scoreData),
+            bodyLanguage: cloneProcessEvaluation(visualSnapshot.bodyLanguage),
+            facialExpressions: cloneProcessEvaluation(visualSnapshot.facialExpressions)
+        };
+    }
+
     function renderScoreBar(label, value) {
         const width = `${Math.min(100, value * 10)}%`;
 
@@ -1792,7 +2405,35 @@ export function initPractice() {
         `;
     }
 
+    function renderProcessEvaluationSection(processEvaluations) {
+        const processes = Object.values(processEvaluations || {});
+
+        return `
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Algorithm Evaluations</strong>
+                        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            Each process now runs three or more algorithms for answer quality, body language, and facial expressions.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                        ${processes.length} processes
+                    </span>
+                </div>
+
+                <div class="mt-4 grid gap-4 xl:grid-cols-3">
+                    ${processes.map((process) => renderProcessEvaluationPanel(process)).join("")}
+                </div>
+            </div>
+        `;
+    }
+
     function resetFeedbackPlaceholder() {
+        if (!elements.feedbackContent) {
+            return;
+        }
+
         elements.feedbackContent.innerHTML = `
             <div class="rounded-2xl border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-700">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">No answer evaluated yet</h3>
@@ -1898,9 +2539,14 @@ export function initPractice() {
 
     function renderFeedback(answer, scoreData, summary) {
         const normalizedSummary = normalizeFeedbackSummary(answer, scoreData, summary);
+        const processEvaluations = summary?.processEvaluations || buildProcessEvaluations(answer, state.selectedCategory?.keywords || [], scoreData);
         const providerMeta = normalizedSummary.provider
             ? `<span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">${normalizedSummary.provider}</span>`
             : "";
+
+        if (!elements.feedbackContent) {
+            return;
+        }
 
         elements.feedbackContent.innerHTML = `
             <div class="space-y-5">
@@ -1928,6 +2574,8 @@ export function initPractice() {
                     ${renderCriterionFeedbackCard("Grammar", scoreData.grammar, normalizedSummary.criteria.grammar)}
                     ${renderCriterionFeedbackCard("Professionalism", scoreData.professionalism, normalizedSummary.criteria.professionalism)}
                 </div>
+
+                ${renderProcessEvaluationSection(processEvaluations)}
 
                 <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
                     <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Strengths</strong>
@@ -1990,7 +2638,15 @@ export function initPractice() {
         stopTimer();
 
         const scoreData = calculateScore(answer, state.selectedCategory.keywords);
-        const fallbackSummary = normalizeFeedbackSummary(answer, scoreData, buildFeedbackSummary(answer, scoreData));
+        const processEvaluations = buildProcessEvaluations(answer, state.selectedCategory.keywords, scoreData);
+        const visualSnapshot = getPersistedVisualSnapshot();
+        const fallbackSummary = {
+            ...normalizeFeedbackSummary(answer, scoreData, buildFeedbackSummary(answer, scoreData)),
+            processEvaluations,
+            visualSnapshot
+        };
+
+        state.lastProcessEvaluations = processEvaluations;
 
         state.feedbackLoading = true;
         updateSessionActionButtons();
@@ -2017,10 +2673,14 @@ export function initPractice() {
 
             applyQuestionAgentProviderCatalog(payload.availableProviders, payload.requestedProviderId || state.questionAgentSelectedProviderId);
             state.questionAgentResolvedProviderLabel = String(payload.provider || state.questionAgentResolvedProviderLabel || "");
-            finalSummary = normalizeFeedbackSummary(answer, scoreData, {
-                ...(payload.feedbackSummary || {}),
-                provider: payload.feedbackSummary?.provider || payload.provider || null
-            });
+            finalSummary = {
+                ...normalizeFeedbackSummary(answer, scoreData, {
+                    ...(payload.feedbackSummary || {}),
+                    provider: payload.feedbackSummary?.provider || payload.provider || null
+                }),
+                processEvaluations,
+                visualSnapshot
+            };
             renderFeedback(answer, scoreData, finalSummary);
             feedbackMessage = payload.usedFallback
                 ? "Your answer was evaluated and local automated feedback was saved successfully."
@@ -2111,14 +2771,14 @@ export function initPractice() {
             return;
         }
 
-        elements.selectedCategoryName.textContent = "Select a category to start";
+        elements.selectedCategoryName.textContent = "Select a track to start";
         elements.selectedCategoryDescription.textContent = "Your chosen interview type will load a fresh AI-generated question set.";
         elements.questionCounter.textContent = "Question 0 of 0";
         elements.practiceStatusTag.textContent = "Session ended";
         elements.practiceStatusTag.className = "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300";
         elements.practiceLabelTag.textContent = "No active session";
-        elements.currentQuestionText.textContent = "Choose a category from the left panel to begin your interview simulation.";
-        elements.coachTipText.textContent = "Choose a category to load your coach guidance and answer keywords.";
+        elements.currentQuestionText.textContent = "Choose a track from the sidebar to begin your interview simulation.";
+        elements.coachTipText.textContent = "Choose a track from the sidebar to load your coach guidance and answer keywords.";
         elements.questionKeywordTags.innerHTML = "";
         elements.questionProgressFill.style.width = "0%";
         elements.responseInput.value = "";
@@ -2136,6 +2796,7 @@ export function initPractice() {
         state.sessionStartedAt = null;
         state.sessionSaved = false;
         state.feedbackHistory = [];
+        state.lastProcessEvaluations = null;
         state.feedbackLoading = false;
         state.questionSourceLabel = "Awaiting category";
         state.questionSetSummary = "Select a category and the chatbot will build a fresh question set for the workspace.";
@@ -2342,6 +3003,67 @@ export function initPractice() {
         window.history.replaceState({}, "", nextUrl);
     }
 
+    function launchCategoryFromQuery(savedSetup) {
+        const params = new URLSearchParams(window.location.search);
+        const requestedCategoryId = String(params.get("category") || "").trim();
+        const launchSource = String(params.get("source") || "").trim();
+        const requestedModuleId = String(params.get("module") || "").trim();
+        const requestedActivityId = String(params.get("activity") || "").trim();
+
+        if (!requestedCategoryId) {
+            return false;
+        }
+
+        const requestedCategory = practiceData.categories.find((item) => item.id === requestedCategoryId);
+
+        if (!requestedCategory) {
+            return false;
+        }
+
+        const note = typeof savedSetup?.notes === "string" ? savedSetup.notes : "";
+        const formatContextLabel = (value) => String(value || "")
+            .split(/[-_]+/)
+            .filter(Boolean)
+            .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+            .join(" ");
+        const moduleLabels = {
+            "answer-blueprint": "Answer Blueprint",
+            "delivery-rehearsal": "Delivery Rehearsal",
+            "visual-presence": "Visual Presence",
+            "reflection-review": "Reflection Review"
+        };
+        const activityLabels = {
+            "quick-drill": "Quick Drill",
+            "star-response": "STAR Response Drill",
+            "voice-rehearsal": "Voice Rehearsal Sprint",
+            "camera-check": "Camera Check",
+            "follow-up-sprint": "Follow-up Sprint",
+            "track-launch": "Track Launch"
+        };
+        selectCategory(requestedCategory, { prefillNeed: note });
+
+        const messageParts = [
+            launchSource === "learning-lab"
+                ? `${requestedCategory.name} was launched from Learning Lab.`
+                : `${requestedCategory.name} was selected from the sidebar.`
+        ];
+
+        if (requestedModuleId) {
+            messageParts.push(`Module: ${moduleLabels[requestedModuleId] || formatContextLabel(requestedModuleId)}.`);
+        }
+
+        if (requestedActivityId) {
+            messageParts.push(`Activity: ${activityLabels[requestedActivityId] || formatContextLabel(requestedActivityId)}.`);
+        }
+
+        if (note.trim()) {
+            messageParts.push(`Saved note: ${truncateText(note.trim().replace(/\s+/g, " "))}`);
+        }
+
+        showMessage("info", messageParts.join(" "));
+        return true;
+    }
+
     function applySavedSetupDefaults() {
         const savedSetup = readSessionSetup();
         const responsePreferenceLabel = {
@@ -2404,11 +3126,13 @@ export function initPractice() {
     elements.focusModeSelect.addEventListener("change", () => {
         if (state.selectedCategory) {
             updateFocusModeDisplay();
+            updateTipsPanel();
             showMessage("info", `Coach focus updated to ${getSelectedFocusMode().label}.`);
             return;
         }
 
         updateFocusModeDisplay();
+        updateTipsPanel();
     });
 
     elements.pacingModeSelect.addEventListener("change", () => {
@@ -2430,6 +3154,19 @@ export function initPractice() {
 
         updateManualResponseState();
     });
+
+    const handleLearningActionClick = (event) => {
+        const trigger = event.target.closest("[data-learning-action]");
+
+        if (!trigger) {
+            return;
+        }
+
+        applyLearningAction(String(trigger.dataset.learningAction || ""));
+    };
+
+    elements.learningModulesList?.addEventListener("click", handleLearningActionClick);
+    elements.learningActivitiesList?.addEventListener("click", handleLearningActionClick);
 
     elements.practiceFieldInput.addEventListener("input", () => {
         syncFieldBuilderModal();
@@ -2526,7 +3263,7 @@ export function initPractice() {
     elements.submitAnswerBtn.addEventListener("click", submitAnswer);
     elements.nextQuestionBtn.addEventListener("click", nextQuestion);
     elements.endSessionBtn.addEventListener("click", endSession);
-    elements.printFeedbackBtn.addEventListener("click", () => window.print());
+    elements.printFeedbackBtn?.addEventListener("click", () => window.print());
     elements.practiceQuestionAgentGenerateBtn.addEventListener("click", () => {
         generateQuestionSet();
     });
@@ -2560,7 +3297,10 @@ export function initPractice() {
     updateTipsPanel();
     syncFieldBuilderModal();
     updateSessionActionButtons();
-    launchSavedSetup(savedSetup);
+    const launchedFromCategoryQuery = launchCategoryFromQuery(savedSetup);
+    if (!launchedFromCategoryQuery) {
+        launchSavedSetup(savedSetup);
+    }
 
     async function initInterviewer() {
         const faceCameraVideo = document.getElementById("faceCameraVideo");
@@ -2579,6 +3319,42 @@ export function initPractice() {
 
         let FaceLandmarker = null;
         let FilesetResolver = null;
+        let faceLandmarker = null;
+        let cameraStream = null;
+        let animationFrameId = null;
+        let lastVideoTime = -1;
+        let lastSpokenQuestion = "";
+        let lastVisualRenderAt = 0;
+        let lastLearningRefreshAt = 0;
+        const faceCenterHistory = [];
+
+        function publishVisualSnapshot(snapshot, { force = false } = {}) {
+            const now = performance.now();
+            state.liveVisualSnapshot = snapshot;
+
+            if (force || (now - lastVisualRenderAt) >= 250) {
+                renderLivePresenceCoaching(snapshot);
+                lastVisualRenderAt = now;
+            }
+
+            if (force || (now - lastLearningRefreshAt) >= 750) {
+                renderLearningLab();
+                lastLearningRefreshAt = now;
+            }
+        }
+
+        function showWaitingVisualSnapshot(reason, {
+            headline = "Camera coaching is waiting",
+            tag = "Standby",
+            tone = "neutral"
+        } = {}, force = false) {
+            const snapshot = createDefaultVisualSnapshot(reason);
+
+            snapshot.headline = headline;
+            snapshot.tag = tag;
+            snapshot.tagTone = tone;
+            publishVisualSnapshot(snapshot, { force });
+        }
 
         try {
             ({ FaceLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs"));
@@ -2586,13 +3362,16 @@ export function initPractice() {
             console.error(error);
             faceStateValue.textContent = "Unavailable";
             avatarLineText.textContent = "Camera and spoken questions are available, but live face detection could not be loaded.";
+            showWaitingVisualSnapshot(
+                "Live body-language and facial-expression coaching could not be loaded. Spoken questions and typing still work.",
+                {
+                    headline: "Visual coaching unavailable",
+                    tag: "Unavailable",
+                    tone: "warning"
+                },
+                true
+            );
         }
-
-        let faceLandmarker = null;
-        let cameraStream = null;
-        let animationFrameId = null;
-        let lastVideoTime = -1;
-        let lastSpokenQuestion = "";
 
         function setStatusTag(text, mode = "neutral") {
             interviewerStatusTag.textContent = text;
@@ -2605,6 +3384,205 @@ export function initPractice() {
             };
 
             interviewerStatusTag.className = styles[mode] || styles.neutral;
+        }
+
+        function buildLiveAlgorithm(name, score, high, medium, low) {
+            return {
+                name,
+                score: roundScore(score),
+                detail: summarizeScoreBand(score, high, medium, low),
+                status: "Live",
+                available: true
+            };
+        }
+
+        function getBlendshapeValue(blendshapes, name) {
+            const categories = Array.isArray(blendshapes) ? blendshapes : [];
+            const match = categories.find((item) => String(item?.categoryName || "") === name);
+
+            return Number(match?.score) || 0;
+        }
+
+        function getAveragePoint(landmarks, indexes) {
+            const points = indexes
+                .map((index) => landmarks[index])
+                .filter((point) => point && Number.isFinite(point.x) && Number.isFinite(point.y));
+
+            if (!points.length) {
+                return { x: 0.5, y: 0.5 };
+            }
+
+            return {
+                x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+                y: points.reduce((sum, point) => sum + point.y, 0) / points.length
+            };
+        }
+
+        function getBoundingBox(landmarks) {
+            return landmarks.reduce((box, point) => ({
+                minX: Math.min(box.minX, point.x),
+                maxX: Math.max(box.maxX, point.x),
+                minY: Math.min(box.minY, point.y),
+                maxY: Math.max(box.maxY, point.y)
+            }), {
+                minX: 1,
+                maxX: 0,
+                minY: 1,
+                maxY: 0
+            });
+        }
+
+        function buildCameraVisualSnapshot(landmarks, blendshapes) {
+            const boundingBox = getBoundingBox(landmarks);
+            const centerX = (boundingBox.minX + boundingBox.maxX) / 2;
+            const centerY = (boundingBox.minY + boundingBox.maxY) / 2;
+            const faceArea = Math.max(0, (boundingBox.maxX - boundingBox.minX) * (boundingBox.maxY - boundingBox.minY));
+            const distanceFromCenter = Math.hypot(centerX - 0.5, centerY - 0.45);
+            const leftEye = getAveragePoint(landmarks, [33, 133, 159, 145]);
+            const rightEye = getAveragePoint(landmarks, [263, 362, 386, 374]);
+            const headTilt = Math.abs(leftEye.y - rightEye.y);
+
+            faceCenterHistory.push({ x: centerX, y: centerY });
+            if (faceCenterHistory.length > 12) {
+                faceCenterHistory.shift();
+            }
+
+            const motionDeltas = faceCenterHistory.slice(1).map((point, index) => {
+                const previous = faceCenterHistory[index];
+                return Math.hypot(point.x - previous.x, point.y - previous.y);
+            });
+            const averageMotion = motionDeltas.length
+                ? motionDeltas.reduce((sum, value) => sum + value, 0) / motionDeltas.length
+                : 0;
+
+            const frameCenteringScore = roundScore(10 - Math.min(8, distanceFromCenter * 18));
+            const headBalanceScore = roundScore(10 - Math.min(8, headTilt * 160));
+            const movementStabilityScore = roundScore(10 - Math.min(8, averageMotion * 180));
+            const presenceFramingScore = roundScore(10 - Math.min(8, Math.abs(faceArea - 0.16) * 55));
+
+            const smileWarmth = (getBlendshapeValue(blendshapes, "mouthSmileLeft") + getBlendshapeValue(blendshapes, "mouthSmileRight")) / 2;
+            const eyeBlink = (getBlendshapeValue(blendshapes, "eyeBlinkLeft") + getBlendshapeValue(blendshapes, "eyeBlinkRight")) / 2;
+            const eyeSquint = (getBlendshapeValue(blendshapes, "eyeSquintLeft") + getBlendshapeValue(blendshapes, "eyeSquintRight")) / 2;
+            const eyeWide = (getBlendshapeValue(blendshapes, "eyeWideLeft") + getBlendshapeValue(blendshapes, "eyeWideRight")) / 2;
+            const jawOpen = getBlendshapeValue(blendshapes, "jawOpen");
+            const mouthPucker = getBlendshapeValue(blendshapes, "mouthPucker");
+            const mouthFrown = (getBlendshapeValue(blendshapes, "mouthFrownLeft") + getBlendshapeValue(blendshapes, "mouthFrownRight")) / 2;
+            const browDown = (getBlendshapeValue(blendshapes, "browDownLeft") + getBlendshapeValue(blendshapes, "browDownRight")) / 2;
+            const browInnerUp = getBlendshapeValue(blendshapes, "browInnerUp");
+
+            const smileWarmthScore = roundScore(10 - Math.min(7, Math.abs(smileWarmth - 0.3) * 20));
+            const eyeEngagementScore = roundScore(Math.max(3, Math.min(10, 8 - ((eyeBlink + eyeSquint) * 5) + (eyeWide * 2.5))));
+            const jawRelaxationScore = roundScore(Math.max(3, Math.min(10, 10 - (Math.max(0, jawOpen - 0.35) * 10) - (mouthPucker * 5) - (mouthFrown * 4))));
+            const browCalmnessScore = roundScore(Math.max(3, Math.min(10, 10 - (browDown * 6) - (Math.max(0, browInnerUp - 0.35) * 4))));
+
+            const bodyAlgorithms = [
+                buildLiveAlgorithm(
+                    "Frame Centering",
+                    frameCenteringScore,
+                    "Your face stays centered in the frame, which reads as attentive and composed.",
+                    "You are mostly centered, but a small left-right adjustment would help.",
+                    "Recenter your position so your face sits nearer the middle of the frame."
+                ),
+                buildLiveAlgorithm(
+                    "Head Balance",
+                    headBalanceScore,
+                    "Your head position looks level and stable on camera.",
+                    "Your head is slightly tilted. Level it out for a more grounded look.",
+                    "Reset your posture and straighten your head for a more confident presence."
+                ),
+                buildLiveAlgorithm(
+                    "Movement Stability",
+                    movementStabilityScore,
+                    "Your movement is calm and steady, which helps the answer feel controlled.",
+                    "You move a little while answering. Try settling before the next response.",
+                    "Reduce extra movement so the camera reads you as more confident and settled."
+                ),
+                buildLiveAlgorithm(
+                    "Presence Framing",
+                    presenceFramingScore,
+                    "Your distance from the camera looks comfortable and interview-ready.",
+                    "Your framing is usable, but moving slightly closer or farther would help.",
+                    "Adjust your distance from the camera so your face fills the frame more naturally."
+                )
+            ];
+
+            const facialAlgorithms = [
+                buildLiveAlgorithm(
+                    "Smile Warmth",
+                    smileWarmthScore,
+                    "Your expression looks warm and approachable without feeling forced.",
+                    "A slightly warmer expression would help you look more engaged.",
+                    "Relax your mouth and add a softer, more welcoming expression."
+                ),
+                buildLiveAlgorithm(
+                    "Eye Engagement",
+                    eyeEngagementScore,
+                    "Your eyes look open and engaged with the interviewer.",
+                    "Your eyes are mostly engaged, but a steadier gaze would help.",
+                    "Lift your gaze toward the camera and reduce eye tension for stronger engagement."
+                ),
+                buildLiveAlgorithm(
+                    "Jaw Relaxation",
+                    jawRelaxationScore,
+                    "Your jaw looks relaxed, which helps your delivery feel calm.",
+                    "There is a little jaw tension. Slow your breathing before the next answer.",
+                    "Release jaw tension so your face looks calmer and your words sound more natural."
+                ),
+                buildLiveAlgorithm(
+                    "Brow Calmness",
+                    browCalmnessScore,
+                    "Your brows look calm and composed on camera.",
+                    "There is slight brow tension. Soften your expression between sentences.",
+                    "Relax your brow area to reduce stress signals on camera."
+                )
+            ];
+
+            const bodyAverage = averageScore(bodyAlgorithms.map((algorithm) => algorithm.score));
+            const facialAverage = averageScore(facialAlgorithms.map((algorithm) => algorithm.score));
+            const combinedAverage = averageScore([bodyAverage, facialAverage]);
+            const lowestAlgorithm = [...bodyAlgorithms, ...facialAlgorithms]
+                .slice()
+                .sort((left, right) => clampScore(left.score) - clampScore(right.score))[0];
+
+            return {
+                headline: summarizeScoreBand(
+                    combinedAverage,
+                    "Presence looks confident and interview-ready",
+                    "Presence is steady, with a few adjustments available",
+                    "Presence coaching suggests a quick reset"
+                ),
+                tip: lowestAlgorithm
+                    ? `${lowestAlgorithm.name}: ${lowestAlgorithm.detail}`
+                    : "Live coaching is running.",
+                tag: `${combinedAverage.toFixed(1)} / 10`,
+                tagTone: getScoreTone(combinedAverage),
+                bodyLanguage: {
+                    label: "Body Language",
+                    average: bodyAverage,
+                    summary: summarizeScoreBand(
+                        bodyAverage,
+                        "Your upper-body camera presence looks grounded and centered.",
+                        "Your body language is usable, but a quick posture reset would sharpen it.",
+                        "Recenter posture, reduce movement, and re-balance your framing before answering again."
+                    ),
+                    status: "Live",
+                    available: true,
+                    algorithms: bodyAlgorithms
+                },
+                facialExpressions: {
+                    label: "Facial Expressions",
+                    average: facialAverage,
+                    summary: summarizeScoreBand(
+                        facialAverage,
+                        "Your facial expressions look warm, calm, and professional.",
+                        "Your expression is mostly neutral; a little more warmth would help.",
+                        "Relax your facial tension and reconnect with the camera before the next answer."
+                    ),
+                    status: "Live",
+                    available: true,
+                    algorithms: facialAlgorithms
+                }
+            };
         }
 
         function setAvatarSpeaking(isSpeaking) {
@@ -2631,6 +3609,7 @@ export function initPractice() {
             const text = currentQuestionText?.textContent?.trim() || "";
             const blockedPhrases = [
                 "Choose a category",
+                "Choose a track from the sidebar",
                 "AI question generator is preparing",
                 "AI question generator is temporarily unavailable"
             ];
@@ -2656,7 +3635,7 @@ export function initPractice() {
             }
 
             if (!text) {
-                avatarLineText.textContent = "No interview question is active yet. Choose a category first.";
+                avatarLineText.textContent = "No interview question is active yet. Choose a track first.";
                 return;
             }
 
@@ -2709,7 +3688,7 @@ export function initPractice() {
                 minFaceDetectionConfidence: 0.5,
                 minFacePresenceConfidence: 0.5,
                 minTrackingConfidence: 0.5,
-                outputFaceBlendshapes: false
+                outputFaceBlendshapes: true
             });
 
             return faceLandmarker;
@@ -2719,15 +3698,44 @@ export function initPractice() {
             if (!faceLandmarker || !faceCameraVideo || !cameraStream) return;
 
             if (faceCameraVideo.readyState >= 2 && faceCameraVideo.currentTime !== lastVideoTime) {
-                const result = faceLandmarker.detectForVideo(faceCameraVideo, performance.now());
-                const facesDetected = result.faceLandmarks?.length || 0;
+                try {
+                    const result = faceLandmarker.detectForVideo(faceCameraVideo, performance.now());
+                    const facesDetected = result.faceLandmarks?.length || 0;
 
-                if (facesDetected > 0) {
-                    faceStateValue.textContent = "Detected";
-                    setStatusTag("Face detected", "success");
-                } else {
-                    faceStateValue.textContent = "Not detected";
-                    setStatusTag("Face not detected", "warning");
+                    if (facesDetected > 0) {
+                        const liveSnapshot = buildCameraVisualSnapshot(
+                            result.faceLandmarks[0],
+                            result.faceBlendshapes?.[0]?.categories || []
+                        );
+
+                        faceStateValue.textContent = "Detected";
+                        setStatusTag("Live coaching active", "success");
+                        publishVisualSnapshot(liveSnapshot);
+                    } else {
+                        faceStateValue.textContent = "Not detected";
+                        setStatusTag("Recenter face", "warning");
+                        showWaitingVisualSnapshot(
+                            "No face is centered yet. Sit upright, move slightly closer, and keep your face visible on camera.",
+                            {
+                                headline: "Face not detected",
+                                tag: "Recenter",
+                                tone: "warning"
+                            }
+                        );
+                    }
+                } catch (error) {
+                    console.error(error);
+                    faceStateValue.textContent = "Unavailable";
+                    setStatusTag("Visual check error", "warning");
+                    showWaitingVisualSnapshot(
+                        "The live visual model ran into a temporary issue. You can keep practicing while the camera stays on.",
+                        {
+                            headline: "Visual coaching paused",
+                            tag: "Paused",
+                            tone: "warning"
+                        },
+                        true
+                    );
                 }
 
                 lastVideoTime = faceCameraVideo.currentTime;
@@ -2760,7 +3768,16 @@ export function initPractice() {
 
                 cameraStateValue.textContent = "Live";
                 setStatusTag("Camera live", "success");
-                avatarLineText.textContent = "Camera is live. I will monitor face visibility while you practice.";
+                avatarLineText.textContent = "Camera is live. I will monitor body language and facial expressions while you practice.";
+                showWaitingVisualSnapshot(
+                    "Camera is live. Center your face in the frame to start body-language and facial-expression coaching.",
+                    {
+                        headline: "Camera ready for coaching",
+                        tag: "Checking",
+                        tone: "neutral"
+                    },
+                    true
+                );
 
                 try {
                     await initFaceLandmarker();
@@ -2772,7 +3789,16 @@ export function initPractice() {
                     console.error(error);
                     faceStateValue.textContent = "Unavailable";
                     setStatusTag("Camera live, no face check", "warning");
-                    avatarLineText.textContent = "Camera is live, but face detection is unavailable. Voice practice still works.";
+                    avatarLineText.textContent = "Camera is live, but visual coaching is unavailable. Voice practice still works.";
+                    showWaitingVisualSnapshot(
+                        "The camera is running, but the visual coaching model is unavailable right now.",
+                        {
+                            headline: "Visual coaching unavailable",
+                            tag: "Unavailable",
+                            tone: "warning"
+                        },
+                        true
+                    );
                 }
             } catch (error) {
                 console.error(error);
@@ -2780,6 +3806,15 @@ export function initPractice() {
                 cameraStateValue.textContent = "Blocked";
                 faceStateValue.textContent = "Unavailable";
                 avatarLineText.textContent = "Camera access or the face model failed. Use localhost or HTTPS and ensure the model file exists.";
+                showWaitingVisualSnapshot(
+                    "Camera access was blocked. Allow camera permissions to unlock body-language and facial-expression coaching.",
+                    {
+                        headline: "Camera blocked",
+                        tag: "Blocked",
+                        tone: "error"
+                    },
+                    true
+                );
             }
         }
 
@@ -2798,16 +3833,30 @@ export function initPractice() {
             cameraStateValue.textContent = "Off";
             faceStateValue.textContent = "Not detected";
             setStatusTag("Camera Off", "neutral");
+            faceCenterHistory.length = 0;
+            showWaitingVisualSnapshot(
+                "Start the camera to unlock live body-language and facial-expression coaching.",
+                {
+                    headline: "Camera coaching is waiting",
+                    tag: "Standby",
+                    tone: "neutral"
+                },
+                true
+            );
         }
 
+        interviewerControls.startCamera = startCamera;
+        interviewerControls.askCurrentQuestion = () => {
+            const question = getCurrentQuestion();
+            speakText(question || "Please choose a track to begin the interview.");
+        };
         interviewerControls.stopCamera = stopCamera;
         interviewerControls.stopSpeaking = stopSpeaking;
 
         startCameraBtn?.addEventListener("click", startCamera);
         stopCameraBtn?.addEventListener("click", stopCamera);
         askQuestionAloudBtn?.addEventListener("click", () => {
-            const question = getCurrentQuestion();
-            speakText(question || "Please choose a category to begin the interview.");
+            interviewerControls.askCurrentQuestion();
         });
 
         if ("speechSynthesis" in window) {

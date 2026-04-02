@@ -15,16 +15,33 @@
             // Auto-open Dashboard menu on page load
             this.initializeActiveMenus();
         },
-        initializeActiveMenus() {
-            const currentPath = '{{ $currentPath }}';
+        matchesPath(path) {
+            try {
+                const current = new URL(window.location.href);
+                const target = new URL(path, window.location.origin);
 
+                if (current.pathname !== target.pathname) {
+                    return false;
+                }
+
+                const targetParams = Array.from(target.searchParams.entries());
+
+                if (targetParams.length === 0) {
+                    return true;
+                }
+
+                return targetParams.every(([key, value]) => current.searchParams.get(key) === value);
+            } catch (error) {
+                return window.location.pathname === path || '{{ $currentPath }}' === String(path).replace(/^\//, '');
+            }
+        },
+        initializeActiveMenus() {
             @foreach ($menuGroups as $groupIndex => $menuGroup)
                 @foreach ($menuGroup['items'] as $itemIndex => $item)
                     @if (isset($item['subItems']))
                         // Check if any submenu item matches current path
                         @foreach ($item['subItems'] as $subItem)
-                            if (currentPath === '{{ ltrim($subItem['path'], '/') }}' ||
-                                window.location.pathname === '{{ $subItem['path'] }}') {
+                            if (this.matchesPath('{{ $subItem['path'] }}')) {
                                 this.openSubmenus['{{ $groupIndex }}-{{ $itemIndex }}'] = true;
                             } @endforeach
             @endif
@@ -47,7 +64,7 @@
             return this.openSubmenus[key] || false;
         },
         isActive(path) {
-            return window.location.pathname === path || '{{ $currentPath }}' === path.replace(/^\//, '');
+            return this.matchesPath(path);
         }
     }"
     :class="{
@@ -153,6 +170,11 @@
                                                             :class="isActive('{{ $subItem['path'] }}') ?
                                                                 'menu-dropdown-item-active' :
                                                                 'menu-dropdown-item-inactive'">
+                                                            @if (!empty($subItem['icon']))
+                                                                <span class="flex h-4 w-4 shrink-0 items-center justify-center [&_svg]:h-4 [&_svg]:w-4">
+                                                                    {!! MenuHelper::getIconSvg($subItem['icon']) !!}
+                                                                </span>
+                                                            @endif
                                                             {{ $subItem['name'] }}
                                                             <span class="flex items-center gap-1 ml-auto">
                                                                 @if (!empty($subItem['new']))

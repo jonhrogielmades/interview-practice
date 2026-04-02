@@ -5,6 +5,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\ChatbotPageController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\FeaturePageController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceController;
@@ -58,6 +59,34 @@ Route::middleware('auth')->group(function () {
     Route::get('/category-insights', function () {
         return view('pages.category-insights', ['title' => 'Category Insights']);
     })->name('category-insights');
+
+    Route::get('/provider-health', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'provider-health')
+        ->name('provider-health');
+
+    Route::get('/question-generator', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'question-generator')
+        ->name('question-generator');
+
+    Route::get('/field-builder', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'field-builder')
+        ->name('field-builder');
+
+    Route::get('/learning-lab', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'learning-lab')
+        ->name('learning-lab');
+
+    Route::get('/voice-practice', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'voice-practice')
+        ->name('voice-practice');
+
+    Route::get('/camera-readiness', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'camera-readiness')
+        ->name('camera-readiness');
+
+    Route::get('/mobile-lan', [FeaturePageController::class, 'show'])
+        ->defaults('page', 'mobile-lan')
+        ->name('mobile-lan');
 
     Route::get('/chatbot', ChatbotPageController::class)->name('chatbot');
 

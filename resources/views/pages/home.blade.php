@@ -89,6 +89,8 @@
                 <nav class="hidden items-center justify-center gap-1 lg:flex lg:justify-self-center">
                     <a href="#workflow"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Workflow</a>
+                    <a href="#features"
+                        class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Features</a>
                     <a href="#tracks"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Tracks</a>
                     <a href="#cta"
@@ -156,6 +158,7 @@
                 class="border-t border-gray-200 bg-white/95 px-4 py-4 lg:hidden dark:border-gray-800 dark:bg-gray-950/95">
                 <div class="mx-auto flex max-w-7xl flex-col gap-3">
                     <a href="#workflow" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Workflow</a>
+                    <a href="#features" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Features</a>
                     <a href="#tracks" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Tracks</a>
                     <a href="#cta" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Launch</a>
 
@@ -399,6 +402,62 @@
                     </div>
                 </div>
             </section>
+
+            <section id="features" class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
+                <div class="home-panel overflow-hidden p-6 sm:p-8">
+                    <div class="flex flex-col gap-6 border-b border-gray-200 pb-8 dark:border-gray-800 lg:flex-row lg:items-end lg:justify-between">
+                        <div class="max-w-3xl">
+                            <span class="home-chip">Platform features</span>
+                            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">InterviewPilot ships with more than 25 visible product features.</h2>
+                            <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
+                                The project already covers guided practice, AI coaching, saved history, profile tools, and
+                                provider-aware chatbot workflows. This section makes that scope easier to scan at a glance.
+                            </p>
+                        </div>
+
+                        <div class="grid gap-3 sm:grid-cols-2">
+                            <div class="rounded-[28px] border border-blue-light-100 bg-blue-light-50 px-5 py-4 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-light-700 dark:text-blue-light-200">Feature count</p>
+                                <p class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{{ count($platformFeatures) }}</p>
+                            </div>
+                            <div class="rounded-[28px] border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Coverage</p>
+                                <p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">Practice flow, chatbot routing, saved results, profile updates, and mobile-ready UI.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                        @foreach ($platformFeatures as $feature)
+                            <article @class([
+                                'rounded-[28px] border p-5 shadow-theme-xs transition duration-300 hover:-translate-y-1 hover:shadow-theme-lg',
+                                'border-brand-100 bg-brand-50/70 dark:border-brand-500/20 dark:bg-brand-500/10' => $feature['tone'] === 'brand',
+                                'border-blue-light-100 bg-blue-light-50/80 dark:border-blue-light-500/20 dark:bg-blue-light-500/10' => $feature['tone'] === 'blue',
+                                'border-success-100 bg-success-50/80 dark:border-success-500/20 dark:bg-success-500/10' => $feature['tone'] === 'success',
+                                'border-warning-100 bg-warning-50/80 dark:border-warning-500/20 dark:bg-warning-500/10' => $feature['tone'] === 'warning',
+                            ])>
+                                <div class="flex items-start gap-4">
+                                    <span @class([
+                                        'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold',
+                                        'bg-white text-brand-600 dark:bg-gray-900 dark:text-brand-300' => $feature['tone'] === 'brand',
+                                        'bg-white text-blue-light-700 dark:bg-gray-900 dark:text-blue-light-200' => $feature['tone'] === 'blue',
+                                        'bg-white text-success-700 dark:bg-gray-900 dark:text-success-300' => $feature['tone'] === 'success',
+                                        'bg-white text-warning-700 dark:bg-gray-900 dark:text-warning-300' => $feature['tone'] === 'warning',
+                                    ])>
+                                        {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
+                                    </span>
+
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $feature['title'] }}</h3>
+                                        <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $feature['body'] }}</p>
+                                    </div>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                </div>
+            </section>
+
             <section id="tracks" class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
                 <div class="home-panel p-6 sm:p-8">
                     <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
