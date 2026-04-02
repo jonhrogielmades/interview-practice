@@ -39,13 +39,56 @@
         activeTrack: @js($firstTrackId),
         authModalOpen: @js($authModalOpen),
         authModalView: @js($initialAuthView),
+        authPanelHeight: null,
+        authFocusTimer: null,
         init() {
-            this.$watch('authModalOpen', value => document.body.classList.toggle('overflow-hidden', value));
+            this.$watch('authModalOpen', value => {
+                document.body.classList.toggle('overflow-hidden', value);
+
+                if (!value) {
+                    window.clearTimeout(this.authFocusTimer);
+                    return;
+                }
+
+                this.clearAuthQuery();
+                this.$nextTick(() => {
+                    this.syncAuthPanelHeight();
+                    this.queueAuthFocus();
+                });
+            });
             document.body.classList.toggle('overflow-hidden', this.authModalOpen);
 
-            if (this.authModalOpen) {
+            this.$nextTick(() => {
+                if (!this.authModalOpen) {
+                    return;
+                }
+
                 this.clearAuthQuery();
+                this.syncAuthPanelHeight();
+                this.queueAuthFocus();
+            });
+        },
+        getActiveAuthPanel() {
+            return this.authModalView === 'signin' ? this.$refs.signinPanel : this.$refs.signupPanel;
+        },
+        syncAuthPanelHeight() {
+            const activePanel = this.getActiveAuthPanel();
+
+            if (!activePanel) {
+                return;
             }
+
+            this.authPanelHeight = `${activePanel.scrollHeight}px`;
+        },
+        focusActiveAuthField() {
+            const activePanel = this.getActiveAuthPanel();
+            const target = activePanel?.querySelector('[data-auth-autofocus]');
+
+            target?.focus({ preventScroll: true });
+        },
+        queueAuthFocus() {
+            window.clearTimeout(this.authFocusTimer);
+            this.authFocusTimer = window.setTimeout(() => this.focusActiveAuthField(), 260);
         },
         clearAuthQuery() {
             const url = new URL(window.location.href);
@@ -58,16 +101,28 @@
             window.history.replaceState({}, '', url.toString());
         },
         openAuthModal(view = 'signin') {
-            this.authModalView = view;
+            this.switchAuthModal(view);
             this.authModalOpen = true;
             this.mobileMenu = false;
             this.clearAuthQuery();
         },
+        switchAuthModal(view) {
+            if (this.authModalView === view) {
+                return;
+            }
+
+            this.authModalView = view;
+            this.$nextTick(() => {
+                this.syncAuthPanelHeight();
+                this.queueAuthFocus();
+            });
+        },
         closeAuthModal() {
+            window.clearTimeout(this.authFocusTimer);
             this.authModalOpen = false;
             this.clearAuthQuery();
         }
-    }" @keydown.escape.window="closeAuthModal()"
+    }" @keydown.escape.window="closeAuthModal()" @resize.window="authModalOpen && syncAuthPanelHeight()"
         class="relative min-h-screen overflow-hidden bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-white">
         <div class="home-orb left-[-8rem] top-[-6rem] h-72 w-72 bg-blue-light-200"></div>
         <div class="home-orb right-[-5rem] top-24 h-80 w-80 bg-blue-light-300 [animation-delay:1.5s]"></div>
@@ -611,29 +666,51 @@
 
                         <div class="flex px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
                             <div class="w-full lg:mx-auto lg:max-w-[37rem]">
-                                <div class="flex rounded-2xl border border-blue-light-100 bg-blue-light-50 p-1 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                                <div class="relative flex rounded-2xl border border-blue-light-100 bg-blue-light-50 p-1 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                                    <div
+                                        aria-hidden="true"
+                                        class="pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-xl transition-all duration-300 ease-out"
+                                        :class="authModalView === 'signin'
+                                            ? 'translate-x-0 bg-gray-900 shadow-theme-xs dark:bg-white'
+                                            : 'translate-x-full bg-blue-light-500 shadow-theme-xs'">
+                                    </div>
                                     <button
                                         type="button"
-                                        class="flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition"
-                                        @click="authModalView = 'signin'"
+                                        class="relative z-10 flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition"
+                                        @click="switchAuthModal('signin')"
                                         :class="authModalView === 'signin'
-                                            ? 'bg-gray-900 text-white shadow-theme-xs dark:bg-white dark:text-gray-900'
+                                            ? 'text-white dark:text-gray-900'
                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'">
                                         Sign In
                                     </button>
                                     <button
                                         type="button"
-                                        class="flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition"
-                                        @click="authModalView = 'signup'"
+                                        class="relative z-10 flex-1 rounded-xl px-4 py-3 text-sm font-semibold transition"
+                                        @click="switchAuthModal('signup')"
                                         :class="authModalView === 'signup'
-                                            ? 'bg-blue-light-500 text-white shadow-theme-xs'
+                                            ? 'text-white'
                                             : 'text-gray-600 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white'">
                                         Sign Up
                                     </button>
                                 </div>
 
-                                <section x-show="authModalView === 'signin'" x-transition.opacity.duration.200ms class="mt-8">
-                                <div class="max-w-xl">
+                                <div
+                                    class="relative mt-8 overflow-hidden transition-[height] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                                    :style="authPanelHeight ? `height: ${authPanelHeight}` : null">
+                                    <div
+                                        class="flex w-[200%] transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]"
+                                        :style="authModalView === 'signin'
+                                            ? 'transform: translate3d(0%, 0, 0);'
+                                            : 'transform: translate3d(-50%, 0, 0);'">
+                                <section
+                                    x-ref="signinPanel"
+                                    class="w-1/2 flex-none pr-2 sm:pr-4"
+                                    x-bind:aria-hidden="authModalView !== 'signin'"
+                                    x-bind:inert="authModalView !== 'signin'">
+                                <div class="max-w-xl transition duration-500"
+                                    :class="authModalView === 'signin'
+                                        ? 'translate-x-0 opacity-100'
+                                        : '-translate-x-6 opacity-50'">
                                     <p class="text-sm font-semibold uppercase tracking-[0.24em] text-blue-light-700 dark:text-blue-light-300">Welcome back</p>
                                     <h3 class="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">Sign in with Google or email</h3>
                                     <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
@@ -681,6 +758,7 @@
                                             id="home_signin_email"
                                             name="email"
                                             type="email"
+                                            data-auth-autofocus
                                             value="{{ old('auth_form') === 'signin' ? old('email') : '' }}"
                                             required
                                             autocomplete="email"
@@ -726,7 +804,7 @@
                                                 class="h-4 w-4 rounded border-gray-300 text-blue-light-600 focus:ring-blue-light-500 dark:border-gray-600">
                                             Keep me signed in
                                         </label>
-                                        <button type="button" class="text-sm font-medium text-blue-light-700 transition hover:text-blue-light-800 dark:text-blue-light-300 dark:hover:text-blue-light-200" @click="authModalView = 'signup'">
+                                        <button type="button" class="text-sm font-medium text-blue-light-700 transition hover:text-blue-light-800 dark:text-blue-light-300 dark:hover:text-blue-light-200" @click="switchAuthModal('signup')">
                                             Need an account?
                                         </button>
                                     </div>
@@ -739,8 +817,15 @@
                                 </form>
                                 </section>
 
-                                <section x-show="authModalView === 'signup'" x-transition.opacity.duration.200ms class="mt-8">
-                                <div class="max-w-xl">
+                                <section
+                                    x-ref="signupPanel"
+                                    class="w-1/2 flex-none pl-2 sm:pl-4"
+                                    x-bind:aria-hidden="authModalView !== 'signup'"
+                                    x-bind:inert="authModalView !== 'signup'">
+                                <div class="max-w-xl transition duration-500"
+                                    :class="authModalView === 'signup'
+                                        ? 'translate-x-0 opacity-100'
+                                        : 'translate-x-6 opacity-50'">
                                     <p class="text-sm font-semibold uppercase tracking-[0.24em] text-blue-light-700 dark:text-blue-light-300">Create account</p>
                                     <h3 class="mt-3 text-3xl font-semibold text-gray-900 dark:text-white">Sign up with Google or email</h3>
                                     <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
@@ -788,6 +873,7 @@
                                             id="home_signup_email"
                                             name="email"
                                             type="email"
+                                            data-auth-autofocus
                                             value="{{ old('auth_form') === 'signup' ? old('email') : '' }}"
                                             required
                                             autocomplete="email"
@@ -853,7 +939,7 @@
                                         </div>
                                     </div>
                                     <div class="pt-1">
-                                        <button type="button" class="text-sm font-medium text-blue-light-700 transition hover:text-blue-light-800 dark:text-blue-light-300 dark:hover:text-blue-light-200" @click="authModalView = 'signin'">
+                                        <button type="button" class="text-sm font-medium text-blue-light-700 transition hover:text-blue-light-800 dark:text-blue-light-300 dark:hover:text-blue-light-200" @click="switchAuthModal('signin')">
                                             Already have an account?
                                         </button>
                                     </div>
@@ -865,6 +951,8 @@
                                     </button>
                                 </form>
                                 </section>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
