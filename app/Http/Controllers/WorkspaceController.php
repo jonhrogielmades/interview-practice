@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Helpers\InterviewChatbotService;
 use App\Helpers\InterviewWorkspaceService;
+use App\Support\Notifications\SystemNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -45,7 +46,11 @@ class WorkspaceController extends Controller
         ]);
     }
 
-    public function storeSession(Request $request, InterviewWorkspaceService $workspace): JsonResponse
+    public function storeSession(
+        Request $request,
+        InterviewWorkspaceService $workspace,
+        SystemNotificationService $notifications,
+    ): JsonResponse
     {
         $validated = $request->validate([
             'id' => ['nullable', 'string', 'max:120'],
@@ -65,6 +70,13 @@ class WorkspaceController extends Controller
             'criteriaAverages.relevance' => ['nullable', 'numeric', 'min:0', 'max:10'],
             'criteriaAverages.grammar' => ['nullable', 'numeric', 'min:0', 'max:10'],
             'criteriaAverages.professionalism' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'criteriaAverages.eyeContact' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'criteriaAverages.posture' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'criteriaAverages.headMovement' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'criteriaAverages.facialComposure' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'criteriaAverages.manuscriptVerbal' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'criteriaAverages.manuscriptNonVerbal' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'criteriaAverages.manuscriptOverall' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'completed' => ['nullable', 'boolean'],
             'answers' => ['nullable', 'array', 'max:50'],
             'answers.*.questionIndex' => ['nullable', 'integer', 'min:0', 'max:50'],
@@ -92,6 +104,21 @@ class WorkspaceController extends Controller
             'answers.*.feedbackSummary.criteria.relevance' => ['nullable', 'string', 'max:500'],
             'answers.*.feedbackSummary.criteria.grammar' => ['nullable', 'string', 'max:500'],
             'answers.*.feedbackSummary.criteria.professionalism' => ['nullable', 'string', 'max:500'],
+            'answers.*.feedbackSummary.manuscriptRubric' => ['nullable', 'array'],
+            'answers.*.feedbackSummary.manuscriptRubric.verbal' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.nonVerbal' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.overall' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.hasNonVerbal' => ['nullable', 'boolean'],
+            'answers.*.feedbackSummary.manuscriptRubric.readinessLabel' => ['nullable', 'string', 'max:120'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria' => ['nullable', 'array'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.clarity' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.relevance' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.grammar' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.professionalism' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.eyeContact' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.posture' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.headMovement' => ['nullable', 'numeric', 'min:0', 'max:5'],
+            'answers.*.feedbackSummary.manuscriptRubric.criteria.facialComposure' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'answers.*.feedbackSummary.processEvaluations' => ['nullable', 'array'],
             'answers.*.feedbackSummary.processEvaluations.*' => ['nullable', 'array'],
             'answers.*.feedbackSummary.processEvaluations.*.label' => ['nullable', 'string', 'max:120'],
@@ -108,12 +135,27 @@ class WorkspaceController extends Controller
             'answers.*.feedbackSummary.visualSnapshot' => ['nullable', 'array'],
             'answers.*.feedbackSummary.visualSnapshot.bodyLanguageScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
             'answers.*.feedbackSummary.visualSnapshot.facialExpressionScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'answers.*.feedbackSummary.visualSnapshot.eyeContactScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'answers.*.feedbackSummary.visualSnapshot.postureScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'answers.*.feedbackSummary.visualSnapshot.headMovementScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
+            'answers.*.feedbackSummary.visualSnapshot.facialComposureScore' => ['nullable', 'numeric', 'min:0', 'max:10'],
             'answers.*.feedbackSummary.visualSnapshot.bodyLanguageLabel' => ['nullable', 'string', 'max:255'],
             'answers.*.feedbackSummary.visualSnapshot.facialExpressionLabel' => ['nullable', 'string', 'max:255'],
+            'answers.*.feedbackSummary.visualSnapshot.eyeContactLabel' => ['nullable', 'string', 'max:255'],
+            'answers.*.feedbackSummary.visualSnapshot.postureLabel' => ['nullable', 'string', 'max:255'],
+            'answers.*.feedbackSummary.visualSnapshot.headMovementLabel' => ['nullable', 'string', 'max:255'],
+            'answers.*.feedbackSummary.visualSnapshot.facialComposureLabel' => ['nullable', 'string', 'max:255'],
             'answers.*.feedbackSummary.visualSnapshot.tip' => ['nullable', 'string', 'max:500'],
+            'notify' => ['nullable', 'boolean'],
         ]);
 
         $session = $workspace->saveSession($validated);
+        $user = $request->user();
+
+        if ($user && ($validated['notify'] ?? true)) {
+            $notifications->notifyUserAboutPracticeSession($user, $session);
+            $notifications->notifyAdminsAboutCompletedPracticeSession($user, $session);
+        }
 
         return response()->json([
             'session' => $session,
@@ -158,7 +200,7 @@ class WorkspaceController extends Controller
     public function chatbotProvidersStatus(Request $request, InterviewChatbotService $chatbot): JsonResponse
     {
         $validated = $request->validate([
-            'providers' => ['nullable', 'array', 'max:5'],
+            'providers' => ['nullable', 'array', 'max:6'],
             'providers.*' => ['required_with:providers', 'string', 'max:50'],
         ]);
 

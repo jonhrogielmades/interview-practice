@@ -10,12 +10,12 @@
                 </span>
 
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
-                    Interview Simulation
+                    AI Avatar Interview Simulation
                 </h1>
 
                 <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
-                    Launch a track from the sidebar, answer naturally, and keep your interview flow focused inside one
-                    practice workspace.
+                    Launch a category, answer through text or voice, and review verbal plus selected non-verbal
+                    coaching inside one capstone-aligned practice workspace.
                 </p>
             </div>
 
@@ -98,19 +98,25 @@
 
         <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
             <div class="mb-5">
-                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Start From Sidebar</h3>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Choose Practice Category</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                    Use the Practice submenu in the sidebar to choose a track, then this workspace will open the field
-                    builder and interview modal for that selection.
+                    Choose the interview category you want before the field builder and interview modal open.
                 </p>
             </div>
 
             <div class="rounded-2xl border border-dashed border-gray-300 px-4 py-4 dark:border-gray-700">
                 <p class="text-sm leading-6 text-gray-600 dark:text-gray-400">
-                    Session Setup can also preload your saved defaults. Once a sidebar track is selected, the AI
-                    question generator and interview modal will continue from here.
+                    Learning Activities can bring the drill, level, and target score here, but the category stays yours
+                    to choose first.
                 </p>
             </div>
+
+            <button
+                id="openPracticeCategoryModalBtn"
+                type="button"
+                class="mt-4 inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:w-auto">
+                Choose Category
+            </button>
         </article>
     </section>
 
@@ -127,7 +133,7 @@
                             Select a track to launch
                         </h3>
                         <p id="practiceModalSummaryText" class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                            Choose a track from the sidebar. The interview flow and AI interviewer will open in a modal.
+                            Choose a category from the sidebar. The interview flow and AI avatar interviewer will open in a modal.
                         </p>
                     </div>
 
@@ -208,9 +214,8 @@
                 <div class="border-b border-gray-200 pb-5 dark:border-gray-800">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Question Generator</h3>
                     <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                        After you choose a sidebar track, the Interview Workspace modal will use the AI question chatbot to
-                        create a fresh set of interview questions for that track and sync the active question with
-                        the interviewer voice.
+                        After you choose a category, the workspace uses the AI question chatbot to build a fresh,
+                        category-backed set of interview questions and sync the active prompt with the avatar voice.
                     </p>
                 </div>
 
@@ -242,6 +247,97 @@
             </article>
         </div>
     </section>
+</div>
+
+<div
+    id="practiceCategoryModal"
+    x-data="{
+        viewportWidth: window.innerWidth,
+        handleResize: null,
+        init() {
+            this.handleResize = () => {
+                this.viewportWidth = window.innerWidth;
+            };
+
+            this.handleResize();
+            window.addEventListener('resize', this.handleResize);
+        },
+        destroy() {
+            if (this.handleResize) {
+                window.removeEventListener('resize', this.handleResize);
+            }
+        },
+        get isDesktop() {
+            return this.viewportWidth >= 1280;
+        },
+        get sidebarOffset() {
+            if (!this.isDesktop) {
+                return 0;
+            }
+
+            return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
+        },
+        get topOffset() {
+            return this.viewportWidth >= 640 ? 88 : 64;
+        },
+        get wrapperPadding() {
+            if (this.viewportWidth >= 1280) {
+                return 24;
+            }
+
+            if (this.viewportWidth >= 640) {
+                return 20;
+            }
+
+            return 12;
+        },
+        get wrapperStyle() {
+            return `top: ${this.topOffset}px; left: ${this.sidebarOffset}px; right: 0; bottom: 0; padding: ${this.wrapperPadding}px;`;
+        }
+    }"
+    class="fixed z-[10010] hidden items-start justify-center"
+    :style="wrapperStyle"
+    aria-hidden="true"
+    aria-labelledby="practiceCategoryModalTitle"
+    aria-modal="true"
+    role="dialog">
+    <div id="practiceCategoryModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+    <div
+        class="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        <div
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
+            <div class="max-w-2xl">
+                <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
+                    Practice Category
+                </p>
+                <h2 id="practiceCategoryModalTitle" class="mt-1 text-lg font-semibold text-gray-900 dark:text-white/90">
+                    Choose category first
+                </h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Pick the interview category for this practice before the field builder and interview workspace open.
+                </p>
+            </div>
+
+            <button
+                id="closePracticeCategoryModalBtn"
+                type="button"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white sm:h-11 sm:w-11">
+                <span class="sr-only">Close category modal</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                        fill="currentColor" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="max-h-[calc(100dvh-160px)] overflow-y-auto p-4 sm:p-6">
+            <div id="practiceCategoryList" class="grid gap-3 sm:grid-cols-2"></div>
+        </div>
+    </div>
 </div>
 
 <div
@@ -755,8 +851,8 @@
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Interviewer</h3>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Avatar asks the question aloud, then evaluates live body language and facial
-                                    expressions from the camera feed.
+                                    The avatar asks the question aloud, while the camera helps surface selected
+                                    non-verbal cues such as eye contact, posture, head movement, and facial composure.
                                 </p>
                             </div>
 
@@ -888,7 +984,8 @@
                                 </div>
 
                                 <p id="livePresenceTip" class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                                    Start the camera to unlock live body-language and facial-expression coaching.
+                                    Start the camera to unlock selected non-verbal coaching for eye contact, posture,
+                                    head movement, and facial composure.
                                 </p>
                             </div>
 
@@ -904,7 +1001,7 @@
 
                                 <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
                                     <div class="flex items-center justify-between gap-3">
-                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Facial Expression Algorithms</h4>
+                                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Facial Presence Algorithms</h4>
                                         <span class="text-xs uppercase tracking-wide text-gray-500">3+ checks</span>
                                     </div>
 

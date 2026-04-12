@@ -25,7 +25,7 @@ const MODE_CONFIG = {
     }
 };
 
-const REMOTE_PROVIDER_IDS = ["gemini", "groq", "openrouter", "wisdomgate", "cohere"];
+const REMOTE_PROVIDER_IDS = ["gemini", "groq", "openrouter", "claude", "wisdomgate", "cohere"];
 
 export function initChatbotPage() {
     const app = document.getElementById("chatbotApp");
@@ -327,7 +327,7 @@ export function initChatbotPage() {
         if (getConfiguredProviderCount() === 0) {
             showStatus(
                 "info",
-                "No free API keys are configured yet, so the page will answer with the built-in Philippine interview coach until you add provider keys."
+                "No external API keys are configured yet, so the page will answer with the built-in Philippine interview coach until you add provider keys."
             );
         }
     }

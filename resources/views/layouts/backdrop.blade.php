@@ -7,6 +7,11 @@ sidebarToggle ? 'block xl:hidden' : 'hidden'
 </div> --}}
 
 <div
+  x-cloak
+  x-show="$store.sidebar.isMobileOpen"
+  x-transition.opacity
+  @click="$store.sidebar.setMobileOpen(false)"
   :class="$store.sidebar.isMobileOpen ? 'block xl:hidden' : 'hidden'"
-  class="fixed z-50 h-screen w-full bg-gray-900/50"
+  class="fixed inset-0 z-[100000] bg-gray-900/50 backdrop-blur-[2px]"
+  aria-hidden="true"
 ></div>

@@ -13,6 +13,7 @@ class InterviewChatbotService
         'gemini',
         'groq',
         'openrouter',
+        'claude',
         'wisdomgate',
         'cohere',
     ];
@@ -457,6 +458,14 @@ class InterviewChatbotService
                 'type' => 'remote',
                 'model' => (string) config('services.openrouter.model', 'openrouter/free'),
             ],
+            'claude' => [
+                'id' => 'claude',
+                'label' => 'Claude API',
+                'description' => 'Anthropic Messages API for Claude models.',
+                'configured' => $this->hasApiKey(config('services.claude.api_key')),
+                'type' => 'remote',
+                'model' => (string) config('services.claude.model', 'claude-haiku-4-5-20251001'),
+            ],
             'wisdomgate' => [
                 'id' => 'wisdomgate',
                 'label' => 'Wisdom Gate API',
@@ -523,6 +532,10 @@ class InterviewChatbotService
             return 'wisdomgate';
         }
 
+        if (in_array($providerId, ['anthropic', 'anthropicapi', 'claudeapi'], true)) {
+            return 'claude';
+        }
+
         return $providerId !== '' ? $providerId : null;
     }
 
@@ -572,7 +585,7 @@ class InterviewChatbotService
 
     protected function configuredPriorityOrder(): array
     {
-        $raw = (string) config('services.interview_chatbot.provider_priority', 'gemini,groq,openrouter,wisdomgate,cohere');
+        $raw = (string) config('services.interview_chatbot.provider_priority', 'gemini,groq,openrouter,claude,wisdomgate,cohere');
         $priority = collect(explode(',', $raw))
             ->map(fn (string $item) => $this->normalizeProviderId($item))
             ->filter(fn (?string $providerId) => $providerId !== null && in_array($providerId, self::REMOTE_PROVIDER_IDS, true))
@@ -596,6 +609,7 @@ class InterviewChatbotService
             'gemini' => $this->requestGeminiReply($message, $context, $currentQuestion, $answerDraft, $history),
             'groq' => $this->requestGroqReply($message, $context, $currentQuestion, $answerDraft, $history),
             'openrouter' => $this->requestOpenRouterReply($message, $context, $currentQuestion, $answerDraft, $history),
+            'claude' => $this->requestClaudeReply($message, $context, $currentQuestion, $answerDraft, $history),
             'wisdomgate' => $this->requestWisdomGateReply($message, $context, $currentQuestion, $answerDraft, $history),
             'cohere' => $this->requestCohereReply($message, $context, $currentQuestion, $answerDraft, $history),
             default => null,
@@ -726,6 +740,65 @@ class InterviewChatbotService
                 'X-Title' => (string) config('app.name', 'InterviewPilot'),
             ],
         );
+    }
+
+    protected function requestClaudeReply(
+        string $message,
+        array $context,
+        ?string $currentQuestion,
+        ?string $answerDraft,
+        array $history
+    ): ?array {
+        $apiKey = (string) config('services.claude.api_key');
+
+        if (! $this->hasApiKey($apiKey)) {
+            return null;
+        }
+
+        $model = (string) config('services.claude.model', 'claude-haiku-4-5-20251001');
+
+        $response = Http::timeout(20)
+            ->acceptJson()
+            ->withHeaders([
+                'x-api-key' => $apiKey,
+                'anthropic-version' => (string) config('services.claude.version', '2023-06-01'),
+                'content-type' => 'application/json',
+            ])
+            ->post('https://api.anthropic.com/v1/messages', [
+                'model' => $model,
+                'system' => InterviewPracticeCatalog::chatbotSystemInstruction(),
+                'messages' => $this->buildClaudeMessages($message, $context, $currentQuestion, $answerDraft, $history),
+                'temperature' => 0.4,
+                'max_tokens' => 600,
+            ]);
+
+        if (! $response->successful()) {
+            $this->recordProviderError(
+                'claude',
+                data_get($response->json(), 'error.message')
+                    ?: data_get($response->json(), 'message')
+                    ?: $response->body(),
+                $response->status()
+            );
+            return null;
+        }
+
+        $reply = $this->sanitizeReply(
+            $this->collectTextFromItems(data_get($response->json(), 'content', []), 'text')
+        );
+
+        if ($reply === null) {
+            $this->recordProviderError('claude', 'The provider returned an empty response.', $response->status());
+            return null;
+        }
+
+        $responseModel = $this->sanitizeText(data_get($response->json(), 'model'), 120) ?? $model;
+
+        return [
+            'reply' => $reply,
+            'provider' => sprintf('Claude API (%s)', $responseModel),
+            'providerId' => 'claude',
+        ];
     }
 
     protected function requestWisdomGateReply(
@@ -911,6 +984,30 @@ class InterviewChatbotService
         foreach ($history as $item) {
             $messages[] = [
                 'role' => $item['role'],
+                'content' => $item['text'],
+            ];
+        }
+
+        $messages[] = [
+            'role' => 'user',
+            'content' => $this->buildProviderUserPrompt($message, $context, $currentQuestion, $answerDraft),
+        ];
+
+        return $messages;
+    }
+
+    protected function buildClaudeMessages(
+        string $message,
+        array $context,
+        ?string $currentQuestion,
+        ?string $answerDraft,
+        array $history
+    ): array {
+        $messages = [];
+
+        foreach ($history as $item) {
+            $messages[] = [
+                'role' => $item['role'] === 'assistant' ? 'assistant' : 'user',
                 'content' => $item['text'],
             ];
         }

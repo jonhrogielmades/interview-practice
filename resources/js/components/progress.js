@@ -4,6 +4,11 @@ import {
     readPracticeSessions,
     removePracticeSession
 } from "./practice-storage";
+import {
+    buildManuscriptRubric,
+    formatRubricScore,
+    getReadinessLabel
+} from "./manuscript-rubric";
 
 export function initProgress() {
     const progressRoot = document.getElementById("progressApp");
@@ -24,6 +29,7 @@ export function initProgress() {
         sessionReviewContainer: document.getElementById("sessionReviewContainer"),
         categoryBreakdownList: document.getElementById("categoryBreakdownList"),
         progressSummaryText: document.getElementById("progressSummaryText"),
+        progressCapstoneRubricGrid: document.getElementById("progressCapstoneRubricGrid"),
         criteriaAnalyticsGrid: document.getElementById("criteriaAnalyticsGrid"),
         recentPerformanceCards: document.getElementById("recentPerformanceCards"),
         progressAchievementList: document.getElementById("progressAchievementList"),
@@ -44,6 +50,12 @@ export function initProgress() {
     let sessionsLastSevenDays = [];
     let streakDays = 0;
     let overallAverage = 0;
+    let capstoneAverages = {
+        verbal: 0,
+        nonVerbal: 0,
+        overall: 0,
+        readinessLabel: "No data yet"
+    };
     let isMutating = false;
 
     hydrateData();
@@ -131,6 +143,7 @@ export function initProgress() {
         });
         streakDays = calculateStreakDays(sessions);
         overallAverage = average(sessions.map((session) => Number(session.averageScore) || 0));
+        capstoneAverages = buildCapstoneAverages(sessions);
     }
 
     function formatDate(dateValue, withTime = false) {
@@ -239,6 +252,7 @@ export function initProgress() {
         renderSessionReview();
         renderCategoryCards();
         renderSummary();
+        renderCapstoneRubric();
         renderCriteriaAnalytics();
         renderRecentCards();
         renderAchievements();
@@ -298,6 +312,51 @@ export function initProgress() {
             relevance: Number((totals.relevance / items.length).toFixed(1)),
             grammar: Number((totals.grammar / items.length).toFixed(1)),
             professionalism: Number((totals.professionalism / items.length).toFixed(1))
+        };
+    }
+
+    function buildCapstoneAverages(items) {
+        if (!items.length) {
+            return {
+                verbal: 0,
+                nonVerbal: 0,
+                overall: 0,
+                readinessLabel: "No data yet"
+            };
+        }
+
+        const rubrics = items.map((session) => {
+            const savedCriteria = session.criteriaAverages || {};
+            const latestAnswer = Array.isArray(session.answers) && session.answers.length
+                ? session.answers[session.answers.length - 1]
+                : null;
+            const savedOverall = Number(savedCriteria.manuscriptOverall) || 0;
+
+            if (savedOverall > 0) {
+                return {
+                    verbal: Number(savedCriteria.manuscriptVerbal) || 0,
+                    nonVerbal: Number(savedCriteria.manuscriptNonVerbal) || 0,
+                    overall: savedOverall,
+                    readinessLabel: getReadinessLabel(savedOverall)
+                };
+            }
+
+            return buildManuscriptRubric(
+                savedCriteria,
+                latestAnswer?.feedbackSummary?.visualSnapshot || {},
+                latestAnswer?.feedbackSummary?.processEvaluations || {}
+            );
+        });
+
+        const averageRubric = {
+            verbal: average(rubrics.map((rubric) => Number(rubric.verbal) || 0)),
+            nonVerbal: average(rubrics.map((rubric) => Number(rubric.nonVerbal) || 0)),
+            overall: average(rubrics.map((rubric) => Number(rubric.overall) || 0))
+        };
+
+        return {
+            ...averageRubric,
+            readinessLabel: getReadinessLabel(averageRubric.overall)
         };
     }
 
@@ -561,7 +620,32 @@ export function initProgress() {
 
         const topCategory = categoryBreakdown[0]?.categoryName || "your main category";
         const bestCriterion = Object.entries(criteriaAverages).sort((left, right) => right[1] - left[1])[0];
-        elements.progressSummaryText.textContent = `You have saved ${sessions.length} session${sessions.length === 1 ? "" : "s"} with an overall average of ${overallAverage.toFixed(1)}/10. ${topCategory} is currently your strongest category, and ${bestCriterion[0]} is your top scoring criterion.`;
+        elements.progressSummaryText.textContent = `You have saved ${sessions.length} session${sessions.length === 1 ? "" : "s"} with an internal average of ${overallAverage.toFixed(1)}/10 and a capstone overall of ${capstoneAverages.overall.toFixed(2)}/5. ${topCategory} is currently your strongest category, and ${bestCriterion[0]} is your top scoring criterion.`;
+    }
+
+    function renderCapstoneRubric() {
+        if (!sessions.length) {
+            elements.progressCapstoneRubricGrid.innerHTML = renderEmptyState(
+                "No rubric data yet",
+                "Save an evaluated session to translate the runtime scores into the manuscript rubric."
+            );
+            return;
+        }
+
+        const cards = [
+            ["Verbal", formatRubricScore(capstoneAverages.verbal), "Weighted clarity, relevance, grammar, and professionalism."],
+            ["Non-Verbal", formatRubricScore(capstoneAverages.nonVerbal), "Selected eye contact, posture, head movement, and facial composure cues."],
+            ["Overall", formatRubricScore(capstoneAverages.overall), "Combined capstone readiness based on verbal and non-verbal weighting."],
+            ["Readiness", capstoneAverages.readinessLabel, "Interpretation band from the manuscript scoring scale."]
+        ];
+
+        elements.progressCapstoneRubricGrid.innerHTML = cards.map(([label, value, body]) => `
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                <p class="text-xs uppercase tracking-wide text-gray-500">${label}</p>
+                <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">${escapeHtml(value)}</p>
+                <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">${escapeHtml(body)}</p>
+            </div>
+        `).join("");
     }
 
     function renderCriteriaAnalytics() {
@@ -669,10 +753,11 @@ export function initProgress() {
                 generatedAt: new Date().toISOString(),
                 totalSessions: sessions.length,
                 overallAverage,
+                capstoneAverages,
                 sessions
             };
 
-            downloadFile("progress-report.json", JSON.stringify(payload, null, 2), "application/json");
+            downloadFile("capstone-progress-report.json", JSON.stringify(payload, null, 2), "application/json");
         });
 
         elements.progressExportCsvBtn.addEventListener("click", () => {
@@ -680,6 +765,7 @@ export function initProgress() {
                 "saved_at",
                 "category",
                 "average_score",
+                "capstone_overall",
                 "answered_count",
                 "question_count",
                 "focus_mode",
@@ -687,9 +773,20 @@ export function initProgress() {
                 "completed"
             ];
             const rows = sessions.map((session) => [
+                ((Array.isArray(session.answers) && session.answers.length) ? session.answers[session.answers.length - 1] : null),
+                session
+            ]).map(([latestAnswer, session]) => [
                 session.savedAt,
                 `"${String(session.categoryName).replace(/"/g, "\"\"")}"`,
                 Number(session.averageScore).toFixed(1),
+                Number(
+                    session.criteriaAverages?.manuscriptOverall
+                    || buildManuscriptRubric(
+                        session.criteriaAverages || {},
+                        latestAnswer?.feedbackSummary?.visualSnapshot || {},
+                        latestAnswer?.feedbackSummary?.processEvaluations || {}
+                    ).overall
+                ).toFixed(2),
                 session.answeredCount,
                 session.questionCount,
                 `"${String(session.focusMode).replace(/"/g, "\"\"")}"`,
@@ -697,7 +794,7 @@ export function initProgress() {
                 session.completed ? "yes" : "no"
             ].join(","));
 
-            downloadFile("progress-sessions.csv", [header.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
+            downloadFile("capstone-progress-sessions.csv", [header.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
         });
     }
 }

@@ -1,6 +1,7 @@
 import { practiceData, readSessionSetup } from "./practice-config";
 import { appendPracticeSession } from "./practice-storage";
 import { buildFeedbackSummary, normalizeFeedbackSummary } from "./feedback-utils";
+import { buildManuscriptRubric, formatRubricScore } from "./manuscript-rubric";
 import { requestWorkspace } from "./workspace-api";
 
 export function initPractice() {
@@ -57,14 +58,19 @@ export function initPractice() {
         fieldBuilderStatusTone: "neutral",
         fieldBuilderRequestId: 0,
         liveVisualSnapshot: null,
-        lastProcessEvaluations: null
+        lastProcessEvaluations: null,
+        learningActivityContext: null
     };
 
     const elements = {
         questionCountSelect: document.getElementById("questionCountSelect"),
         focusModeSelect: document.getElementById("focusModeSelect"),
         pacingModeSelect: document.getElementById("pacingModeSelect"),
+        practiceCategoryModal: document.getElementById("practiceCategoryModal"),
+        practiceCategoryModalBackdrop: document.getElementById("practiceCategoryModalBackdrop"),
         practiceCategoryList: document.getElementById("practiceCategoryList"),
+        openPracticeCategoryModalBtn: document.getElementById("openPracticeCategoryModalBtn"),
+        closePracticeCategoryModalBtn: document.getElementById("closePracticeCategoryModalBtn"),
         practiceFieldModal: document.getElementById("practiceFieldModal"),
         practiceFieldModalBackdrop: document.getElementById("practiceFieldModalBackdrop"),
         closePracticeFieldModalBtn: document.getElementById("closePracticeFieldModalBtn"),
@@ -156,6 +162,49 @@ export function initPractice() {
         stopSpeaking: () => {}
     };
 
+    const learningActivityProgression = {
+        "quick-drill": {
+            label: "Quick Drill",
+            levels: [
+                { level: 1, label: "Level 1", targetScore: 7.0, questionFocus: "Answer one warm-up question with a direct point and one example." },
+                { level: 2, label: "Level 2", targetScore: 8.0, questionFocus: "Answer a stronger follow-up question with clearer detail and outcome." },
+                { level: 3, label: "Level 3", targetScore: 8.5, questionFocus: "Answer a challenge question with polished confidence and concise evidence." }
+            ]
+        },
+        "star-response": {
+            label: "STAR Response Drill",
+            levels: [
+                { level: 1, label: "Level 1", targetScore: 7.0, questionFocus: "Build the answer around situation, task, action, and result." },
+                { level: 2, label: "Level 2", targetScore: 8.0, questionFocus: "Add measurable results and connect the example to the interview goal." },
+                { level: 3, label: "Level 3", targetScore: 8.5, questionFocus: "Handle a follow-up question while keeping the STAR answer concise." }
+            ]
+        },
+        "voice-rehearsal": {
+            label: "Voice Rehearsal Sprint",
+            levels: [
+                { level: 1, label: "Level 1", targetScore: 7.0, questionFocus: "Deliver one answer clearly within the saved pacing target." },
+                { level: 2, label: "Level 2", targetScore: 8.0, questionFocus: "Improve pacing, transitions, and confidence in a follow-up answer." },
+                { level: 3, label: "Level 3", targetScore: 8.5, questionFocus: "Give a polished spoken answer with minimal filler and strong closing." }
+            ]
+        },
+        "camera-check": {
+            label: "Camera Presence Check",
+            levels: [
+                { level: 1, label: "Level 1", targetScore: 7.0, questionFocus: "Answer while keeping posture and camera framing steady." },
+                { level: 2, label: "Level 2", targetScore: 8.0, questionFocus: "Maintain eye contact orientation and calm head movement through a follow-up." },
+                { level: 3, label: "Level 3", targetScore: 8.5, questionFocus: "Deliver a harder answer with composed facial presence and steady pacing." }
+            ]
+        },
+        "follow-up-sprint": {
+            label: "Follow-up Sprint",
+            levels: [
+                { level: 1, label: "Level 1", targetScore: 7.0, questionFocus: "Answer one follow-up question using the last feedback area." },
+                { level: 2, label: "Level 2", targetScore: 8.0, questionFocus: "Give a clearer follow-up answer with stronger evidence and reflection." },
+                { level: 3, label: "Level 3", targetScore: 8.5, questionFocus: "Handle a deeper follow-up with a polished, interview-ready response." }
+            ]
+        }
+    };
+
     function normalizeQuestionAgentProviders(providers) {
         const fallbackProviders = [
             {
@@ -231,13 +280,13 @@ export function initPractice() {
         "Professional Tone"
     ];
     const BODY_LANGUAGE_ALGORITHM_NAMES = [
-        "Frame Centering",
-        "Head Balance",
-        "Movement Stability",
-        "Presence Framing"
+        "Eye Contact Orientation",
+        "Posture Stability",
+        "Head Movement Control",
+        "Camera Framing Support"
     ];
     const FACIAL_EXPRESSION_ALGORITHM_NAMES = [
-        "Smile Warmth",
+        "Facial Composure",
         "Eye Engagement",
         "Jaw Relaxation",
         "Brow Calmness"
@@ -255,6 +304,113 @@ export function initPractice() {
 
     function roundScore(value, fallback = 0) {
         return Number(clampScore(value, fallback).toFixed(1));
+    }
+
+    function getLearningActivityMeta(activityId) {
+        return learningActivityProgression[String(activityId || "")] || null;
+    }
+
+    function getLearningActivityLevel(activityId, requestedLevel = 1) {
+        const meta = getLearningActivityMeta(activityId);
+
+        if (!meta) {
+            return null;
+        }
+
+        const levels = meta.levels || [];
+        const numericLevel = Number(requestedLevel);
+
+        return levels.find((level) => Number(level.level) === numericLevel) || levels[0] || null;
+    }
+
+    function setLearningActivityContext(activityId, moduleId = "", requestedLevel = 1, requestedTarget = null) {
+        const meta = getLearningActivityMeta(activityId);
+        const currentLevel = getLearningActivityLevel(activityId, requestedLevel);
+
+        if (!meta || !currentLevel) {
+            state.learningActivityContext = null;
+            return null;
+        }
+
+        const targetScore = Number.isFinite(Number(requestedTarget))
+            ? roundScore(requestedTarget, currentLevel.targetScore)
+            : roundScore(currentLevel.targetScore, 7);
+        const levels = meta.levels || [];
+        const nextLevel = levels.find((level) => Number(level.level) > Number(currentLevel.level)) || null;
+
+        state.learningActivityContext = {
+            activityId: String(activityId),
+            moduleId: String(moduleId || ""),
+            activityLabel: meta.label,
+            level: Number(currentLevel.level),
+            levelLabel: currentLevel.label,
+            targetScore,
+            questionFocus: currentLevel.questionFocus,
+            nextLevel: nextLevel ? {
+                level: Number(nextLevel.level),
+                levelLabel: nextLevel.label,
+                targetScore: roundScore(nextLevel.targetScore, targetScore),
+                questionFocus: nextLevel.questionFocus
+            } : null
+        };
+
+        return state.learningActivityContext;
+    }
+
+    function buildLearningActivityInstruction() {
+        const context = state.learningActivityContext;
+
+        if (!context) {
+            return "";
+        }
+
+        const nextLevelText = context.nextLevel
+            ? `If the user passes, the next level is ${context.nextLevel.levelLabel} with a ${context.nextLevel.targetScore.toFixed(1)} / 10 target.`
+            : "If the user passes, this is the final activity level.";
+
+        return [
+            `Learning activity: ${context.activityLabel}.`,
+            `Current level: ${context.levelLabel}.`,
+            `Target score: ${context.targetScore.toFixed(1)} / 10.`,
+            `Question focus: ${context.questionFocus}`,
+            "Generate questions that match this activity level and stay inside the selected interview category.",
+            nextLevelText
+        ].join(" ");
+    }
+
+    function buildLearningActivityScoreMessage(score) {
+        const context = state.learningActivityContext;
+
+        if (!context) {
+            return "";
+        }
+
+        const scoreLabel = `${roundScore(score, 0).toFixed(1)} / 10`;
+        const targetLabel = `${context.targetScore.toFixed(1)} / 10`;
+
+        if (roundScore(score, 0) < context.targetScore) {
+            return ` Learning activity score: ${scoreLabel}. Target: ${targetLabel}. Try ${context.activityLabel} ${context.levelLabel} again before moving to the next level.`;
+        }
+
+        if (!context.nextLevel) {
+            return ` Learning activity score: ${scoreLabel}. Target: ${targetLabel}. Passed. You completed the final level for ${context.activityLabel}.`;
+        }
+
+        const nextUrl = new URL(window.location.href);
+        nextUrl.searchParams.set("source", "learning-lab");
+        nextUrl.searchParams.set("activity", context.activityId);
+        nextUrl.searchParams.set("level", String(context.nextLevel.level));
+        nextUrl.searchParams.set("target", context.nextLevel.targetScore.toFixed(1));
+
+        if (context.moduleId) {
+            nextUrl.searchParams.set("module", context.moduleId);
+        }
+
+        if (state.selectedCategory?.id) {
+            nextUrl.searchParams.set("category", state.selectedCategory.id);
+        }
+
+        return ` Learning activity score: ${scoreLabel}. Target: ${targetLabel}. Passed. Next level: ${context.nextLevel.levelLabel} with a ${context.nextLevel.targetScore.toFixed(1)} / 10 target. Open ${nextUrl.pathname}${nextUrl.search} to continue.`;
     }
 
     function averageScore(values, fallback = 0) {
@@ -326,12 +482,22 @@ export function initPractice() {
         };
     }
 
-    function createDefaultVisualSnapshot(reason = "Start the camera to unlock live body-language and facial-expression coaching.") {
+    function createDefaultVisualSnapshot(reason = "Start the camera to unlock selected non-verbal coaching.") {
         return {
             headline: "Camera coaching is waiting",
             tip: reason,
             tag: "Standby",
             tagTone: "neutral",
+            criteria: {
+                eyeContactScore: null,
+                postureScore: null,
+                headMovementScore: null,
+                facialComposureScore: null,
+                eyeContactLabel: reason,
+                postureLabel: reason,
+                headMovementLabel: reason,
+                facialComposureLabel: reason
+            },
             bodyLanguage: createUnavailableProcessEvaluation(
                 "Body Language",
                 reason,
@@ -351,16 +517,25 @@ export function initPractice() {
 
     function getPersistedVisualSnapshot() {
         const visualSnapshot = getLiveVisualSnapshot();
+        const criteria = visualSnapshot.criteria || {};
 
         return {
             bodyLanguageScore: visualSnapshot.bodyLanguage.average,
             facialExpressionScore: visualSnapshot.facialExpressions.average,
+            eyeContactScore: criteria.eyeContactScore,
+            postureScore: criteria.postureScore,
+            headMovementScore: criteria.headMovementScore,
+            facialComposureScore: criteria.facialComposureScore,
             bodyLanguageLabel: visualSnapshot.bodyLanguage.available
                 ? visualSnapshot.bodyLanguage.summary
                 : visualSnapshot.bodyLanguage.status,
             facialExpressionLabel: visualSnapshot.facialExpressions.available
                 ? visualSnapshot.facialExpressions.summary
                 : visualSnapshot.facialExpressions.status,
+            eyeContactLabel: criteria.eyeContactLabel || visualSnapshot.bodyLanguage.status,
+            postureLabel: criteria.postureLabel || visualSnapshot.bodyLanguage.status,
+            headMovementLabel: criteria.headMovementLabel || visualSnapshot.bodyLanguage.status,
+            facialComposureLabel: criteria.facialComposureLabel || visualSnapshot.facialExpressions.status,
             tip: visualSnapshot.tip
         };
     }
@@ -425,6 +600,10 @@ export function initPractice() {
 
     function isPracticeModalOpen() {
         return Boolean(elements.practiceSessionModal) && !elements.practiceSessionModal.classList.contains("hidden");
+    }
+
+    function isCategoryModalOpen() {
+        return Boolean(elements.practiceCategoryModal) && !elements.practiceCategoryModal.classList.contains("hidden");
     }
 
     function lockBodyScroll() {
@@ -698,6 +877,38 @@ export function initPractice() {
         }
     }
 
+    function openCategoryModal() {
+        if (!elements.practiceCategoryModal) {
+            return;
+        }
+
+        if (!isCategoryModalOpen()) {
+            elements.practiceCategoryModal.classList.remove("hidden");
+            elements.practiceCategoryModal.classList.add("flex");
+            elements.practiceCategoryModal.setAttribute("aria-hidden", "false");
+            lockBodyScroll();
+        }
+
+        window.setTimeout(() => {
+            elements.practiceCategoryList?.querySelector("button")?.focus();
+        }, 0);
+    }
+
+    function closeCategoryModal({ returnFocus = true } = {}) {
+        if (!elements.practiceCategoryModal || !isCategoryModalOpen()) {
+            return;
+        }
+
+        elements.practiceCategoryModal.classList.add("hidden");
+        elements.practiceCategoryModal.classList.remove("flex");
+        elements.practiceCategoryModal.setAttribute("aria-hidden", "true");
+        unlockBodyScroll();
+
+        if (returnFocus) {
+            elements.openPracticeCategoryModalBtn?.focus();
+        }
+    }
+
     function closePracticeModal({ returnFocus = true } = {}) {
         if (!elements.practiceSessionModal || !isPracticeModalOpen()) {
             return;
@@ -778,6 +989,7 @@ export function initPractice() {
             .map((category) => `
                 <button
                     type="button"
+                    aria-label="Choose ${category.name}"
                     data-category-id="${category.id}"
                     class="${getCategoryButtonClass()}"
                 >
@@ -791,6 +1003,7 @@ export function initPractice() {
             button.addEventListener("click", () => {
                 const category = practiceData.categories.find((item) => item.id === button.dataset.categoryId);
                 if (category) {
+                    closeCategoryModal({ returnFocus: false });
                     selectCategory(category);
                 }
             });
@@ -1262,7 +1475,7 @@ export function initPractice() {
 
         if (action === "start-camera") {
             interviewerControls.startCamera();
-            showMessage("info", "Camera coaching has been requested so you can review body language and facial expressions.");
+            showMessage("info", "Camera coaching has been requested so you can review selected non-verbal cues.");
             return;
         }
 
@@ -1347,24 +1560,25 @@ export function initPractice() {
     function buildLearningActivities() {
         const visualSnapshot = getLiveVisualSnapshot();
         const responseProcess = state.lastProcessEvaluations?.response;
+        const categoryName = state.selectedCategory?.name || "the selected interview track";
 
         return [
             {
-                title: "Outline The Next Answer",
-                tag: "Structure drill",
-                tone: "neutral",
+                title: "STAR Response Drill",
+                tag: "Structure",
+                tone: responseProcess?.available ? getScoreTone(responseProcess.average) : "neutral",
                 summary: responseProcess?.available
-                    ? `The latest answer process scored ${getScoreLabel(responseProcess.average, "0.0 / 10")}. Load an outline before you answer again.`
-                    : "Prepare the next response with a direct answer, one example, and a clear result.",
+                    ? `The latest answer process scored ${getScoreLabel(responseProcess.average, "0.0 / 10")}. Add a STAR outline before answering in ${categoryName}.`
+                    : `Prepare the next ${categoryName} answer with a situation, task, action, and result.`,
                 action: "load-outline",
-                actionLabel: "Add Outline",
+                actionLabel: "Add STAR Outline",
                 enabled: Boolean(state.selectedCategory && getActiveQuestionCount() > 0)
             },
             {
-                title: "Replay The Interviewer",
-                tag: "Listening drill",
+                title: "Question Replay Drill",
+                tag: "Listening",
                 tone: "success",
-                summary: "Hear the active question again so you can answer more naturally before typing or speaking.",
+                summary: `Hear the active ${categoryName} question again so the answer starts naturally before typing or speaking.`,
                 action: "replay-question",
                 actionLabel: "Replay Question",
                 enabled: Boolean(state.selectedCategory)
@@ -1381,7 +1595,7 @@ export function initPractice() {
                 enabled: Boolean(state.selectedCategory && state.speechRecognition)
             },
             {
-                title: "Mirror And Posture Reset",
+                title: "Camera Presence Check",
                 tag: visualSnapshot.bodyLanguage.available
                     ? getScoreLabel(visualSnapshot.bodyLanguage.average, "0.0 / 10")
                     : "Standby",
@@ -1390,7 +1604,7 @@ export function initPractice() {
                     : "neutral",
                 summary: visualSnapshot.bodyLanguage.available
                     ? visualSnapshot.bodyLanguage.summary
-                    : "Turn on the camera to check centering, head balance, movement stability, and frame presence.",
+                    : "Turn on the camera to check centering, posture, head movement, and facial composure.",
                 action: "start-camera",
                 actionLabel: visualSnapshot.bodyLanguage.available ? "Refresh Camera" : "Start Camera",
                 enabled: true
@@ -1804,8 +2018,9 @@ export function initPractice() {
         const baseInstruction = String(instruction || "").trim() || buildDefaultQuestionAgentInstruction(category);
         const fieldPlan = getFieldPlanForCategory(category) || (state.selectedCategory?.id === category.id ? state.selectedFieldPlan : null);
         const fieldSuffix = buildFieldInstructionSuffix(fieldPlan);
+        const learningActivityInstruction = buildLearningActivityInstruction();
 
-        return [baseInstruction, fieldSuffix]
+        return [baseInstruction, learningActivityInstruction, fieldSuffix]
             .filter(Boolean)
             .join(" ");
     }
@@ -2018,6 +2233,9 @@ export function initPractice() {
         state.questionSourceLabel = payload?.usedFallback ? "Local generated set" : "AI-generated set";
         state.questionSetSummary = [
             String(payload?.reply || `${questions.length} AI-generated interview questions are ready.`).trim(),
+            state.learningActivityContext
+                ? `${state.learningActivityContext.activityLabel} ${state.learningActivityContext.levelLabel}: target ${state.learningActivityContext.targetScore.toFixed(1)} / 10.`
+                : "",
             getSelectedFieldTitle() ? `Focus: ${getSelectedFieldTitle()}.` : ""
         ].filter(Boolean).join(" ");
         state.questionAgentResolvedProviderLabel = String(payload?.provider || "");
@@ -2030,6 +2248,7 @@ export function initPractice() {
         }
 
         const category = state.selectedCategory;
+        const learningActivityContext = state.learningActivityContext;
         const hasExistingProgress = state.feedbackHistory.length > 0;
         const message = buildQuestionGenerationInstruction(category, instruction || elements.practiceQuestionAgentInput.value || "");
         const requestId = state.questionAgentRequestId + 1;
@@ -2044,6 +2263,7 @@ export function initPractice() {
         setQuestionAgentStatus("Generating", "warning");
         syncQuestionAgentControls();
         resetSessionProgress();
+        state.learningActivityContext = learningActivityContext;
         showQuestionSetLoadingState(category);
         updateTipsPanel();
         updateSessionActionButtons();
@@ -2212,6 +2432,7 @@ export function initPractice() {
 
     async function selectCategory(category, { skipFieldModal = false, prefillNeed = "" } = {}) {
         const fieldPlan = getFieldPlanForCategory(category);
+        const learningActivityContext = state.learningActivityContext;
 
         if (!skipFieldModal) {
             openPracticeFieldModal(category, { prefillNeed });
@@ -2230,6 +2451,7 @@ export function initPractice() {
         elements.timerTargetValue.textContent = formatTime(state.timerTarget);
 
         resetSessionProgress();
+        state.learningActivityContext = learningActivityContext;
         updateSelectedCategoryButtons();
         resetQuestionAgentConversation(category);
         showQuestionSetLoadingState(category);
@@ -2405,6 +2627,41 @@ export function initPractice() {
         `;
     }
 
+    function renderCapstoneRubricSection(rubric) {
+        const items = [
+            ["Verbal", formatRubricScore(rubric.verbal), "Weighted clarity, relevance, grammar, and professionalism."],
+            ["Non-Verbal", formatRubricScore(rubric.nonVerbal), "Selected eye contact, posture, head movement, and facial composure cues."],
+            ["Overall", formatRubricScore(rubric.overall), "Combined capstone score based on the manuscript weighting model."],
+            ["Readiness", rubric.readinessLabel || "No data yet", "Interpretation band used for manuscript-style reporting."]
+        ];
+
+        return `
+            <div class="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-900/70">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Capstone Rubric</strong>
+                        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                            The runtime scores below are also translated into the manuscript's weighted 1-to-5 rubric.
+                        </p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                        ${rubric.readinessLabel || "No data yet"}
+                    </span>
+                </div>
+
+                <div class="mt-4 grid gap-3 md:grid-cols-2">
+                    ${items.map(([label, value, description]) => `
+                        <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                            <p class="text-xs uppercase tracking-wide text-gray-500">${label}</p>
+                            <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">${value}</p>
+                            <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">${description}</p>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+
     function renderProcessEvaluationSection(processEvaluations) {
         const processes = Object.values(processEvaluations || {});
 
@@ -2414,7 +2671,7 @@ export function initPractice() {
                     <div>
                         <strong class="block text-sm font-semibold text-gray-900 dark:text-white/90">Algorithm Evaluations</strong>
                         <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                            Each process now runs three or more algorithms for answer quality, body language, and facial expressions.
+                            These process checks support the manuscript-aligned evaluation flow for answer quality and selected non-verbal cues.
                         </p>
                     </div>
                     <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
@@ -2444,6 +2701,14 @@ export function initPractice() {
         `;
     }
 
+    function getEntryRubric(entry) {
+        return entry?.feedbackSummary?.manuscriptRubric || buildManuscriptRubric(
+            entry || {},
+            entry?.feedbackSummary?.visualSnapshot || {},
+            entry?.feedbackSummary?.processEvaluations || {}
+        );
+    }
+
     function buildSessionRecord() {
         if (!state.selectedCategory || state.feedbackHistory.length === 0) {
             return null;
@@ -2461,6 +2726,28 @@ export function initPractice() {
             relevance: 0,
             grammar: 0,
             professionalism: 0
+        });
+        const rubricTotals = state.feedbackHistory.reduce((totals, entry) => {
+            const rubric = getEntryRubric(entry);
+            const visualSnapshot = entry?.feedbackSummary?.visualSnapshot || {};
+
+            totals.eyeContact += Number(visualSnapshot.eyeContactScore) || 0;
+            totals.posture += Number(visualSnapshot.postureScore) || 0;
+            totals.headMovement += Number(visualSnapshot.headMovementScore) || 0;
+            totals.facialComposure += Number(visualSnapshot.facialComposureScore) || 0;
+            totals.manuscriptVerbal += Number(rubric.verbal) || 0;
+            totals.manuscriptNonVerbal += Number(rubric.nonVerbal) || 0;
+            totals.manuscriptOverall += Number(rubric.overall) || 0;
+
+            return totals;
+        }, {
+            eyeContact: 0,
+            posture: 0,
+            headMovement: 0,
+            facialComposure: 0,
+            manuscriptVerbal: 0,
+            manuscriptNonVerbal: 0,
+            manuscriptOverall: 0
         });
 
         const answerCount = state.feedbackHistory.length;
@@ -2489,7 +2776,14 @@ export function initPractice() {
                 clarity: Number((criteriaTotals.clarity / answerCount).toFixed(1)),
                 relevance: Number((criteriaTotals.relevance / answerCount).toFixed(1)),
                 grammar: Number((criteriaTotals.grammar / answerCount).toFixed(1)),
-                professionalism: Number((criteriaTotals.professionalism / answerCount).toFixed(1))
+                professionalism: Number((criteriaTotals.professionalism / answerCount).toFixed(1)),
+                eyeContact: Number((rubricTotals.eyeContact / answerCount).toFixed(1)),
+                posture: Number((rubricTotals.posture / answerCount).toFixed(1)),
+                headMovement: Number((rubricTotals.headMovement / answerCount).toFixed(1)),
+                facialComposure: Number((rubricTotals.facialComposure / answerCount).toFixed(1)),
+                manuscriptVerbal: Number((rubricTotals.manuscriptVerbal / answerCount).toFixed(2)),
+                manuscriptNonVerbal: Number((rubricTotals.manuscriptNonVerbal / answerCount).toFixed(2)),
+                manuscriptOverall: Number((rubricTotals.manuscriptOverall / answerCount).toFixed(2))
             },
             completed: answerCount >= getActiveQuestionCount(),
             answers: state.feedbackHistory
@@ -2540,6 +2834,11 @@ export function initPractice() {
     function renderFeedback(answer, scoreData, summary) {
         const normalizedSummary = normalizeFeedbackSummary(answer, scoreData, summary);
         const processEvaluations = summary?.processEvaluations || buildProcessEvaluations(answer, state.selectedCategory?.keywords || [], scoreData);
+        const manuscriptRubric = summary?.manuscriptRubric || buildManuscriptRubric(
+            scoreData,
+            summary?.visualSnapshot || {},
+            processEvaluations
+        );
         const providerMeta = normalizedSummary.provider
             ? `<span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">${normalizedSummary.provider}</span>`
             : "";
@@ -2574,6 +2873,8 @@ export function initPractice() {
                     ${renderCriterionFeedbackCard("Grammar", scoreData.grammar, normalizedSummary.criteria.grammar)}
                     ${renderCriterionFeedbackCard("Professionalism", scoreData.professionalism, normalizedSummary.criteria.professionalism)}
                 </div>
+
+                ${renderCapstoneRubricSection(manuscriptRubric)}
 
                 ${renderProcessEvaluationSection(processEvaluations)}
 
@@ -2640,10 +2941,12 @@ export function initPractice() {
         const scoreData = calculateScore(answer, state.selectedCategory.keywords);
         const processEvaluations = buildProcessEvaluations(answer, state.selectedCategory.keywords, scoreData);
         const visualSnapshot = getPersistedVisualSnapshot();
+        const manuscriptRubric = buildManuscriptRubric(scoreData, visualSnapshot, processEvaluations);
         const fallbackSummary = {
             ...normalizeFeedbackSummary(answer, scoreData, buildFeedbackSummary(answer, scoreData)),
             processEvaluations,
-            visualSnapshot
+            visualSnapshot,
+            manuscriptRubric
         };
 
         state.lastProcessEvaluations = processEvaluations;
@@ -2679,7 +2982,8 @@ export function initPractice() {
                     provider: payload.feedbackSummary?.provider || payload.provider || null
                 }),
                 processEvaluations,
-                visualSnapshot
+                visualSnapshot,
+                manuscriptRubric
             };
             renderFeedback(answer, scoreData, finalSummary);
             feedbackMessage = payload.usedFallback
@@ -2719,10 +3023,10 @@ export function initPractice() {
 
         try {
             await persistSessionIfNeeded();
-            showMessage("success", feedbackMessage);
+            showMessage("success", `${feedbackMessage}${buildLearningActivityScoreMessage(scoreData.average)}`);
         } catch (error) {
             console.error(error);
-            showMessage("warning", "Your answer was evaluated, but it could not be saved to the database.");
+            showMessage("warning", `Your answer was evaluated, but it could not be saved to the database.${buildLearningActivityScoreMessage(scoreData.average)}`);
         }
     }
 
@@ -2792,6 +3096,7 @@ export function initPractice() {
         state.questionIndex = 0;
         state.activeQuestions = [];
         state.answeredCount = 0;
+        state.learningActivityContext = null;
         state.currentMode = "Text";
         state.sessionStartedAt = null;
         state.sessionSaved = false;
@@ -3009,15 +3314,25 @@ export function initPractice() {
         const launchSource = String(params.get("source") || "").trim();
         const requestedModuleId = String(params.get("module") || "").trim();
         const requestedActivityId = String(params.get("activity") || "").trim();
+        const requestedActivityLevel = Number(params.get("level") || 1);
+        const requestedActivityTarget = params.get("target");
+        const hasLearningLaunchContext = launchSource === "learning-lab" || requestedModuleId || requestedActivityId;
 
-        if (!requestedCategoryId) {
+        if (!requestedCategoryId && !hasLearningLaunchContext) {
             return false;
         }
 
-        const requestedCategory = practiceData.categories.find((item) => item.id === requestedCategoryId);
+        const learningContext = requestedActivityId
+            ? setLearningActivityContext(
+                requestedActivityId,
+                requestedModuleId,
+                requestedActivityLevel,
+                requestedActivityTarget
+            )
+            : null;
 
-        if (!requestedCategory) {
-            return false;
+        if (!requestedActivityId) {
+            state.learningActivityContext = null;
         }
 
         const note = typeof savedSetup?.notes === "string" ? savedSetup.notes : "";
@@ -3036,10 +3351,52 @@ export function initPractice() {
             "quick-drill": "Quick Drill",
             "star-response": "STAR Response Drill",
             "voice-rehearsal": "Voice Rehearsal Sprint",
-            "camera-check": "Camera Check",
+            "camera-check": "Camera Presence Check",
             "follow-up-sprint": "Follow-up Sprint",
             "track-launch": "Track Launch"
         };
+
+        if (!requestedCategoryId) {
+            const messageParts = ["Choose a practice category first to launch from Learning Lab."];
+
+            if (requestedModuleId) {
+                messageParts.push(`Module: ${moduleLabels[requestedModuleId] || formatContextLabel(requestedModuleId)}.`);
+            }
+
+            if (requestedActivityId) {
+                messageParts.push(`Activity: ${activityLabels[requestedActivityId] || formatContextLabel(requestedActivityId)}.`);
+            }
+
+            if (learningContext) {
+                messageParts.push(`${learningContext.levelLabel} target: ${learningContext.targetScore.toFixed(1)} / 10.`);
+            }
+
+            elements.practiceModalCategoryName.textContent = "Choose a category first";
+            elements.practiceModalSummaryText.textContent = learningContext
+                ? `${learningContext.activityLabel} ${learningContext.levelLabel} is ready. Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.`
+                : "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.";
+            elements.practiceModalStateTag.textContent = "Choose category";
+            elements.practiceModalStateTag.className = "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
+            elements.practiceModalActiveCategory.textContent = "None selected";
+            elements.selectedCategoryName.textContent = "Choose a category first";
+            elements.selectedCategoryDescription.textContent = learningContext
+                ? `${learningContext.activityLabel} ${learningContext.levelLabel} is ready. Choose a category, then continue through the field builder.`
+                : "Choose a category, then continue through the field builder.";
+            elements.currentQuestionText.textContent = "Choose a category below to start this Learning Lab practice.";
+            elements.coachTipText.textContent = "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.";
+            updateSessionActionButtons();
+            showMessage("info", messageParts.join(" "));
+            openCategoryModal();
+
+            return true;
+        }
+
+        const requestedCategory = practiceData.categories.find((item) => item.id === requestedCategoryId);
+
+        if (!requestedCategory) {
+            return false;
+        }
+
         selectCategory(requestedCategory, { prefillNeed: note });
 
         const messageParts = [
@@ -3054,6 +3411,11 @@ export function initPractice() {
 
         if (requestedActivityId) {
             messageParts.push(`Activity: ${activityLabels[requestedActivityId] || formatContextLabel(requestedActivityId)}.`);
+        }
+
+        if (learningContext) {
+            messageParts.push(`${learningContext.levelLabel} target: ${learningContext.targetScore.toFixed(1)} / 10.`);
+            messageParts.push("Pass the target to unlock the next level; below target means try this level again.");
         }
 
         if (note.trim()) {
@@ -3155,6 +3517,10 @@ export function initPractice() {
         updateManualResponseState();
     });
 
+    elements.openPracticeCategoryModalBtn?.addEventListener("click", () => {
+        openCategoryModal();
+    });
+
     const handleLearningActionClick = (event) => {
         const trigger = event.target.closest("[data-learning-action]");
 
@@ -3242,6 +3608,14 @@ export function initPractice() {
         closePracticeModal();
     });
 
+    elements.closePracticeCategoryModalBtn?.addEventListener("click", () => {
+        closeCategoryModal();
+    });
+
+    elements.practiceCategoryModalBackdrop?.addEventListener("click", () => {
+        closeCategoryModal({ returnFocus: false });
+    });
+
     elements.practiceSessionModalBackdrop.addEventListener("click", () => {
         closePracticeModal({ returnFocus: false });
     });
@@ -3250,6 +3624,11 @@ export function initPractice() {
         if (event.key === "Escape") {
             if (isFieldModalOpen()) {
                 closePracticeFieldModal();
+                return;
+            }
+
+            if (isCategoryModalOpen()) {
+                closeCategoryModal();
                 return;
             }
 
@@ -3363,7 +3742,7 @@ export function initPractice() {
             faceStateValue.textContent = "Unavailable";
             avatarLineText.textContent = "Camera and spoken questions are available, but live face detection could not be loaded.";
             showWaitingVisualSnapshot(
-                "Live body-language and facial-expression coaching could not be loaded. Spoken questions and typing still work.",
+                "Selected non-verbal coaching could not be loaded. Spoken questions and typing still work.",
                 {
                     headline: "Visual coaching unavailable",
                     tag: "Unavailable",
@@ -3474,31 +3853,35 @@ export function initPractice() {
             const eyeEngagementScore = roundScore(Math.max(3, Math.min(10, 8 - ((eyeBlink + eyeSquint) * 5) + (eyeWide * 2.5))));
             const jawRelaxationScore = roundScore(Math.max(3, Math.min(10, 10 - (Math.max(0, jawOpen - 0.35) * 10) - (mouthPucker * 5) - (mouthFrown * 4))));
             const browCalmnessScore = roundScore(Math.max(3, Math.min(10, 10 - (browDown * 6) - (Math.max(0, browInnerUp - 0.35) * 4))));
+            const eyeContactScore = averageScore([frameCenteringScore, eyeEngagementScore]);
+            const postureScore = averageScore([headBalanceScore, presenceFramingScore]);
+            const headMovementScore = movementStabilityScore;
+            const facialComposureScore = averageScore([smileWarmthScore, jawRelaxationScore, browCalmnessScore]);
 
             const bodyAlgorithms = [
                 buildLiveAlgorithm(
-                    "Frame Centering",
-                    frameCenteringScore,
-                    "Your face stays centered in the frame, which reads as attentive and composed.",
-                    "You are mostly centered, but a small left-right adjustment would help.",
-                    "Recenter your position so your face sits nearer the middle of the frame."
+                    "Eye Contact Orientation",
+                    eyeContactScore,
+                    "Your face stays centered and your gaze reads as attentive to the interviewer.",
+                    "Your gaze is mostly usable, but a steadier camera-facing orientation would help.",
+                    "Recenter your face and reconnect your gaze toward the camera before the next answer."
                 ),
                 buildLiveAlgorithm(
-                    "Head Balance",
-                    headBalanceScore,
-                    "Your head position looks level and stable on camera.",
-                    "Your head is slightly tilted. Level it out for a more grounded look.",
-                    "Reset your posture and straighten your head for a more confident presence."
+                    "Posture Stability",
+                    postureScore,
+                    "Your head position and framing look upright and interview-ready.",
+                    "Your posture is mostly workable, but a straighter reset would help.",
+                    "Sit taller, level your head, and rebalance your framing for stronger posture."
                 ),
                 buildLiveAlgorithm(
-                    "Movement Stability",
-                    movementStabilityScore,
+                    "Head Movement Control",
+                    headMovementScore,
                     "Your movement is calm and steady, which helps the answer feel controlled.",
                     "You move a little while answering. Try settling before the next response.",
                     "Reduce extra movement so the camera reads you as more confident and settled."
                 ),
                 buildLiveAlgorithm(
-                    "Presence Framing",
+                    "Camera Framing Support",
                     presenceFramingScore,
                     "Your distance from the camera looks comfortable and interview-ready.",
                     "Your framing is usable, but moving slightly closer or farther would help.",
@@ -3508,11 +3891,11 @@ export function initPractice() {
 
             const facialAlgorithms = [
                 buildLiveAlgorithm(
-                    "Smile Warmth",
-                    smileWarmthScore,
-                    "Your expression looks warm and approachable without feeling forced.",
-                    "A slightly warmer expression would help you look more engaged.",
-                    "Relax your mouth and add a softer, more welcoming expression."
+                    "Facial Composure",
+                    facialComposureScore,
+                    "Your expression looks calm, steady, and professional on camera.",
+                    "Your expression is mostly usable, but relaxing the face a little more would help.",
+                    "Release visible facial tension so you look calmer and more composed."
                 ),
                 buildLiveAlgorithm(
                     "Eye Engagement",
@@ -3556,6 +3939,36 @@ export function initPractice() {
                     : "Live coaching is running.",
                 tag: `${combinedAverage.toFixed(1)} / 10`,
                 tagTone: getScoreTone(combinedAverage),
+                criteria: {
+                    eyeContactScore,
+                    postureScore,
+                    headMovementScore,
+                    facialComposureScore,
+                    eyeContactLabel: summarizeScoreBand(
+                        eyeContactScore,
+                        "Eye contact orientation looks engaged and camera-aware.",
+                        "Eye contact is mostly usable, but a steadier camera-facing gaze would help.",
+                        "Reconnect your gaze with the camera so the answer feels more engaged."
+                    ),
+                    postureLabel: summarizeScoreBand(
+                        postureScore,
+                        "Posture looks upright, centered, and interview-ready.",
+                        "Posture is usable, but a quick reset would make you look more grounded.",
+                        "Straighten your posture and rebalance your framing before the next answer."
+                    ),
+                    headMovementLabel: summarizeScoreBand(
+                        headMovementScore,
+                        "Head movement is calm and controlled.",
+                        "Movement is manageable, but settling more would help.",
+                        "Reduce head movement so the camera reads you as steadier and more confident."
+                    ),
+                    facialComposureLabel: summarizeScoreBand(
+                        facialComposureScore,
+                        "Facial composure looks calm and professional.",
+                        "Facial composure is acceptable, but softening tension would help.",
+                        "Relax your face and jaw before the next answer to look more composed."
+                    )
+                },
                 bodyLanguage: {
                     label: "Body Language",
                     average: bodyAverage,
@@ -3768,9 +4181,9 @@ export function initPractice() {
 
                 cameraStateValue.textContent = "Live";
                 setStatusTag("Camera live", "success");
-                avatarLineText.textContent = "Camera is live. I will monitor body language and facial expressions while you practice.";
+                avatarLineText.textContent = "Camera is live. I will monitor selected non-verbal cues while you practice.";
                 showWaitingVisualSnapshot(
-                    "Camera is live. Center your face in the frame to start body-language and facial-expression coaching.",
+                    "Camera is live. Center your face in the frame to start selected non-verbal coaching.",
                     {
                         headline: "Camera ready for coaching",
                         tag: "Checking",
@@ -3807,7 +4220,7 @@ export function initPractice() {
                 faceStateValue.textContent = "Unavailable";
                 avatarLineText.textContent = "Camera access or the face model failed. Use localhost or HTTPS and ensure the model file exists.";
                 showWaitingVisualSnapshot(
-                    "Camera access was blocked. Allow camera permissions to unlock body-language and facial-expression coaching.",
+                    "Camera access was blocked. Allow camera permissions to unlock selected non-verbal coaching.",
                     {
                         headline: "Camera blocked",
                         tag: "Blocked",
@@ -3835,7 +4248,7 @@ export function initPractice() {
             setStatusTag("Camera Off", "neutral");
             faceCenterHistory.length = 0;
             showWaitingVisualSnapshot(
-                "Start the camera to unlock live body-language and facial-expression coaching.",
+                "Start the camera to unlock selected non-verbal coaching.",
                 {
                     headline: "Camera coaching is waiting",
                     tag: "Standby",

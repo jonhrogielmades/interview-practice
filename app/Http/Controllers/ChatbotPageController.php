@@ -23,7 +23,7 @@ class ChatbotPageController extends Controller
                 ->values()
                 ->all(),
             'chatbotProviders' => collect($bootstrap['providers'] ?? [])
-                ->filter(fn (array $provider) => in_array($provider['id'] ?? null, ['gemini', 'groq', 'openrouter', 'wisdomgate', 'cohere'], true))
+                ->filter(fn (array $provider) => in_array($provider['id'] ?? null, ['gemini', 'groq', 'openrouter', 'claude', 'wisdomgate', 'cohere'], true))
                 ->values()
                 ->all(),
             'chatbotDefaultProviderId' => (string) ($bootstrap['defaultProviderId'] ?? 'auto'),

@@ -177,6 +177,34 @@
   color utility to any element that depends on these defaults.
 */
 @layer base {
+  html[data-theme-color='emerald'] {
+    --color-brand-25: #f6fef9;
+    --color-brand-50: #ecfdf3;
+    --color-brand-100: #d1fadf;
+    --color-brand-200: #a6f4c5;
+    --color-brand-300: #6ce9a6;
+    --color-brand-400: #32d583;
+    --color-brand-500: #12b76a;
+    --color-brand-600: #039855;
+    --color-brand-700: #027a48;
+    --color-brand-800: #05603a;
+    --color-brand-900: #054f31;
+    --color-brand-950: #053321;
+    --color-blue-light-25: #f5feff;
+    --color-blue-light-50: #ecfeff;
+    --color-blue-light-100: #cffafe;
+    --color-blue-light-200: #a5f3fc;
+    --color-blue-light-300: #67e8f9;
+    --color-blue-light-400: #22d3ee;
+    --color-blue-light-500: #06b6d4;
+    --color-blue-light-600: #0891b2;
+    --color-blue-light-700: #0e7490;
+    --color-blue-light-800: #155e75;
+    --color-blue-light-900: #164e63;
+    --color-blue-light-950: #083344;
+    --shadow-focus-ring: 0px 0px 0px 4px rgba(18, 183, 106, 0.14);
+  }
+
   html {
     overflow-x: hidden;
   }
@@ -193,6 +221,35 @@
   }
   body {
     @apply relative z-1 overflow-x-hidden bg-gray-50 font-normal font-outfit;
+  }
+  body.app-shell-user {
+    background-color: #eef8fb;
+  }
+  body.app-shell-admin {
+    background-color: #f4f7fb;
+  }
+  html[data-theme-color='emerald'] body.app-shell-user {
+    background-color: #effaf6;
+  }
+  html[data-theme-color='emerald'] body.app-shell-admin {
+    background-color: #f3faf7;
+  }
+  .dark body.app-shell-user {
+    background-color: #08171f;
+  }
+  .dark body.app-shell-admin {
+    background-color: #0d1724;
+  }
+  html[data-theme-color='emerald'].dark body.app-shell-user {
+    background-color: #071a16;
+  }
+  html[data-theme-color='emerald'].dark body.app-shell-admin {
+    background-color: #0b1814;
+  }
+  html.sidebar-mobile-open,
+  body.sidebar-mobile-open {
+    overflow: hidden;
+    overscroll-behavior: none;
   }
   [x-cloak] {
     display: none !important;
@@ -238,6 +295,54 @@
     background-image:
       linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
       linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  }
+
+  .dashboard-tour-target {
+    position: relative;
+    transition:
+      transform 0.25s ease,
+      opacity 0.25s ease,
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .dashboard-tour-target-active {
+    isolation: isolate;
+    z-index: 100001;
+    transform: translateY(-2px);
+    pointer-events: none;
+    box-shadow:
+      0 0 0 4px color-mix(in oklab, var(--color-brand-500) 18%, transparent),
+      var(--shadow-theme-lg);
+  }
+
+  .dashboard-tour-target-active::before {
+    content: '';
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 1rem;
+    height: 2px;
+    background-color: var(--color-brand-500);
+    border-radius: 9999px;
+  }
+
+  .dashboard-tour-target-active::after {
+    content: '';
+    position: absolute;
+    top: calc(1rem - 3px);
+    right: 1rem;
+    width: 10px;
+    height: 10px;
+    border-top: 2px solid var(--color-brand-500);
+    border-right: 2px solid var(--color-brand-500);
+    transform: rotate(45deg);
+  }
+
+  .dashboard-tour-target-muted {
+    opacity: 0.38;
+    pointer-events: none;
+    transform: scale(0.985);
   }
 }
 
@@ -589,13 +694,13 @@ span.flatpickr-weekday,
 .flatpickr-day.selected.nextMonthDay,
 .flatpickr-day.startRange.nextMonthDay,
 .flatpickr-day.endRange.nextMonthDay {
-  background: #465fff;
+  background: var(--color-brand-500);
   @apply !border-brand-500 !bg-brand-500 hover:!border-brand-500 hover:!bg-brand-500;
 }
 .flatpickr-day.selected.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.startRange.startRange + .endRange:not(:nth-child(7n + 1)),
 .flatpickr-day.endRange.startRange + .endRange:not(:nth-child(7n + 1)) {
-  box-shadow: -10px 0 0 #465fff;
+  box-shadow: -10px 0 0 var(--color-brand-500);
 }
 
 .flatpickr-months .flatpickr-prev-month svg,

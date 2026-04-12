@@ -40,6 +40,13 @@ it('stores and returns setup and session data through workspace endpoints', func
             'relevance' => 8.5,
             'grammar' => 8.5,
             'professionalism' => 9.0,
+            'eyeContact' => 7.9,
+            'posture' => 7.8,
+            'headMovement' => 8.1,
+            'facialComposure' => 7.4,
+            'manuscriptVerbal' => 4.38,
+            'manuscriptNonVerbal' => 3.87,
+            'manuscriptOverall' => 4.23,
         ],
         'completed' => true,
         'answers' => [
@@ -67,6 +74,23 @@ it('stores and returns setup and session data through workspace endpoints', func
                         'relevance' => 'The project example fits the question well.',
                         'grammar' => 'The wording is mostly polished.',
                         'professionalism' => 'The tone sounds professional and confident.',
+                    ],
+                    'manuscriptRubric' => [
+                        'verbal' => 4.38,
+                        'nonVerbal' => 3.87,
+                        'overall' => 4.23,
+                        'hasNonVerbal' => true,
+                        'readinessLabel' => 'Highly Acceptable',
+                        'criteria' => [
+                            'clarity' => 4.5,
+                            'relevance' => 4.3,
+                            'grammar' => 4.3,
+                            'professionalism' => 4.5,
+                            'eyeContact' => 4.0,
+                            'posture' => 3.9,
+                            'headMovement' => 4.1,
+                            'facialComposure' => 3.7,
+                        ],
                     ],
                     'processEvaluations' => [
                         'response' => [
@@ -163,8 +187,16 @@ it('stores and returns setup and session data through workspace endpoints', func
                     'visualSnapshot' => [
                         'bodyLanguageScore' => 7.9,
                         'facialExpressionScore' => 7.4,
+                        'eyeContactScore' => 7.9,
+                        'postureScore' => 7.8,
+                        'headMovementScore' => 8.1,
+                        'facialComposureScore' => 7.4,
                         'bodyLanguageLabel' => 'Camera presence is steady overall.',
                         'facialExpressionLabel' => 'Expression is professional with room for more warmth.',
+                        'eyeContactLabel' => 'Eye contact orientation looks engaged and camera-aware.',
+                        'postureLabel' => 'Posture looks upright, centered, and interview-ready.',
+                        'headMovementLabel' => 'Head movement is calm and controlled.',
+                        'facialComposureLabel' => 'Facial composure looks calm and professional.',
                         'tip' => 'Relax the face slightly more before the next answer.',
                     ],
                 ],
@@ -186,6 +218,9 @@ it('stores and returns setup and session data through workspace endpoints', func
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.provider', 'Groq API (openai/gpt-oss-20b)')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.processEvaluations.response.label', 'Answer Process')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.processEvaluations.bodyLanguage.algorithms.1.name', 'Head Balance')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.manuscriptRubric.overall', 4.23)
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.eyeContactScore', 7.9)
+        ->assertJsonPath('workspace.sessions.0.criteriaAverages.manuscriptOverall', 4.23)
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.tip', 'Relax the face slightly more before the next answer.');
 });
 

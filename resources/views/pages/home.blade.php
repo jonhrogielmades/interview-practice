@@ -1,7 +1,6 @@
 @extends('layouts.fullscreen-layout')
 
 @php
-    $firstTrackId = $practiceTracks[0]['id'] ?? null;
     $authRequestView = request()->query('auth');
     $authOldForm = old('auth_form');
     $initialAuthView = in_array($authOldForm, ['signin', 'signup'], true)
@@ -14,36 +13,21 @@
     );
     $showSigninErrors = $errors->any() && $initialAuthView === 'signin';
     $showSignupErrors = $errors->any() && $initialAuthView === 'signup';
-    $workflow = [
-        [
-            'step' => '01',
-            'title' => 'Start with the right interview track',
-            'description' => 'Browse job, scholarship, college admission, and IT interview flows before you even open the workspace.',
-        ],
-        [
-            'step' => '02',
-            'title' => 'Tune the session to match your pace',
-            'description' => 'Question count, coaching style, pacing, and response mode are already reflected from the live practice setup options.',
-        ],
-        [
-            'step' => '03',
-            'title' => 'Practice, save, and review',
-            'description' => 'Returning users can jump back into dashboard insights, AI-reviewed answers, and saved feedback without extra clicks.',
-        ],
-    ];
 @endphp
 
 @section('content')
     <div x-data="{
         mobileMenu: false,
-        activeTrack: @js($firstTrackId),
+        homeSectionModalOpen: false,
+        homeSectionModalView: 'workflow',
+        videoTutorialModalOpen: false,
         authModalOpen: @js($authModalOpen),
         authModalView: @js($initialAuthView),
         authPanelHeight: null,
         authFocusTimer: null,
         init() {
             this.$watch('authModalOpen', value => {
-                document.body.classList.toggle('overflow-hidden', value);
+                this.updateBodyLock();
 
                 if (!value) {
                     window.clearTimeout(this.authFocusTimer);
@@ -56,7 +40,27 @@
                     this.queueAuthFocus();
                 });
             });
-            document.body.classList.toggle('overflow-hidden', this.authModalOpen);
+            this.$watch('homeSectionModalOpen', value => {
+                this.updateBodyLock();
+
+                if (!value) {
+                    return;
+                }
+
+                this.clearAuthQuery();
+            });
+            this.$watch('videoTutorialModalOpen', value => {
+                this.updateBodyLock();
+
+                if (!value) {
+                    this.pauseVideoTutorial();
+                    return;
+                }
+
+                this.clearAuthQuery();
+                this.$nextTick(() => this.playVideoTutorial());
+            });
+            this.updateBodyLock();
 
             this.$nextTick(() => {
                 if (!this.authModalOpen) {
@@ -67,6 +71,32 @@
                 this.syncAuthPanelHeight();
                 this.queueAuthFocus();
             });
+        },
+        updateBodyLock() {
+            document.body.classList.toggle('overflow-hidden', this.authModalOpen || this.homeSectionModalOpen || this.videoTutorialModalOpen);
+        },
+        playVideoTutorial() {
+            const video = this.$refs.tutorialVideo;
+
+            if (!video) {
+                return;
+            }
+
+            const playRequest = video.play();
+
+            if (playRequest && typeof playRequest.catch === 'function') {
+                playRequest.catch(() => {});
+            }
+        },
+        pauseVideoTutorial() {
+            const video = this.$refs.tutorialVideo;
+
+            if (!video) {
+                return;
+            }
+
+            video.pause();
+            video.currentTime = 0;
         },
         getActiveAuthPanel() {
             return this.authModalView === 'signin' ? this.$refs.signinPanel : this.$refs.signupPanel;
@@ -103,8 +133,31 @@
         openAuthModal(view = 'signin') {
             this.switchAuthModal(view);
             this.authModalOpen = true;
+            this.homeSectionModalOpen = false;
+            this.videoTutorialModalOpen = false;
             this.mobileMenu = false;
             this.clearAuthQuery();
+        },
+        openHomeSectionModal(view = 'workflow') {
+            this.homeSectionModalView = view;
+            this.homeSectionModalOpen = true;
+            this.authModalOpen = false;
+            this.videoTutorialModalOpen = false;
+            this.mobileMenu = false;
+            this.clearAuthQuery();
+        },
+        closeHomeSectionModal() {
+            this.homeSectionModalOpen = false;
+        },
+        openVideoTutorialModal() {
+            this.videoTutorialModalOpen = true;
+            this.homeSectionModalOpen = false;
+            this.authModalOpen = false;
+            this.mobileMenu = false;
+            this.clearAuthQuery();
+        },
+        closeVideoTutorialModal() {
+            this.videoTutorialModalOpen = false;
         },
         switchAuthModal(view) {
             if (this.authModalView === view) {
@@ -122,33 +175,33 @@
             this.authModalOpen = false;
             this.clearAuthQuery();
         }
-    }" @keydown.escape.window="closeAuthModal()" @resize.window="authModalOpen && syncAuthPanelHeight()"
+    }" @keydown.escape.window="videoTutorialModalOpen ? closeVideoTutorialModal() : (authModalOpen ? closeAuthModal() : closeHomeSectionModal())" @resize.window="authModalOpen && syncAuthPanelHeight()"
         class="relative min-h-screen overflow-hidden bg-white text-gray-900 transition-colors dark:bg-gray-950 dark:text-white">
         <div class="home-orb left-[-8rem] top-[-6rem] h-72 w-72 bg-blue-light-200"></div>
         <div class="home-orb right-[-5rem] top-24 h-80 w-80 bg-blue-light-300 [animation-delay:1.5s]"></div>
         <div class="home-orb bottom-[-8rem] left-1/3 h-80 w-80 bg-blue-light-100 dark:bg-blue-light-500/20 [animation-delay:3s]"></div>
         <div class="home-grid absolute inset-0 opacity-50 dark:opacity-30"></div>
 
-        <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/90">
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8 lg:py-4">
+        <header class="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur-xl transition-opacity duration-200 dark:border-gray-800 dark:bg-gray-950/90">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 lg:grid lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:px-8 lg:py-3">
                 <a href="{{ route('home') }}" class="flex min-w-0 flex-1 items-center gap-3 lg:flex-none">
-                    <span class="inline-flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                    <span class="inline-flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                         <img src="{{ asset('images/logo/interviewpilot-icon.png') }}" alt="InterviewPilot" class="h-full w-full object-cover" />
                     </span>
                     <span class="min-w-0">
                         <span class="block truncate text-sm font-semibold uppercase tracking-[0.22em] text-gray-900 dark:text-white">InterviewPilot</span>
-                        <span class="block truncate text-sm text-gray-500 dark:text-gray-400">Guided interview practice with AI feedback</span>
+                        <span class="block truncate text-sm text-gray-500 dark:text-gray-400">Capstone-aligned interview simulation and guided feedback</span>
                     </span>
                 </a>
 
                 <nav class="hidden items-center justify-center gap-1 lg:flex lg:justify-self-center">
-                    <a href="#workflow"
+                    <a href="#workflow" @click.prevent="openHomeSectionModal('workflow')"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Workflow</a>
-                    <a href="#features"
+                    <a href="#features" @click.prevent="openHomeSectionModal('features')"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Features</a>
-                    <a href="#tracks"
+                    <a href="#tracks" @click.prevent="openHomeSectionModal('tracks')"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Tracks</a>
-                    <a href="#cta"
+                    <a href="#cta" @click.prevent="openHomeSectionModal('launch')"
                         class="inline-flex h-11 items-center rounded-full px-4 text-sm font-medium text-gray-600 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-300 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">Launch</a>
                 </nav>
 
@@ -212,10 +265,10 @@
             <div x-show="mobileMenu" x-cloak x-transition.opacity
                 class="border-t border-gray-200 bg-white/95 px-4 py-4 lg:hidden dark:border-gray-800 dark:bg-gray-950/95">
                 <div class="mx-auto flex max-w-7xl flex-col gap-3">
-                    <a href="#workflow" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Workflow</a>
-                    <a href="#features" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Features</a>
-                    <a href="#tracks" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Tracks</a>
-                    <a href="#cta" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click="mobileMenu = false">Launch</a>
+                    <a href="#workflow" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click.prevent="openHomeSectionModal('workflow')">Workflow</a>
+                    <a href="#features" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click.prevent="openHomeSectionModal('features')">Features</a>
+                    <a href="#tracks" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click.prevent="openHomeSectionModal('tracks')">Tracks</a>
+                    <a href="#cta" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-blue-light-50 hover:text-blue-light-700 dark:text-gray-200 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200" @click.prevent="openHomeSectionModal('launch')">Launch</a>
 
                     @auth
                         <a href="{{ route('dashboard') }}"
@@ -241,23 +294,66 @@
         </header>
 
         <main class="relative">
-            <section class="mx-auto max-w-7xl px-4 pb-14 pt-10 sm:px-6 sm:pt-16 lg:px-8 lg:pb-20">
-                <div class="grid gap-10 lg:grid-cols-[1.06fr_0.94fr] lg:items-start">
-                    <div class="space-y-8">
-                        <span class="home-chip">Philippine-ready interview practice</span>
-
+            <section class="mx-auto flex max-w-7xl flex-col justify-center px-4 py-8 sm:px-6 sm:py-10 lg:min-h-[calc(100svh-4.5rem)] lg:px-8 lg:py-8 xl:py-10">
+                <div class="grid gap-8 lg:grid-cols-[1.04fr_0.96fr] lg:items-center xl:gap-10">
+                    <div class="flex h-full flex-col justify-center">
                         <div class="max-w-2xl">
-                            <p class="text-sm font-semibold uppercase tracking-[0.3em] text-blue-light-700 dark:text-blue-light-300">TailAdmin-inspired landing experience</p>
-                            <h1 class="mt-4 text-4xl font-semibold leading-tight text-gray-900 sm:text-5xl lg:text-[4.25rem] lg:leading-[1.02] dark:text-white">
-                                Practice the interview that matters next, not someday.
+                            <p class="text-xs font-semibold uppercase tracking-[0.26em] text-blue-light-700 sm:text-sm dark:text-blue-light-300">AI-Based Interview Practice System</p>
+                            <h1 class="mt-4 text-4xl font-semibold leading-tight text-gray-900 sm:text-5xl lg:text-[3.5rem] lg:leading-[1.04] xl:text-[3.75rem] dark:text-white">
+                                Simulate the next interview, review the feedback, and keep improving.
                             </h1>
-                            <p class="mt-5 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-300">
-                                InterviewPilot now opens with a cleaner homepage that points visitors into the real sign-in,
-                                session setup, practice, progress, and dashboard flows already built in this project.
-                            </p>
+                            <h2 class="mt-4 max-w-xl text-base leading-7 text-gray-600 lg:max-w-2xl dark:text-gray-300">
+                                The platform supports category-based interview practice, an AI avatar interviewer,
+                                text or voice responses, selected non-verbal observation, learning activities, and
+                                progress tracking inside one web-based workflow.
+                            </h2>
                         </div>
+                    </div>
 
-                        <div class="flex flex-wrap gap-3">
+                    <div class="flex h-full flex-col justify-center gap-4 lg:items-center">
+                        <a href="{{ asset('videos/ai-based-interview-practice-system.mp4') }}"
+                            class="home-panel group relative block aspect-video w-full overflow-hidden rounded-lg p-0 text-left transition hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-blue-light-200 lg:max-w-[34rem] xl:max-w-[36rem] dark:focus:ring-blue-light-500/30"
+                            aria-label="Watch AI-based interview practice system video tutorial"
+                            @click.prevent="openVideoTutorialModal()">
+                            <video
+                                class="pointer-events-none absolute inset-0 h-full w-full bg-gray-950 object-contain"
+                                autoplay
+                                muted
+                                loop
+                                playsinline
+                                preload="metadata"
+                                poster="{{ asset('images/ai/video-thumb.png') }}"
+                                aria-hidden="true">
+                                <source src="{{ asset('videos/ai-based-interview-practice-system.mp4') }}" type="video/mp4">
+                            </video>
+                            <div class="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/35 to-gray-950/5"></div>
+
+                            <div class="relative flex h-full flex-col justify-between p-4 text-white sm:p-5 xl:p-6">
+                                <div class="flex items-start justify-between gap-4">
+                                    <div>
+                                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-blue-light-200 sm:text-sm"></p>
+                                        <h2 class="mt-2 max-w-sm text-lg font-semibold leading-snug sm:text-xl xl:text-2xl"></h2>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-end justify-between gap-4">
+                                    <div class="hidden max-w-md sm:block">
+                                        <p class="text-sm font-semibold uppercase tracking-[0.22em] text-blue-light-200"></p>
+                                        <span class="hidden rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white backdrop-blur sm:inline-flex">
+                                            VIDEO TUTORIAL
+                                        </span>
+                                    </div>
+                                    <span class="inline-flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-red-600 text-white shadow-[0_18px_40px_-18px_rgba(220,38,38,0.9)] transition group-hover:scale-105 group-hover:bg-red-500">
+                                        <span class="sr-only">Play video tutorial</span>
+                                        <svg class="ml-1 h-7 w-7 fill-current" viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M8 5v14l11-7L8 5Z" />
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
+                        </a>
+
+                        <div class="flex flex-wrap gap-3 lg:w-full lg:max-w-[34rem] xl:max-w-[36rem]">
                             @auth
                                 <a href="{{ route('practice') }}"
                                     class="inline-flex items-center justify-center rounded-full bg-blue-light-500 px-6 py-3 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-blue-light-600">
@@ -278,117 +374,28 @@
                                 </a>
                             @endauth
 
-                            <a href="#tracks"
+                            <a href="#tracks" @click.prevent="openHomeSectionModal('tracks')"
                                 class="inline-flex items-center justify-center rounded-full border border-blue-light-200 bg-blue-light-50 px-6 py-3 text-sm font-semibold text-blue-light-700 transition hover:-translate-y-0.5 hover:border-blue-light-300 hover:bg-blue-light-100 dark:border-blue-light-500/20 dark:bg-blue-light-500/10 dark:text-blue-light-200 dark:hover:bg-blue-light-500/15">
                                 Explore Practice Tracks
                             </a>
-                        </div>
-
-                        <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                            @foreach ($stats as $stat)
-                                <div class="home-panel p-5">
-                                    <p class="text-3xl font-semibold text-gray-900 dark:text-white">{{ $stat['value'] }}</p>
-                                    <p class="mt-2 text-sm font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{{ $stat['label'] }}</p>
-                                    <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $stat['detail'] }}</p>
-                                </div>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    <div class="home-panel relative overflow-hidden p-6 sm:p-8">
-                        <div class="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,_rgba(11,165,236,0.18),_transparent_70%)] dark:bg-[radial-gradient(circle_at_top,_rgba(54,191,250,0.16),_transparent_70%)]"></div>
-
-                        <div class="relative">
-                            <div class="flex items-start justify-between gap-4">
-                                <div>
-                                    <p class="text-sm font-semibold uppercase tracking-[0.26em] text-blue-light-700 dark:text-blue-light-300">Interactive preview</p>
-                                    <h2 class="mt-3 text-2xl font-semibold text-gray-900 dark:text-white">Switch tracks and inspect real practice content.</h2>
-                                </div>
-                                <span class="rounded-full border border-gray-900/10 bg-gray-900 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-white dark:border-white/10 dark:bg-white/10">
-                                    Responsive
-                                </span>
-                            </div>
-
-                            <div class="mt-6 flex flex-wrap gap-2">
-                                @foreach ($practiceTracks as $track)
-                                    <button type="button"
-                                        class="rounded-full px-4 py-2 text-sm font-medium transition"
-                                        @click="activeTrack = '{{ $track['id'] }}'"
-                                        :class="activeTrack === '{{ $track['id'] }}'
-                                            ? 'bg-blue-light-500 text-white shadow-theme-xs'
-                                            : 'border border-gray-200 bg-white text-gray-600 hover:border-blue-light-200 hover:text-blue-light-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:border-blue-light-500/40 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200'">
-                                        {{ $track['name'] }}
-                                    </button>
-                                @endforeach
-                            </div>
-
-                            <div class="mt-6 space-y-4">
-                                @foreach ($practiceTracks as $track)
-                                    <section x-show="activeTrack === '{{ $track['id'] }}'" x-cloak x-transition.opacity.duration.300ms>
-                                        <div class="rounded-[28px] border border-gray-900/5 bg-gray-900 p-5 text-white shadow-theme-lg dark:border-white/10">
-                                            <p class="text-sm font-semibold uppercase tracking-[0.22em] text-blue-light-200">{{ $track['name'] }}</p>
-                                            <p class="mt-3 text-base leading-7 text-white/80">{{ $track['description'] }}</p>
-
-                                            <div class="mt-5 grid gap-4 sm:grid-cols-2">
-                                                <div>
-                                                    <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-blue-light-200/90">Sample questions</h3>
-                                                    <ul class="mt-3 space-y-3 text-sm leading-6 text-white/80">
-                                                        @foreach ($track['questions'] as $question)
-                                                            <li class="flex gap-3">
-                                                                <span class="mt-1 h-2 w-2 rounded-full bg-blue-light-400"></span>
-                                                                <span>{{ $question }}</span>
-                                                            </li>
-                                                        @endforeach
-                                                    </ul>
-                                                </div>
-
-                                                <div class="space-y-4">
-                                                    <div>
-                                                        <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-blue-light-200/90">Local focus</h3>
-                                                        <ul class="mt-3 space-y-3 text-sm leading-6 text-white/80">
-                                                            @foreach ($track['localFocus'] as $focus)
-                                                                <li class="flex gap-3">
-                                                                    <span class="mt-1 h-2 w-2 rounded-full bg-blue-light-300"></span>
-                                                                    <span>{{ $focus }}</span>
-                                                                </li>
-                                                            @endforeach
-                                                        </ul>
-                                                    </div>
-
-                                                    <div>
-                                                        <h3 class="text-sm font-semibold uppercase tracking-[0.22em] text-blue-light-200/90">Quick prompts</h3>
-                                                        <div class="mt-3 flex flex-wrap gap-2">
-                                                            @foreach ($track['quickPrompts'] as $prompt)
-                                                                <span class="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-xs font-medium text-white/85">
-                                                                    {{ $prompt }}
-                                                                </span>
-                                                            @endforeach
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </section>
-                                @endforeach
-                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="workflow" class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
-                <div class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                    <div class="home-panel p-6 sm:p-8">
+            <section id="workflow" class="hidden">
+                <div class="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:items-stretch">
+                    <div class="home-panel flex h-full flex-col p-6 sm:p-8">
                         <span class="home-chip">How it works</span>
-                        <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">Move from landing page to practice flow without dead ends.</h2>
+                        <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">Move from account access to a full mock interview cycle.</h2>
                         <p class="mt-4 max-w-xl text-base leading-7 text-gray-600 dark:text-gray-300">
-                            The homepage now acts like a real product entry point, not a blank route. Every CTA takes the
-                            user into an existing part of the application.
+                            The manuscript focuses on a realistic but accessible practice loop: sign in, choose a category,
+                            answer the interview, review feedback, and continue improving with saved records and learning tasks.
                         </p>
 
-                        <div class="mt-8 space-y-4">
+                        <div class="mt-8 flex flex-1 flex-col gap-4">
                             @foreach ($workflow as $item)
-                                <div class="rounded-[28px] border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/70">
+                                <div class="flex-1 rounded-[28px] border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/70">
                                     <div class="flex items-start gap-4">
                                         <span class="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gray-900 text-base font-semibold text-white ring-4 ring-blue-light-50 dark:ring-blue-light-500/10">
                                             {{ $item['step'] }}
@@ -403,11 +410,11 @@
                         </div>
                     </div>
 
-                    <div class="home-panel p-6 sm:p-8">
+                    <div class="home-panel flex h-full flex-col p-6 sm:p-8">
                         <span class="home-chip">Session controls</span>
 
-                        <div class="mt-6 grid gap-6 sm:grid-cols-2">
-                            <div class="rounded-[24px] border border-blue-light-100 bg-blue-light-50 p-5 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                        <div class="mt-6 grid flex-1 auto-rows-fr gap-6 sm:grid-cols-2">
+                            <div class="flex h-full flex-col rounded-[24px] border border-blue-light-100 bg-blue-light-50 p-5 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-light-700 dark:text-blue-light-200">Question counts</p>
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     @foreach ($questionCountOptions as $count)
@@ -418,7 +425,7 @@
                                 </div>
                             </div>
 
-                            <div class="rounded-[24px] border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                            <div class="flex h-full flex-col rounded-[24px] border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900/70">
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-gray-900 dark:text-white">Response modes</p>
                                 <ul class="mt-4 space-y-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
                                     @foreach ($responseModes as $mode)
@@ -430,7 +437,7 @@
                                 </ul>
                             </div>
 
-                            <div class="rounded-[24px] border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                            <div class="flex h-full flex-col rounded-[24px] border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-gray-900 dark:text-white">Focus styles</p>
                                 <ul class="mt-4 space-y-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
                                     @foreach ($focusModes as $mode)
@@ -442,7 +449,7 @@
                                 </ul>
                             </div>
 
-                            <div class="rounded-[24px] border border-blue-light-100 bg-blue-light-50 p-5 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                            <div class="flex h-full flex-col rounded-[24px] border border-blue-light-100 bg-blue-light-50 p-5 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
                                 <p class="text-sm font-semibold uppercase tracking-[0.2em] text-blue-light-700 dark:text-blue-light-200">Answer pacing</p>
                                 <ul class="mt-4 space-y-3 text-sm leading-6 text-gray-700 dark:text-gray-300">
                                     @foreach ($pacingModes as $mode)
@@ -458,34 +465,34 @@
                 </div>
             </section>
 
-            <section id="features" class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
+            <section id="features" class="hidden">
                 <div class="home-panel overflow-hidden p-6 sm:p-8">
                     <div class="flex flex-col gap-6 border-b border-gray-200 pb-8 dark:border-gray-800 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-3xl">
                             <span class="home-chip">Platform features</span>
-                            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">InterviewPilot ships with more than 25 visible product features.</h2>
+                            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">The prototype now reads closer to the manuscript-backed system scope.</h2>
                             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
-                                The project already covers guided practice, AI coaching, saved history, profile tools, and
-                                provider-aware chatbot workflows. This section makes that scope easier to scan at a glance.
+                                These cards now emphasize the capstone scope: interview simulation, multimodal input,
+                                criterion-based evaluation, learning support, reporting, and administrative monitoring.
                             </p>
                         </div>
 
-                        <div class="grid gap-3 sm:grid-cols-2">
-                            <div class="rounded-[28px] border border-blue-light-100 bg-blue-light-50 px-5 py-4 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                        <div class="grid auto-rows-fr gap-3 sm:grid-cols-2">
+                            <div class="flex h-full flex-col rounded-[28px] border border-blue-light-100 bg-blue-light-50 px-5 py-4 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-blue-light-700 dark:text-blue-light-200">Feature count</p>
                                 <p class="mt-2 text-3xl font-semibold text-gray-900 dark:text-white">{{ count($platformFeatures) }}</p>
                             </div>
-                            <div class="rounded-[28px] border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900/70">
+                            <div class="flex h-full flex-col rounded-[28px] border border-gray-200 bg-white px-5 py-4 dark:border-gray-800 dark:bg-gray-900/70">
                                 <p class="text-xs font-semibold uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">Coverage</p>
-                                <p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">Practice flow, chatbot routing, saved results, profile updates, and mobile-ready UI.</p>
+                                <p class="mt-2 text-sm leading-6 text-gray-700 dark:text-gray-300">Simulation flow, rubric-aligned feedback, saved reports, admin visibility, and responsive access.</p>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                    <div class="mt-8 grid auto-rows-fr gap-4 md:grid-cols-2 xl:grid-cols-3">
                         @foreach ($platformFeatures as $feature)
                             <article @class([
-                                'rounded-[28px] border p-5 shadow-theme-xs transition duration-300 hover:-translate-y-1 hover:shadow-theme-lg',
+                                'flex h-full flex-col rounded-[28px] border p-5 shadow-theme-xs transition duration-300 hover:-translate-y-1 hover:shadow-theme-lg',
                                 'border-brand-100 bg-brand-50/70 dark:border-brand-500/20 dark:bg-brand-500/10' => $feature['tone'] === 'brand',
                                 'border-blue-light-100 bg-blue-light-50/80 dark:border-blue-light-500/20 dark:bg-blue-light-500/10' => $feature['tone'] === 'blue',
                                 'border-success-100 bg-success-50/80 dark:border-success-500/20 dark:bg-success-500/10' => $feature['tone'] === 'success',
@@ -513,15 +520,15 @@
                 </div>
             </section>
 
-            <section id="tracks" class="mx-auto max-w-7xl px-4 pb-14 sm:px-6 lg:px-8 lg:pb-20">
+            <section id="tracks" class="hidden">
                 <div class="home-panel p-6 sm:p-8">
                     <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
                         <div class="max-w-2xl">
                             <span class="home-chip">Practice tracks</span>
-                            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">The homepage content stays synced with the actual interview catalog.</h2>
+                            <h2 class="mt-6 text-3xl font-semibold text-gray-900 dark:text-white">The public track list stays synced with the real question bank.</h2>
                             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
-                                These cards come from the same categories used by the workspace, which keeps the public-facing
-                                experience aligned with the real product behavior.
+                                These cards use the same category data as the workspace, which keeps the manuscript-facing
+                                description aligned with the actual practice catalog.
                             </p>
                         </div>
 
@@ -544,9 +551,9 @@
                         </div>
                     </div>
 
-                    <div class="mt-8 grid gap-5 md:grid-cols-2">
+                    <div class="mt-8 grid auto-rows-fr gap-5 md:grid-cols-2">
                         @foreach ($practiceTracks as $track)
-                            <article class="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs transition duration-300 hover:-translate-y-1 hover:border-blue-light-200 hover:shadow-theme-lg dark:border-gray-800 dark:bg-gray-900/70 dark:hover:border-blue-light-500/20">
+                            <article class="flex h-full flex-col rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs transition duration-300 hover:-translate-y-1 hover:border-blue-light-200 hover:shadow-theme-lg dark:border-gray-800 dark:bg-gray-900/70 dark:hover:border-blue-light-500/20">
                                 <div class="flex items-start justify-between gap-4">
                                     <div>
                                         <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-light-700 dark:text-blue-light-300">Track {{ $loop->iteration }}</p>
@@ -559,9 +566,9 @@
 
                                 <p class="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300">{{ $track['description'] }}</p>
 
-                                <div class="mt-6 space-y-3">
+                                <div class="mt-6 flex flex-1 flex-col gap-3">
                                     @foreach ($track['questions'] as $question)
-                                        <div class="rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-700 transition hover:border-blue-light-100 hover:bg-blue-light-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-blue-light-500/20 dark:hover:bg-blue-light-500/5">
+                                        <div class="flex flex-1 items-center rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-700 transition hover:border-blue-light-100 hover:bg-blue-light-50 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200 dark:hover:border-blue-light-500/20 dark:hover:bg-blue-light-500/5">
                                             {{ $question }}
                                         </div>
                                     @endforeach
@@ -572,7 +579,7 @@
                 </div>
             </section>
 
-            <section id="cta" class="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8 lg:pb-24">
+            <section id="cta" class="hidden">
                 <div class="relative overflow-hidden rounded-[36px] border border-gray-200 bg-gray-900 px-6 py-10 text-white shadow-theme-xl sm:px-8 lg:px-12 dark:border-gray-800">
                     <div class="absolute right-0 top-0 h-48 w-48 rounded-full bg-blue-light-500/20 blur-3xl"></div>
                     <div class="absolute bottom-[-4rem] left-12 h-40 w-40 rounded-full bg-blue-light-300/10 blur-3xl"></div>
@@ -581,11 +588,11 @@
                         <div>
                             <p class="text-sm font-semibold uppercase tracking-[0.3em] text-blue-light-200">Ready to launch</p>
                             <h2 class="mt-4 max-w-2xl text-3xl font-semibold sm:text-4xl">
-                                The homepage now works as the front door to the full InterviewPilot experience.
+                                Open the capstone prototype and move straight into interview practice.
                             </h2>
                             <p class="mt-4 max-w-2xl text-base leading-7 text-white/75">
-                                It gives guests a clear path into account creation and gives signed-in users a faster return
-                                path to the tools they actually use.
+                                Guests get a clear path into account creation, while signed-in users can jump back into
+                                dashboard review, session setup, practice, and progress tracking immediately.
                             </p>
                         </div>
 
@@ -614,6 +621,258 @@
                 </div>
             </section>
         </main>
+
+        <div x-show="homeSectionModalOpen" x-cloak x-transition.opacity
+            class="fixed inset-0 z-[950] flex items-center justify-center p-4 sm:p-6">
+            <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" @click="closeHomeSectionModal()"></div>
+
+            <section
+                role="dialog"
+                aria-modal="true"
+                x-bind:aria-label="`${homeSectionModalView} homepage modal`"
+                class="relative z-10 flex max-h-[calc(100vh-2rem)] w-full max-w-6xl flex-col overflow-hidden rounded-[32px] border border-gray-200 bg-white shadow-[0_32px_100px_-42px_rgba(15,23,42,0.65)] dark:border-gray-800 dark:bg-gray-950 sm:max-h-[calc(100vh-3rem)]">
+                <button
+                    type="button"
+                    class="absolute right-4 top-4 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:border-blue-light-300 hover:text-blue-light-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-blue-light-500/30 dark:hover:text-blue-light-200"
+                    @click="closeHomeSectionModal()">
+                    <span class="sr-only">Close homepage modal</span>
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <div class="grid min-h-0 flex-1 lg:grid-cols-[15rem_minmax(0,1fr)]">
+                    <aside class="border-b border-gray-200 bg-gray-50 px-5 py-5 dark:border-gray-800 dark:bg-gray-900/70 lg:border-b-0 lg:border-r lg:px-6 lg:py-8">
+                        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-blue-light-700 dark:text-blue-light-300">Homepage modal</p>
+                        <h2 class="mt-3 pr-12 text-2xl font-semibold text-gray-900 dark:text-white lg:pr-0">Open a section preview.</h2>
+
+                        <div class="mt-6 grid gap-2 sm:grid-cols-4 lg:grid-cols-1">
+                            <button type="button"
+                                class="rounded-2xl px-4 py-3 text-left text-sm font-semibold transition"
+                                :class="homeSectionModalView === 'workflow'
+                                    ? 'bg-gray-900 text-white shadow-theme-xs dark:bg-white dark:text-gray-900'
+                                    : 'border border-gray-200 bg-white text-gray-700 hover:border-blue-light-200 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-blue-light-500/30 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200'"
+                                @click="homeSectionModalView = 'workflow'">
+                                Workflow
+                            </button>
+                            <button type="button"
+                                class="rounded-2xl px-4 py-3 text-left text-sm font-semibold transition"
+                                :class="homeSectionModalView === 'features'
+                                    ? 'bg-gray-900 text-white shadow-theme-xs dark:bg-white dark:text-gray-900'
+                                    : 'border border-gray-200 bg-white text-gray-700 hover:border-blue-light-200 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-blue-light-500/30 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200'"
+                                @click="homeSectionModalView = 'features'">
+                                Features
+                            </button>
+                            <button type="button"
+                                class="rounded-2xl px-4 py-3 text-left text-sm font-semibold transition"
+                                :class="homeSectionModalView === 'tracks'
+                                    ? 'bg-gray-900 text-white shadow-theme-xs dark:bg-white dark:text-gray-900'
+                                    : 'border border-gray-200 bg-white text-gray-700 hover:border-blue-light-200 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-blue-light-500/30 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200'"
+                                @click="homeSectionModalView = 'tracks'">
+                                Tracks
+                            </button>
+                            <button type="button"
+                                class="rounded-2xl px-4 py-3 text-left text-sm font-semibold transition"
+                                :class="homeSectionModalView === 'launch'
+                                    ? 'bg-gray-900 text-white shadow-theme-xs dark:bg-white dark:text-gray-900'
+                                    : 'border border-gray-200 bg-white text-gray-700 hover:border-blue-light-200 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-800 dark:bg-gray-950 dark:text-gray-200 dark:hover:border-blue-light-500/30 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200'"
+                                @click="homeSectionModalView = 'launch'">
+                                Launch
+                            </button>
+                        </div>
+                    </aside>
+
+                    <div class="min-h-0 overflow-y-auto px-5 py-8 sm:px-8 lg:px-10">
+                        <section x-show="homeSectionModalView === 'workflow'" x-cloak x-transition.opacity>
+                            <span class="home-chip">How it works</span>
+                            <h3 class="mt-5 max-w-3xl text-3xl font-semibold text-gray-900 dark:text-white">Move from account access to a full mock interview cycle.</h3>
+                            <p class="mt-4 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
+                                Start with the right access path, run the mock interview, then review feedback and keep improving with saved records.
+                            </p>
+
+                            <div class="mt-8 grid auto-rows-fr gap-4 md:grid-cols-3">
+                                @foreach ($workflow as $item)
+                                    <article class="flex h-full flex-col rounded-[28px] border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/70">
+                                        <span class="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gray-900 text-base font-semibold text-white ring-4 ring-blue-light-50 dark:ring-blue-light-500/10">
+                                            {{ $item['step'] }}
+                                        </span>
+                                        <h4 class="mt-5 text-lg font-semibold text-gray-900 dark:text-white">{{ $item['title'] }}</h4>
+                                        <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $item['description'] }}</p>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <section x-show="homeSectionModalView === 'features'" x-cloak x-transition.opacity>
+                            <span class="home-chip">Platform features</span>
+                            <h3 class="mt-5 max-w-3xl text-3xl font-semibold text-gray-900 dark:text-white">Scan the capstone feature coverage in one modal.</h3>
+                            <p class="mt-4 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
+                                Interview simulation, multimodal response input, rubric-aligned feedback, learning tasks, reporting, and admin visibility stay grouped here.
+                            </p>
+
+                            <div class="mt-8 grid auto-rows-fr gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                @foreach ($platformFeatures as $feature)
+                                    <article @class([
+                                        'flex h-full flex-col rounded-[28px] border p-5 shadow-theme-xs',
+                                        'border-brand-100 bg-brand-50/70 dark:border-brand-500/20 dark:bg-brand-500/10' => $feature['tone'] === 'brand',
+                                        'border-blue-light-100 bg-blue-light-50/80 dark:border-blue-light-500/20 dark:bg-blue-light-500/10' => $feature['tone'] === 'blue',
+                                        'border-success-100 bg-success-50/80 dark:border-success-500/20 dark:bg-success-500/10' => $feature['tone'] === 'success',
+                                        'border-warning-100 bg-warning-50/80 dark:border-warning-500/20 dark:bg-warning-500/10' => $feature['tone'] === 'warning',
+                                    ])>
+                                        <div class="flex items-start gap-4">
+                                            <span @class([
+                                                'inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold',
+                                                'bg-white text-brand-600 dark:bg-gray-900 dark:text-brand-300' => $feature['tone'] === 'brand',
+                                                'bg-white text-blue-light-700 dark:bg-gray-900 dark:text-blue-light-200' => $feature['tone'] === 'blue',
+                                                'bg-white text-success-700 dark:bg-gray-900 dark:text-success-300' => $feature['tone'] === 'success',
+                                                'bg-white text-warning-700 dark:bg-gray-900 dark:text-warning-300' => $feature['tone'] === 'warning',
+                                            ])>
+                                                {{ str_pad((string) $loop->iteration, 2, '0', STR_PAD_LEFT) }}
+                                            </span>
+                                            <div>
+                                                <h4 class="text-lg font-semibold text-gray-900 dark:text-white">{{ $feature['title'] }}</h4>
+                                                <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $feature['body'] }}</p>
+                                            </div>
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <section x-show="homeSectionModalView === 'tracks'" x-cloak x-transition.opacity>
+                            <span class="home-chip">Practice tracks</span>
+                            <h3 class="mt-5 max-w-3xl text-3xl font-semibold text-gray-900 dark:text-white">Choose a track from the same question bank used in the workspace.</h3>
+                            <p class="mt-4 max-w-3xl text-base leading-7 text-gray-600 dark:text-gray-300">
+                                Each track keeps the public homepage aligned with the actual interview categories and sample questions.
+                            </p>
+
+                            <div class="mt-8 grid auto-rows-fr gap-5 md:grid-cols-2">
+                                @foreach ($practiceTracks as $track)
+                                    <article class="flex h-full flex-col rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900/70">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <div>
+                                                <p class="text-xs font-semibold uppercase tracking-[0.22em] text-blue-light-700 dark:text-blue-light-300">Track {{ $loop->iteration }}</p>
+                                                <h4 class="mt-3 text-2xl font-semibold text-gray-900 dark:text-white">{{ $track['name'] }}</h4>
+                                            </div>
+                                            <span class="rounded-full bg-blue-light-500 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-white">
+                                                {{ count($track['questions']) }} questions
+                                            </span>
+                                        </div>
+
+                                        <p class="mt-4 text-sm leading-7 text-gray-600 dark:text-gray-300">{{ $track['description'] }}</p>
+
+                                        <div class="mt-6 flex flex-1 flex-col gap-3">
+                                            @foreach ($track['questions'] as $question)
+                                                <div class="flex flex-1 items-center rounded-2xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm leading-6 text-gray-700 dark:border-gray-800 dark:bg-gray-800 dark:text-gray-200">
+                                                    {{ $question }}
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    </article>
+                                @endforeach
+                            </div>
+                        </section>
+
+                        <section x-show="homeSectionModalView === 'launch'" x-cloak x-transition.opacity>
+                            <span class="home-chip">Ready to launch</span>
+                            <div class="mt-5 grid gap-8 lg:grid-cols-[1fr_0.9fr] lg:items-start">
+                                <div>
+                                    <h3 class="max-w-3xl text-3xl font-semibold text-gray-900 dark:text-white">Open the capstone prototype and move straight into interview practice.</h3>
+                                    <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
+                                        Guests can create an account or sign in from the homepage modal. Signed-in users can jump back into dashboard review, session setup, and practice.
+                                    </p>
+
+                                    <div class="mt-8 grid auto-rows-fr gap-4 sm:grid-cols-3">
+                                        <div class="rounded-[28px] border border-blue-light-100 bg-blue-light-50 p-5 dark:border-blue-light-500/20 dark:bg-blue-light-500/10">
+                                            <p class="text-sm font-semibold text-blue-light-700 dark:text-blue-light-200">Account access</p>
+                                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Start with Google or email, then keep your sessions saved.</p>
+                                        </div>
+                                        <div class="rounded-[28px] border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white">Practice setup</p>
+                                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Choose your category, pacing, question count, and response mode.</p>
+                                        </div>
+                                        <div class="rounded-[28px] border border-success-100 bg-success-50 p-5 dark:border-success-500/20 dark:bg-success-500/10">
+                                            <p class="text-sm font-semibold text-success-700 dark:text-success-300">Feedback review</p>
+                                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">Return to reports, dashboard progress, and improvement guidance.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rounded-[32px] border border-gray-200 bg-gray-50 p-6 dark:border-gray-800 dark:bg-gray-900/70">
+                                    <p class="text-sm font-semibold uppercase tracking-[0.22em] text-gray-500 dark:text-gray-400">Launch path</p>
+                                    <h4 class="mt-3 text-2xl font-semibold text-gray-900 dark:text-white">Choose where to begin.</h4>
+                                    <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">The next step opens in the current app flow.</p>
+
+                                    <div class="mt-6 grid gap-3">
+                                        @auth
+                                            <a href="{{ route('dashboard') }}"
+                                                class="inline-flex items-center justify-center rounded-full bg-blue-light-500 px-6 py-3 text-sm font-semibold text-white shadow-theme-xs transition hover:bg-blue-light-600">
+                                                View Dashboard
+                                            </a>
+                                            <a href="{{ route('session-setup') }}"
+                                                class="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:border-blue-light-300 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-light-500/40 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">
+                                                Session Setup
+                                            </a>
+                                            <a href="{{ route('practice') }}"
+                                                class="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:border-blue-light-300 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-light-500/40 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">
+                                                Continue Practice
+                                            </a>
+                                        @else
+                                            <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')"
+                                                class="inline-flex items-center justify-center rounded-full bg-blue-light-500 px-6 py-3 text-sm font-semibold text-white shadow-theme-xs transition hover:bg-blue-light-600">
+                                                Create Free Account
+                                            </a>
+                                            <a href="{{ route('signin') }}" @click.prevent="openAuthModal('signin')"
+                                                class="inline-flex items-center justify-center rounded-full border border-gray-300 bg-white px-6 py-3 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:border-blue-light-300 hover:bg-blue-light-50 hover:text-blue-light-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-blue-light-500/40 dark:hover:bg-blue-light-500/10 dark:hover:text-blue-light-200">
+                                                Sign In
+                                            </a>
+                                        @endauth
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div x-show="videoTutorialModalOpen" x-cloak x-transition.opacity
+            class="fixed inset-0 z-[980] flex items-center justify-center p-4 sm:p-6">
+            <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-sm" @click="closeVideoTutorialModal()"></div>
+
+            <section
+                role="dialog"
+                aria-modal="true"
+                aria-label="Video tutorial"
+                class="relative z-10 w-full max-w-5xl overflow-hidden rounded-lg border border-white/10 bg-gray-950 shadow-[0_32px_100px_-42px_rgba(15,23,42,0.85)]">
+                <button
+                    type="button"
+                    class="absolute right-4 top-4 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-gray-950/80 text-white transition hover:border-blue-light-300 hover:text-blue-light-200"
+                    @click="closeVideoTutorialModal()">
+                    <span class="sr-only">Close video tutorial</span>
+                    <svg class="h-5 w-5" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+                    </svg>
+                </button>
+
+                <div class="border-b border-white/10 px-5 py-4 pr-20 sm:px-6">
+                    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-blue-light-200">Video tutorial</p>
+                    <h2 class="mt-2 text-xl font-semibold text-white sm:text-2xl">AI-Based Interview Practice System</h2>
+                </div>
+
+                <div class="aspect-video w-full bg-black">
+                    <video
+                        x-ref="tutorialVideo"
+                        class="h-full w-full"
+                        controls
+                        playsinline
+                        preload="metadata"
+                        poster="{{ asset('images/ai/video-thumb.png') }}">
+                        <source src="{{ asset('videos/ai-based-interview-practice-system.mp4') }}" type="video/mp4">
+                    </video>
+                </div>
+            </section>
+        </div>
 
         @guest
             <div x-show="authModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6">
@@ -719,9 +978,21 @@
                                 </div>
 
                                 @if ($showSigninErrors)
-                                    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
-                                        <p class="font-semibold">Sign-in could not be completed.</p>
-                                        <ul class="mt-2 space-y-1">
+                                    <div x-data="{ visible: true }" x-show="visible" class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <p class="font-semibold">Sign-in could not be completed.</p>
+                                            <button
+                                                type="button"
+                                                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-500 transition hover:bg-red-100 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
+                                                @click="visible = false"
+                                                aria-label="Dismiss sign-in error"
+                                            >
+                                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                    <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <ul class="mt-2 space-y-1 pr-8">
                                             @foreach ($errors->all() as $error)
                                                 <li>{{ $error }}</li>
                                             @endforeach
@@ -834,9 +1105,21 @@
                                 </div>
 
                                 @if ($showSignupErrors)
-                                    <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
-                                        <p class="font-semibold">Sign-up could not be completed.</p>
-                                        <ul class="mt-2 space-y-1">
+                                    <div x-data="{ visible: true }" x-show="visible" class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-red-200">
+                                        <div class="flex items-start justify-between gap-4">
+                                            <p class="font-semibold">Sign-up could not be completed.</p>
+                                            <button
+                                                type="button"
+                                                class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-500 transition hover:bg-red-100 hover:text-red-700 dark:text-red-300 dark:hover:bg-red-500/10 dark:hover:text-red-200"
+                                                @click="visible = false"
+                                                aria-label="Dismiss sign-up error"
+                                            >
+                                                <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                                                    <path d="M5 5L15 15M15 5L5 15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <ul class="mt-2 space-y-1 pr-8">
                                             @foreach ($errors->all() as $error)
                                                 <li>{{ $error }}</li>
                                             @endforeach
@@ -959,5 +1242,6 @@
                 </div>
             </div>
         @endguest
+
     </div>
 @endsection

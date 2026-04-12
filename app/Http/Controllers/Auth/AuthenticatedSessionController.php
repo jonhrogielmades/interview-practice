@@ -10,7 +10,9 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthenticatedSessionController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(
+        Request $request,
+    ): RedirectResponse
     {
         $credentials = $request->validate([
             'email' => ['required', 'string', 'email'],

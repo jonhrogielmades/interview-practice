@@ -86,7 +86,7 @@ it('shows dashboard metrics and latest AI evaluation from saved practice session
         ],
     ])->assertCreated();
 
-    $this->get(route('dashboard'))
+    $this->get(route('user.dashboard'))
         ->assertOk()
         ->assertSeeText('1 saved AI-reviewed session')
         ->assertSeeText('2 scored answers from AI practice')
@@ -96,4 +96,26 @@ it('shows dashboard metrics and latest AI evaluation from saved practice session
         ->assertSeeText('AI says this answer is strong overall and needs one clearer result.')
         ->assertSeeText('Revise the final sentence so it shows business impact.')
         ->assertSeeText('Clarity note from AI.');
+});
+
+it('renders the updated 8-step onboarding tutorial on the user dashboard', function () {
+    $this->actingAs(User::factory()->create());
+
+    $this->get(route('user.dashboard'))
+        ->assertOk()
+        ->assertSeeText('8-Step Tour')
+        ->assertDontSeeText('Meet your interview workspace')
+        ->assertDontSeeText('Read the aligned score cards first')
+        ->assertSeeText('Track growth across saved sessions')
+        ->assertSeeText('Inspect every saved interview in detail')
+        ->assertSeeText('Spot repeated coaching themes faster')
+        ->assertSee('data-dashboard-tour-target="sidebar-session-setup"', false)
+        ->assertDontSee('data-dashboard-tour-target="sidebar-camera-readiness"', false)
+        ->assertDontSee('data-dashboard-tour-target="sidebar-field-builder"', false)
+        ->assertDontSee('data-dashboard-tour-target="sidebar-question-generator"', false)
+        ->assertSee('data-dashboard-tour-target="sidebar-progress"', false)
+        ->assertSee('data-dashboard-tour-target="sidebar-session-review"', false)
+        ->assertSee('data-dashboard-tour-target="sidebar-feedback-center"', false)
+        ->assertSee('data-dashboard-tour-target="sidebar-category-insights"', false)
+        ->assertDontSee('data-dashboard-tour-target="sidebar-mobile-lan"', false);
 });

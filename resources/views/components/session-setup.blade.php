@@ -11,7 +11,7 @@
                 <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
                     Session Setup
                 </h1>
-                <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
+                <p class="mt-3 max-w-2xl text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
                     Configure your default interview settings here, then open Practice with your preferred question
                     count, pacing, and coaching style already in place.
                 </p>
@@ -45,7 +45,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Core Defaults
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     These values will be preloaded on the Practice page.
                 </p>
             </div>
@@ -91,7 +91,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Session Preferences
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     Add context so each mock interview starts from the right baseline.
                 </p>
             </div>
@@ -131,8 +131,8 @@
                     class="dark:bg-dark-900 min-h-[140px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
                     placeholder="Example: focus on shorter answers, include metrics, and start with Job Interview this week."></textarea>
 
-                <div class="mt-2 flex items-center justify-between gap-3 text-xs text-gray-500 dark:text-gray-400">
-                    <span>Saved notes carry into Practice so each session starts with one clear reminder.</span>
+                <div class="mt-2 flex flex-col items-start justify-between gap-2 text-xs text-gray-500 dark:text-gray-400 sm:flex-row sm:items-center sm:gap-3">
+                    <span class="text-left md:text-justify">Saved notes carry into Practice so each session starts with one clear reminder.</span>
                     <span id="setupNotesCount">0 / 500</span>
                 </div>
             </div>
@@ -144,7 +144,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Setup Guidance
                 </h3>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-600 dark:text-gray-400 md:text-justify">
                     A few strong defaults usually make sessions feel more intentional than changing everything each
                     time.
                 </p>
@@ -156,7 +156,7 @@
                     <p class="text-sm font-semibold text-gray-900 dark:text-white/90">
                         Quick Drill
                     </p>
-                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    <p class="mt-2 text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
                         Best for daily repetition and confidence building.
                     </p>
                 </div>
@@ -165,7 +165,7 @@
                     <p class="text-sm font-semibold text-gray-900 dark:text-white/90">
                         Technical Depth
                     </p>
-                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    <p class="mt-2 text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
                         Helpful when you want more detail, tradeoffs, and system language in your answers.
                     </p>
                 </div>
@@ -174,7 +174,7 @@
                     <p class="text-sm font-semibold text-gray-900 dark:text-white/90">
                         Deep Dive Pace
                     </p>
-                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    <p class="mt-2 text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
                         Better when you want space for structured, example-rich responses.
                     </p>
                 </div>
@@ -186,7 +186,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Category Preview
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     Quick context for the category that will be ready first on Practice.
                 </p>
             </div>
@@ -194,7 +194,7 @@
             <div class="space-y-4">
                 <p
                     id="summaryCategoryDescription"
-                    class="text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    class="text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
                     Common employment questions about strengths, skills, and goals.
                 </p>
 
@@ -222,7 +222,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Saved Summary
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     Live preview of the defaults you are about to save.
                 </p>
             </div>
@@ -290,14 +290,14 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Notes Preview
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     Keep a short reminder for how you want the next mock to feel.
                 </p>
             </div>
 
             <p
                 id="summaryNotes"
-                class="rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                class="rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-left text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400 md:text-justify">
                 No notes saved yet.
             </p>
         </article>
@@ -307,7 +307,7 @@
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Actions
                 </h3>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
                     Save your defaults, reset them, or move directly into practice.
                 </p>
             </div>

@@ -151,7 +151,10 @@ async function migrateLegacyWorkspaceToDatabase() {
     for (const session of legacyWorkspace.sessions.slice().reverse()) {
         await requestWorkspace("storeSession", {
             method: "POST",
-            body: session
+            body: {
+                ...session,
+                notify: false
+            }
         });
     }
 

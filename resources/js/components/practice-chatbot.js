@@ -188,7 +188,7 @@ export function initPracticeChatbot() {
         if (!selectedProvider || selectedProvider.id === "auto") {
             if (configuredRemoteProviders.length === 0) {
                 elements.chatbotModeText.textContent = "No external AI key is configured, so the local PH coach will answer";
-                elements.chatbotProviderHelpText.textContent = "Add one or more API keys in .env to enable Gemini, Groq, OpenRouter, Wisdom Gate, or Cohere.";
+                elements.chatbotProviderHelpText.textContent = "Add one or more API keys in .env to enable Gemini, Groq, OpenRouter, Claude, Wisdom Gate, or Cohere.";
                 return;
             }
 
@@ -235,7 +235,7 @@ export function initPracticeChatbot() {
             elements.chatbotModalCategoryName.textContent = "Open the PH interview coach";
             elements.chatbotModalSummaryText.textContent = modalIsOpen
                 ? "The PH interview coach is open in the modal. Ask about job, scholarship, admission, or IT interviews in the Philippines."
-                : "Ask Philippine interview practice questions in a dedicated modal, with Gemini, Groq, OpenRouter, Wisdom Gate, and Cohere support when configured.";
+                : "Ask Philippine interview practice questions in a dedicated modal, with Gemini, Groq, OpenRouter, Claude, Wisdom Gate, and Cohere support when configured.";
         }
 
         elements.openChatbotModalBtn.disabled = modalIsOpen;

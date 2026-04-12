@@ -54,11 +54,403 @@
             'body' => 'Use the dashboard to compare saved AI evaluations and identify what still needs work.',
         ],
     ];
+
+    $onboardingSteps = [
+        [
+            'label' => 'Session Setup',
+            'title' => 'Prepare each interview round before you begin',
+            'body' => 'Use Session Setup to define the scenario, pacing, and timing so every practice session starts with the right structure.',
+            'target' => 'sidebar-session-setup',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Core Defaults',
+                    'title' => 'Question count, coach focus, and pacing',
+                    'body' => 'Set the main defaults that preload every practice session with the structure you want.',
+                ],
+                [
+                    'eyebrow' => 'Preferences',
+                    'title' => 'Category, response mode, and notes',
+                    'body' => 'Save the interview category, preferred answer style, and a quick reminder for your next round.',
+                ],
+                [
+                    'eyebrow' => 'Saved Summary',
+                    'title' => 'Preview your setup before saving',
+                    'body' => 'See the selected defaults, estimated session time, and category summary in one place.',
+                ],
+                [
+                    'eyebrow' => 'Actions',
+                    'title' => 'Save, reset, or jump into practice',
+                    'body' => 'Finish by saving your defaults, clearing them, or opening Practice with setup-ready values.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Practice',
+            'title' => 'Move into the live mock interview flow',
+            'body' => 'Practice opens the full interview workspace where you can set up the session, define your target field, generate AI questions, and answer each prompt by voice or text.',
+            'target' => 'sidebar-practice',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Session Setup',
+                    'title' => 'Tune question count, coaching, and pacing',
+                    'body' => 'Start by setting the interview length and guidance style so the next mock run matches your goal.',
+                ],
+                [
+                    'eyebrow' => 'Target Field',
+                    'title' => 'Choose the track and target field',
+                    'body' => 'Shape the field plan inside Practice and prepare the workspace for a focused interview scenario.',
+                ],
+                [
+                    'eyebrow' => 'AI Prompts',
+                    'title' => 'Create a fresh set of prompts',
+                    'body' => 'Use the AI question flow to generate track-based interview questions and keep practice sessions varied.',
+                ],
+                [
+                    'eyebrow' => 'Interview Modal',
+                    'title' => 'Answer by voice or text with live guidance',
+                    'body' => 'Open the interview modal to move through active questions, record answers, and review the running practice state.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Learning Lab',
+            'title' => 'Study before another attempt',
+            'body' => 'Learning Lab gives you extra review material so you can sharpen weak areas before the next round.',
+            'target' => 'sidebar-learning-lab',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Modules',
+                    'title' => 'Choose guided drills before practice',
+                    'body' => 'Open focused modules like answer blueprint, delivery rehearsal, visual presence, and reflection review.',
+                ],
+                [
+                    'eyebrow' => 'Activities',
+                    'title' => 'Launch quick study exercises',
+                    'body' => 'Start short activities such as quick drills, STAR practice, voice rehearsal, and follow-up sprints.',
+                ],
+                [
+                    'eyebrow' => 'Track Connections',
+                    'title' => 'Jump straight into a practice track',
+                    'body' => 'Each learning card can send you into the matching interview category with connected drill context.',
+                ],
+                [
+                    'eyebrow' => 'Signals',
+                    'title' => 'Use saved history to pick the next move',
+                    'body' => 'Recent scores, completed sessions, and recommendations help you decide what to practice next.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Interview Chatbot',
+            'title' => 'Ask for fast coaching between sessions',
+            'body' => 'The Interview Chatbot is your quick coaching lane for feedback, rewrites, follow-up prompts, and answer ideas.',
+            'target' => 'sidebar-chatbot',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Provider Status',
+                    'title' => 'Check which AI routes are available',
+                    'body' => 'Run a live API check and review which supported providers are configured before sending requests.',
+                ],
+                [
+                    'eyebrow' => 'Workspace',
+                    'title' => 'Switch between coach chat, question builder, and review',
+                    'body' => 'Use one workspace for coaching questions, generated interview sets, and answer-draft feedback.',
+                ],
+                [
+                    'eyebrow' => 'Scope & Prompts',
+                    'title' => 'Choose interview scope and fast starters',
+                    'body' => 'Set the interview scope, provider route, and quick prompts so requests stay focused and relevant.',
+                ],
+                [
+                    'eyebrow' => 'Results',
+                    'title' => 'Review output with built-in guardrails',
+                    'body' => 'See generated questions or review feedback while staying inside the interview-only PH coaching limits.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Progress',
+            'title' => 'Track growth across saved sessions',
+            'body' => 'Use Progress to review score trends, streaks, category breakdowns, recent performance cards, and export-ready summaries in one place.',
+            'target' => 'sidebar-progress',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Trends',
+                    'title' => 'Follow average score movement over time',
+                    'body' => 'The progress dashboard highlights overall sessions, average score, weekly goals, and streak momentum together.',
+                ],
+                [
+                    'eyebrow' => 'History',
+                    'title' => 'Open saved sessions from the dashboard view',
+                    'body' => 'Review session history, detailed session cards, and recent performance snapshots without leaving the analytics workflow.',
+                ],
+                [
+                    'eyebrow' => 'Exports',
+                    'title' => 'Download capstone-ready reports',
+                    'body' => 'Export saved history as JSON or CSV when you need documentation, reporting, or offline review.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Session Review',
+            'title' => 'Inspect every saved interview in detail',
+            'body' => 'Session Review is the fastest way to search saved interviews, filter by category, and reopen question-by-question answer data.',
+            'target' => 'sidebar-session-review',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Search',
+                    'title' => 'Find a past session by prompt, answer, or category',
+                    'body' => 'Use the saved-session search, category filter, and sort controls to narrow the list before opening a result.',
+                ],
+                [
+                    'eyebrow' => 'Saved List',
+                    'title' => 'Jump between all reviewed interviews',
+                    'body' => 'The session list keeps totals, best score, and current focus visible while you compare multiple interview runs.',
+                ],
+                [
+                    'eyebrow' => 'Detail View',
+                    'title' => 'Read every question, answer, and score signal',
+                    'body' => 'Open the full review panel to inspect what you answered, where the score dipped, and what the AI feedback recommended next.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Feedback Center',
+            'title' => 'Spot repeated coaching themes faster',
+            'body' => 'Feedback Center gathers saved evaluations so you can compare strengths, improvement areas, and session-level summaries across practice runs.',
+            'target' => 'sidebar-feedback-center',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Filters',
+                    'title' => 'Search feedback by category or review type',
+                    'body' => 'Narrow the workspace by search term, interview category, or evaluation view before scanning the saved results.',
+                ],
+                [
+                    'eyebrow' => 'Digest',
+                    'title' => 'Surface common strengths and improvement areas',
+                    'body' => 'The coaching digest summarizes repeated praise and repeated weaknesses so the next practice goal is easier to choose.',
+                ],
+                [
+                    'eyebrow' => 'Saved Reviews',
+                    'title' => 'Compare answer evaluations with full-session summaries',
+                    'body' => 'Keep both individual answer reviews and session history together when you want to verify whether a pattern keeps repeating.',
+                ],
+            ],
+        ],
+        [
+            'label' => 'Category Insights',
+            'title' => 'Compare readiness by interview category',
+            'body' => 'Category Insights shows which interview tracks are strongest, which still need attention, and where another practice round will help most.',
+            'target' => 'sidebar-category-insights',
+            'area' => 'sidebar',
+            'cards' => [
+                [
+                    'eyebrow' => 'Compare',
+                    'title' => 'Sort categories by score, recency, or volume',
+                    'body' => 'Search a category name and reorder the list to see which interview scenarios are most practiced or most successful.',
+                ],
+                [
+                    'eyebrow' => 'Readiness',
+                    'title' => 'See strongest categories and next-focus areas',
+                    'body' => 'The summary cards call out strongest category, ready categories, and the best next area for improvement.',
+                ],
+                [
+                    'eyebrow' => 'Detail',
+                    'title' => 'Open a category-level breakdown before the next session',
+                    'body' => 'Use the detail panel to decide which scenario should guide your next saved interview run.',
+                ],
+            ],
+        ],
+    ];
 @endphp
 
 @section('content')
-    <div class="space-y-6">
-        <section class="shadow-theme-sm overflow-hidden rounded-[28px] border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+    <div id="dashboardOnboarding" class="flex flex-col gap-10">
+        <div x-show="$store.dashboardOnboarding.active" x-cloak x-transition.opacity
+            class="fixed inset-0 z-[100000] bg-gray-900/35 backdrop-blur-sm"></div>
+
+        <div x-show="$store.dashboardOnboarding.active" x-cloak x-transition.opacity
+            class="fixed inset-x-4 bottom-4 z-[100002] sm:left-auto sm:right-4"
+            :class="$store.dashboardOnboarding.currentStep()?.form || ($store.dashboardOnboarding.currentStep()?.cards || []).length > 0
+                ? 'w-[min(480px,calc(100vw-2rem))]'
+                : 'w-[min(360px,calc(100vw-2rem))]'">
+            <div
+                class="shadow-theme-xl max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-[24px] border border-white/70 bg-white/95 p-4 backdrop-blur-xl dark:border-gray-700/70 dark:bg-gray-900/95 sm:p-5">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <span
+                            class="bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
+                                stroke="currentColor" class="h-3.5 w-3.5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                            </svg>
+                            <span x-text="$store.dashboardOnboarding.currentStep()?.label"></span>
+                        </span>
+
+                        <h2 class="mt-3 text-lg leading-7 font-semibold text-gray-900 dark:text-white"
+                            x-text="$store.dashboardOnboarding.currentStep()?.title"></h2>
+                    </div>
+
+                    <button type="button" @click="$store.dashboardOnboarding.finish()"
+                        class="rounded-full border border-gray-200 px-3 py-1.5 text-[12px] font-medium text-gray-500 transition hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white">
+                        Skip
+                    </button>
+                </div>
+
+                <p class="mt-3 text-[13px] leading-6 text-gray-600 dark:text-gray-300"
+                    x-text="$store.dashboardOnboarding.currentStep()?.body"></p>
+
+                <div x-show="$store.dashboardOnboarding.currentStep()?.form" x-cloak class="mt-4">
+                    <div
+                        class="rounded-[22px] border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-blue-light-50/60 p-3.5 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-gray-900 dark:to-blue-light-500/10">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-500"
+                                    x-text="$store.dashboardOnboarding.currentStep()?.form?.eyebrow"></p>
+                                <p class="mt-2 text-[13px] font-semibold leading-5 text-gray-900 dark:text-white"
+                                    x-text="$store.dashboardOnboarding.currentStep()?.form?.title"></p>
+                            </div>
+
+                            <span
+                                class="rounded-full border border-brand-200 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-500 dark:border-brand-500/30 dark:bg-gray-900/80 dark:text-brand-300">
+                                Form
+                            </span>
+                        </div>
+
+                        <div class="mt-4 space-y-3">
+                            <template
+                                x-for="section in ($store.dashboardOnboarding.currentStep()?.form?.sections || [])"
+                                :key="section.title">
+                                <div
+                                    class="rounded-2xl border border-white/70 bg-white/85 p-3 shadow-theme-xs dark:border-white/10 dark:bg-gray-900/80">
+                                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500"
+                                        x-text="section.title"></p>
+
+                                    <div x-show="(section.fields || []).length > 0" class="mt-3 space-y-2.5">
+                                        <template x-for="field in (section.fields || [])"
+                                            :key="`${section.title}-${field.label}`">
+                                            <div>
+                                                <p class="text-[10px] font-medium uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500"
+                                                    x-text="field.label"></p>
+
+                                                <div
+                                                    class="mt-1.5 rounded-xl border border-gray-200 bg-gray-50/90 px-3 py-2.5 dark:border-gray-700 dark:bg-white/5">
+                                                    <div x-show="field.kind !== 'textarea'"
+                                                        class="flex items-center justify-between gap-3">
+                                                        <span class="text-[12px] font-medium text-gray-800 dark:text-gray-100"
+                                                            x-text="field.value"></span>
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                            viewBox="0 0 24 24" stroke-width="1.7"
+                                                            stroke="currentColor"
+                                                            class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                        </svg>
+                                                    </div>
+
+                                                    <p x-show="field.kind === 'textarea'"
+                                                        class="text-[11px] leading-5 text-gray-600 dark:text-gray-300"
+                                                        x-text="field.value"></p>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+
+                                    <div x-show="(section.actions || []).length > 0"
+                                        class="mt-3 grid grid-cols-2 gap-2">
+                                        <template x-for="action in (section.actions || [])"
+                                            :key="`${section.title}-${action.label}`">
+                                            <span
+                                                class="inline-flex items-center justify-center rounded-xl px-3 py-2 text-[11px] font-semibold"
+                                                :class="action.tone === 'primary'
+                                                    ? 'bg-brand-500 text-white'
+                                                    : 'border border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300'">
+                                                <span x-text="action.label"></span>
+                                            </span>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="($store.dashboardOnboarding.currentStep()?.cards || []).length > 0" x-cloak
+                    class="mt-4">
+                    <p
+                        class="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
+                        What's inside
+                    </p>
+
+                    <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                        <template x-for="card in ($store.dashboardOnboarding.currentStep()?.cards || [])"
+                            :key="card.eyebrow">
+                            <div
+                                class="flex h-full flex-col rounded-2xl border border-gray-200 bg-gray-50/80 p-3 dark:border-gray-700 dark:bg-white/5">
+                                <p class="text-[10px] font-semibold tracking-[0.18em] text-brand-500 uppercase"
+                                    x-text="card.eyebrow"></p>
+                                <p class="mt-2 text-[12px] font-semibold leading-5 text-gray-900 dark:text-white"
+                                    x-text="card.title"></p>
+                                <p class="mt-1 text-[11px] leading-5 text-gray-500 dark:text-gray-400"
+                                    x-text="card.body"></p>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <div class="mt-5 flex items-center gap-1.5">
+                    <template x-for="(step, index) in $store.dashboardOnboarding.steps" :key="step.target">
+                        <button type="button" @click="$store.dashboardOnboarding.goTo(index)"
+                            class="h-2 flex-1 rounded-full transition"
+                            :class="index === $store.dashboardOnboarding.currentStepIndex
+                                ? 'bg-brand-500'
+                                : (index < $store.dashboardOnboarding.currentStepIndex
+                                    ? 'bg-brand-200 dark:bg-brand-700'
+                                    : 'bg-gray-200 dark:bg-gray-700')"
+                            :aria-label="`Go to step ${index + 1}`"></button>
+                    </template>
+                </div>
+
+                <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400"
+                        x-text="$store.dashboardOnboarding.stepLabel()"></p>
+
+                    <div class="grid grid-cols-2 gap-3 sm:min-w-[220px]">
+                        <button type="button" @click="$store.dashboardOnboarding.previous()"
+                            :disabled="$store.dashboardOnboarding.currentStepIndex === 0"
+                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-[13px] font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-white/5">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
+                                stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+                            </svg>
+                            Previous
+                        </button>
+
+                        <button type="button" @click="$store.dashboardOnboarding.next()"
+                            class="bg-brand-500 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[13px] font-medium text-white transition hover:bg-brand-600">
+                            <span
+                                x-text="$store.dashboardOnboarding.currentStepIndex === $store.dashboardOnboarding.steps.length - 1 ? 'Finish' : 'Next'"></span>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
+                                stroke="currentColor" class="h-4 w-4">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <section data-dashboard-tour-target="dashboard-home"
+            class="shadow-theme-sm overflow-hidden rounded-[28px] border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+            :class="$store.dashboardOnboarding.targetClass('dashboard-home')">
             <div class="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
                 <div class="flex flex-col justify-center">
                     <span class="bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400 mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium tracking-[0.2em] uppercase">
@@ -90,10 +482,17 @@
                             class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                             Profile
                         </a>
+
+                        <button type="button" @click="$store.dashboardOnboarding.restart()"
+                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-dashed border-brand-300 bg-brand-50 px-5 py-3 font-medium text-brand-600 transition hover:border-brand-400 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/15">
+                            {{ count($onboardingSteps) }}-Step Tour
+                        </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div data-dashboard-tour-target="dashboard-metrics"
+                    class="grid grid-cols-1 gap-4 sm:grid-cols-2"
+                    :class="$store.dashboardOnboarding.targetClass('dashboard-metrics')">
                     @foreach ($summaryCards as $card)
                         <div class="shadow-theme-xs rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/5">
                             <p class="text-theme-xs mb-2 text-gray-500 dark:text-gray-400">{{ $card['label'] }}</p>
@@ -291,61 +690,19 @@
                     </div>
                 </section>
 
-                <section class="shadow-theme-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
-                    <div class="mb-5">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                            Current Focus
-                        </h2>
-                        <p class="text-theme-sm text-gray-500 dark:text-gray-400">
-                            Suggested priorities before the next session
-                        </p>
-                    </div>
-
-                    <div class="space-y-3">
-                        @foreach ($focusItems as $item)
-                            <div class="rounded-xl border border-gray-200 p-4 dark:border-gray-800">
-                                <div class="flex items-start gap-3">
-                                    <span class="bg-success-500 mt-1 inline-flex size-2.5 rounded-full"></span>
-                                    <p class="text-sm leading-7 text-gray-700 dark:text-gray-300">
-                                        {{ $item }}
-                                    </p>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </section>
-
-                <section class="shadow-theme-sm rounded-2xl border border-gray-200 bg-gray-900 p-6 text-white dark:border-gray-800">
-                    <div class="mb-5">
-                        <p class="text-brand-300 text-xs font-semibold tracking-[0.2em] uppercase">
-                            Weekly Signals
-                        </p>
-                        <h2 class="mt-2 text-xl font-semibold">
-                            Keep progress visible
-                        </h2>
-                    </div>
-
-                    <div class="space-y-3">
-                        @foreach ($weeklySignals as $signal)
-                            <div class="rounded-xl border border-white/10 bg-white/5 p-4">
-                                <p class="text-xs tracking-[0.2em] text-gray-400 uppercase">{{ $signal['label'] }}</p>
-                                <p class="mt-2 text-base font-semibold text-white">{{ $signal['value'] }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-
-                    <div class="mt-6 flex flex-wrap gap-3">
-                        <a href="{{ route('home') }}"
-                            class="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium transition hover:bg-white/10">
-                            Back Home
-                        </a>
-                        <a href="{{ route('signup') }}"
-                            class="bg-brand-500 hover:bg-brand-600 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium text-white transition">
-                            Register User
-                        </a>
-                    </div>
-                </section>
             </div>
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.Alpine) {
+                return;
+            }
+
+            window.Alpine.store('dashboardOnboarding').bootDashboard(@json($onboardingSteps));
+        });
+    </script>
+@endpush

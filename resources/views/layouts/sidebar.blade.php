@@ -5,10 +5,24 @@
 
     // Get current path
     $currentPath = request()->path();
+    $dashboardTourTargets = [
+        '/session-setup' => 'sidebar-session-setup',
+        '/practice' => 'sidebar-practice',
+        '/learning-lab' => 'sidebar-learning-lab',
+        '/chatbot' => 'sidebar-chatbot',
+        '/progress' => 'sidebar-progress',
+        '/session-review' => 'sidebar-session-review',
+        '/feedback-center' => 'sidebar-feedback-center',
+        '/category-insights' => 'sidebar-category-insights',
+        '/admin/mobile-lan' => 'sidebar-mobile-lan',
+    ];
+    $dashboardTourGroupTargets = [
+        'Review' => 'sidebar-review-hub',
+    ];
 @endphp
 
 <aside id="sidebar"
-    class="fixed flex flex-col mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-99999 border-r border-gray-200"
+    class="fixed top-0 left-0 z-[100001] mt-0 flex h-[100dvh] flex-col overflow-hidden border-r border-gray-200 bg-white px-4 text-gray-900 shadow-2xl transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900 sm:px-5 xl:shadow-none"
     x-data="{
         openSubmenus: {},
         init() {
@@ -68,15 +82,16 @@
         }
     }"
     :class="{
-        'w-[min(290px,calc(100vw-1rem))] xl:w-[290px]': $store.sidebar.isExpanded || $store.sidebar.isMobileOpen || $store.sidebar.isHovered,
+        'w-[min(290px,calc(100vw-0.75rem))] sm:w-[min(290px,calc(100vw-1rem))] xl:w-[290px]': $store.sidebar.isExpanded || $store.sidebar.isMobileOpen || $store.sidebar.isHovered,
         'w-[90px]': !$store.sidebar.isExpanded && !$store.sidebar.isHovered,
         'translate-x-0': $store.sidebar.isMobileOpen,
-        '-translate-x-full xl:translate-x-0': !$store.sidebar.isMobileOpen
+        '-translate-x-full xl:translate-x-0': !$store.sidebar.isMobileOpen,
+        'z-[100003]': $store.dashboardOnboarding.active
     }"
     @mouseenter="if (!$store.sidebar.isExpanded) $store.sidebar.setHovered(true)"
     @mouseleave="$store.sidebar.setHovered(false)">
     <!-- Logo Section -->
-    <div class="pt-8 pb-7 flex"
+    <div class="flex pt-6 pb-6 sm:pt-8 sm:pb-7"
         :class="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ?
         'xl:justify-center' :
         'justify-start'">
@@ -93,11 +108,19 @@
     </div>
 
     <!-- Navigation Menu -->
-    <div class="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+    <div class="no-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto duration-300 ease-linear">
         <nav class="mb-6">
             <div class="flex flex-col gap-4">
                 @foreach ($menuGroups as $groupIndex => $menuGroup)
-                    <div>
+                    @php
+                        $groupTourTarget = $dashboardTourGroupTargets[$menuGroup['title']] ?? null;
+                    @endphp
+                    <div
+                        x-data="{ groupTourTarget: @js($groupTourTarget) }"
+                        @if ($groupTourTarget)
+                            data-dashboard-tour-target="{{ $groupTourTarget }}"
+                        @endif
+                        :class="groupTourTarget ? $store.dashboardOnboarding.targetClass(groupTourTarget, 'sidebar') : ''">
                         <!-- Menu Group Title -->
                         <h2 class="mb-4 text-xs uppercase flex leading-[20px] text-gray-400"
                             :class="(!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ?
@@ -116,16 +139,25 @@
                         <!-- Menu Items -->
                         <ul class="flex flex-col gap-1">
                             @foreach ($menuGroup['items'] as $itemIndex => $item)
+                                @php
+                                    $itemTourTarget = $dashboardTourTargets[$item['path'] ?? ''] ?? null;
+                                @endphp
                                 <li>
                                     @if (isset($item['subItems']))
                                         <!-- Menu Item with Submenu -->
-                                        <button @click="toggleSubmenu({{ $groupIndex }}, {{ $itemIndex }})"
+                                        <button
+                                            x-data="{ tourTarget: @js($itemTourTarget) }"
+                                            @if ($itemTourTarget)
+                                                data-dashboard-tour-target="{{ $itemTourTarget }}"
+                                            @endif
+                                            @click="toggleSubmenu({{ $groupIndex }}, {{ $itemIndex }})"
                                             class="menu-item group w-full"
                                             :class="[
                                                 isSubmenuOpen({{ $groupIndex }}, {{ $itemIndex }}) ?
                                                 'menu-item-active' : 'menu-item-inactive',
                                                 !$store.sidebar.isExpanded && !$store.sidebar.isHovered ?
-                                                'xl:justify-center' : 'xl:justify-start'
+                                                'xl:justify-center' : 'xl:justify-start',
+                                                tourTarget ? $store.dashboardOnboarding.targetClass(tourTarget, 'sidebar') : ''
                                             ]">
 
                                             <!-- Icon -->
@@ -201,13 +233,20 @@
                                         </div>
                                     @else
                                         <!-- Simple Menu Item -->
-                                        <a href="{{ $item['path'] }}" class="menu-item group"
+                                        <a
+                                            x-data="{ tourTarget: @js($itemTourTarget) }"
+                                            @if ($itemTourTarget)
+                                                data-dashboard-tour-target="{{ $itemTourTarget }}"
+                                            @endif
+                                            href="{{ $item['path'] }}"
+                                            class="menu-item group"
                                             :class="[
                                                 isActive('{{ $item['path'] }}') ? 'menu-item-active' :
                                                 'menu-item-inactive',
                                                 (!$store.sidebar.isExpanded && !$store.sidebar.isHovered && !$store.sidebar.isMobileOpen) ?
                                                 'xl:justify-center' :
-                                                'justify-start'
+                                                'justify-start',
+                                                tourTarget ? $store.dashboardOnboarding.targetClass(tourTarget, 'sidebar') : ''
                                             ]">
 
                                             <!-- Icon -->
@@ -241,7 +280,11 @@
 
         <!-- Sidebar Widget -->
         <div x-data x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen" x-transition class="mt-auto">
-            @include('layouts.sidebar-widget')
+            @if (auth()->user()?->isAdmin())
+                @include('layouts.admin-sidebar-widget')
+            @else
+                @include('layouts.sidebar-widget')
+            @endif
         </div>
 
     </div>
@@ -250,3 +293,5 @@
 <!-- Mobile Overlay -->
 <div x-show="$store.sidebar.isMobileOpen" @click="$store.sidebar.setMobileOpen(false)"
     class="fixed inset-0 z-50 bg-gray-900/50 xl:hidden"></div>
+
+

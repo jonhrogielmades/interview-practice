@@ -23,13 +23,14 @@ class FeaturePageController extends Controller
             'question-generator' => $this->questionGeneratorPage($context),
             'field-builder' => $this->fieldBuilderPage($context),
             'learning-lab' => $this->learningLabPage($context),
+            'learning-lab-activities' => $this->learningLabPage($context, 'activities'),
             'voice-practice' => $this->voicePracticePage($context),
             'camera-readiness' => $this->cameraReadinessPage($context),
             'mobile-lan' => $this->mobileLanPage($context),
             default => abort(404),
         };
 
-        return view("pages.{$page}", [
+        return view($featurePage['view'] ?? "pages.{$page}", [
             'title' => $featurePage['title'],
             'featurePage' => $featurePage,
         ]);
@@ -143,6 +144,7 @@ class FeaturePageController extends Controller
             ['name' => 'GEMINI_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'gemini'), 'configured', false)],
             ['name' => 'GROQ_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'groq'), 'configured', false)],
             ['name' => 'OPENROUTER_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'openrouter'), 'configured', false)],
+            ['name' => 'ANTHROPIC_API_KEY / CLAUDE_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'claude'), 'configured', false)],
             ['name' => 'HUGGINGFACE_API_KEY / WISDOMGATE_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'wisdomgate'), 'configured', false)],
             ['name' => 'COHERE_API_KEY', 'configured' => (bool) data_get($remoteProviders->firstWhere('id', 'cohere'), 'configured', false)],
         ];
@@ -601,8 +603,9 @@ class FeaturePageController extends Controller
         ];
     }
 
-    protected function learningLabPage(array $context): array
+    protected function learningLabPage(array $context, string $viewMode = 'overview'): array
     {
+        $viewMode = $viewMode === 'activities' ? 'activities' : 'overview';
         $setup = $context['setup'];
         $sessions = $context['sessions'];
         $answers = $context['answers'];
@@ -612,8 +615,11 @@ class FeaturePageController extends Controller
         $focusLabel = $this->focusModeLabel($context['focusModes'], (int) ($setup['focusModeIndex'] ?? 0));
         $pacingLabel = $this->pacingModeLabel($context['pacingModes'], (int) ($setup['pacingModeIndex'] ?? 0));
         $responseLabel = $this->responsePreferenceLabel((string) ($setup['voiceMode'] ?? 'text'));
-        $averageScore = $answers->isNotEmpty()
-            ? number_format((float) $answers->avg(fn (array $answer) => (float) ($answer['average'] ?? 0)), 1).' / 10'
+        $averageScoreValue = $answers->isNotEmpty()
+            ? (float) $answers->avg(fn (array $answer) => (float) ($answer['average'] ?? 0))
+            : null;
+        $averageScore = $averageScoreValue !== null
+            ? number_format($averageScoreValue, 1).' / 10'
             : 'No scores yet';
         $latestAnswer = $answers
             ->sortByDesc(fn (array $answer) => (string) ($answer['sessionSavedAt'] ?? ''))
@@ -623,6 +629,27 @@ class FeaturePageController extends Controller
                 'category' => $categoryId,
                 'source' => 'learning-lab',
             ], $query));
+        };
+        $learningActivityLaunch = function (array $query = []) {
+            return route('practice', array_merge([
+                'source' => 'learning-lab',
+            ], $query));
+        };
+        $learningActivityCatalog = collect(InterviewPracticeCatalog::learningActivityCatalog());
+        $recommendedActivityId = match (true) {
+            $answers->isEmpty() => 'quick-drill',
+            $averageScoreValue !== null && $averageScoreValue < 6.5 => 'star-response',
+            in_array((string) ($setup['voiceMode'] ?? 'text'), ['voice', 'hybrid'], true) => 'voice-rehearsal',
+            default => 'follow-up-sprint',
+        };
+        $recommendedActivity = $learningActivityCatalog->get($recommendedActivityId)
+            ?? $learningActivityCatalog->first()
+            ?? ['title' => 'Quick Drill'];
+        $recommendedReason = match ($recommendedActivityId) {
+            'quick-drill' => 'No evaluated answer is saved yet, so a short baseline run is the best starting point.',
+            'star-response' => 'The saved score shows that answer structure is the best area to strengthen next.',
+            'voice-rehearsal' => 'The saved response preference already leans toward spoken practice.',
+            default => 'Saved answers are available, so a follow-up round can target the next improvement.',
         };
 
         $categoryCards = $context['categories']->map(function (array $category, string $categoryId) use ($practiceLaunch) {
@@ -704,57 +731,92 @@ class FeaturePageController extends Controller
             ],
         ];
 
-        $learningActivities = [
-            [
-                'title' => 'Quick Drill',
-                'tag' => $this->questionCountLabel($context['questionCountOptions'], (int) ($setup['questionCount'] ?? 3)),
-                'summary' => 'Use the current saved session length and jump straight into the preferred track for a short focused run.',
-                'tone' => 'brand',
-                'actionLabel' => 'Launch Quick Drill',
-                'actionHref' => $practiceLaunch($preferredCategoryId, [
-                    'module' => 'answer-blueprint',
-                    'activity' => 'quick-drill',
-                ]),
-            ],
-            [
-                'title' => 'STAR Response Drill',
-                'tag' => 'Structure',
-                'summary' => 'Open Practice with a structure-focused activity so the next answer leans on situation, task, action, and result.',
-                'tone' => 'blue',
-                'actionLabel' => 'Run STAR Drill',
-                'actionHref' => $practiceLaunch($preferredCategoryId, [
-                    'module' => 'answer-blueprint',
-                    'activity' => 'star-response',
-                ]),
-            ],
-            [
-                'title' => 'Voice Rehearsal Sprint',
-                'tag' => $responseLabel,
-                'summary' => 'Connect Learning Lab to the live Practice workspace and rehearse the next answer using your saved response preference.',
-                'tone' => 'success',
-                'actionLabel' => 'Start Voice Sprint',
-                'actionHref' => $practiceLaunch($preferredCategoryId, [
-                    'module' => 'delivery-rehearsal',
-                    'activity' => 'voice-rehearsal',
-                ]),
-            ],
-            [
-                'title' => 'Follow-up Sprint',
-                'tag' => $preferredCategoryName,
-                'summary' => 'Return to Practice for a tighter follow-up round after reviewing what the previous answers still need.',
-                'tone' => 'warning',
-                'actionLabel' => 'Launch Follow-up',
-                'actionHref' => $practiceLaunch($preferredCategoryId, [
-                    'module' => 'reflection-review',
-                    'activity' => 'follow-up-sprint',
-                ]),
-            ],
-        ];
+        $learningActivities = $learningActivityCatalog
+            ->map(function (array $activity, string $activityId) use (
+                $context,
+                $learningActivityLaunch,
+                $preferredCategoryName,
+                $recommendedActivityId,
+                $responseLabel,
+                $setup
+            ) {
+                $tag = match ($activityId) {
+                    'quick-drill' => $this->questionCountLabel($context['questionCountOptions'], (int) ($setup['questionCount'] ?? 3)),
+                    'voice-rehearsal' => $responseLabel,
+                    'follow-up-sprint' => $preferredCategoryName,
+                    default => (string) ($activity['tag'] ?? 'Practice'),
+                };
+                $levels = collect($activity['levels'] ?? [])
+                    ->map(function (array $level) {
+                        $targetScore = (float) ($level['targetScore'] ?? 7.0);
+
+                        return [
+                            'level' => (int) ($level['level'] ?? 1),
+                            'label' => (string) ($level['label'] ?? 'Level 1'),
+                            'targetScore' => $targetScore,
+                            'targetLabel' => number_format($targetScore, 1).' / 10',
+                            'questionFocus' => (string) ($level['questionFocus'] ?? 'Answer the next interview question clearly.'),
+                        ];
+                    })
+                    ->values();
+                $launchLevel = $levels->first() ?? [
+                    'level' => 1,
+                    'label' => 'Level 1',
+                    'targetScore' => 7.0,
+                    'targetLabel' => '7.0 / 10',
+                    'questionFocus' => 'Answer the next interview question clearly.',
+                ];
+
+                return [
+                    'title' => (string) ($activity['title'] ?? 'Learning Activity'),
+                    'tag' => $tag,
+                    'summary' => (string) ($activity['summary'] ?? 'Open a focused practice drill for this interview system.'),
+                    'tone' => (string) ($activity['tone'] ?? 'neutral'),
+                    'recommended' => $activityId === $recommendedActivityId,
+                    'levelLabel' => (string) $launchLevel['label'],
+                    'targetScoreLabel' => (string) $launchLevel['targetLabel'],
+                    'passRule' => 'Pass this level with '.$launchLevel['targetLabel'].' or higher.',
+                    'retryRule' => 'Below target: try the same level again. Passed: proceed to the next level of questions.',
+                    'levels' => $levels->all(),
+                    'actionLabel' => (string) ($activity['actionLabel'] ?? 'Launch Activity'),
+                    'actionHref' => $learningActivityLaunch([
+                        'module' => (string) ($activity['module'] ?? 'answer-blueprint'),
+                        'activity' => $activityId,
+                        'level' => (int) $launchLevel['level'],
+                        'target' => (float) $launchLevel['targetScore'],
+                    ]),
+                ];
+            })
+            ->values()
+            ->all();
+        $isActivitiesView = $viewMode === 'activities';
+        $pageTitle = $isActivitiesView ? 'Learning Activities' : 'Learning Lab Overview';
+        $pageDescription = $isActivitiesView
+            ? 'Choose a focused activity for this interview system, then choose the practice category you want before the drill starts.'
+            : 'Review the Learning Lab modules, practice track connections, and saved learning signals before choosing a focused activity.';
+        $actionsDescription = $isActivitiesView
+            ? 'Choose a drill, return to the overview, or adjust the setup before launching Practice.'
+            : 'Use the overview to understand the next move, then open the activity page when you are ready to drill.';
+        $actions = $isActivitiesView
+            ? [
+                ['label' => 'Choose Practice Category', 'href' => $learningActivityLaunch(), 'style' => 'primary'],
+                ['label' => 'Open Learning Lab Overview', 'href' => route('learning-lab'), 'style' => 'secondary'],
+                ['label' => 'Adjust Session Setup', 'href' => route('session-setup'), 'style' => 'ghost'],
+            ]
+            : [
+                ['label' => 'Open Learning Activities', 'href' => route('learning-lab.activities'), 'style' => 'primary'],
+                ['label' => 'Open Practice', 'href' => route('practice'), 'style' => 'secondary'],
+                ['label' => 'Adjust Session Setup', 'href' => route('session-setup'), 'style' => 'ghost'],
+            ];
 
         return [
             'eyebrow' => 'Standalone adaptive coaching hub',
-            'title' => 'Learning Lab',
-            'description' => 'Learning Lab now lives outside the Practice page, giving you a dedicated place to review modules, choose drills, and launch the next interview track with clearer intent.',
+            'title' => $pageTitle,
+            'description' => $pageDescription,
+            'view' => 'pages.learning-lab',
+            'viewMode' => $viewMode,
+            'overviewHref' => route('learning-lab'),
+            'activitiesHref' => route('learning-lab.activities'),
             'gradient' => 'from-amber-500/10 via-white to-brand-500/10 dark:from-amber-500/5 dark:via-gray-900 dark:to-brand-500/5',
             'summaryCards' => [
                 [
@@ -763,9 +825,11 @@ class FeaturePageController extends Controller
                     'detail' => 'Current default pulled from Session Setup',
                 ],
                 [
-                    'label' => 'Coach Focus',
-                    'value' => $focusLabel,
-                    'detail' => 'The current coaching emphasis applied before each practice run',
+                    'label' => $isActivitiesView ? 'Recommended Activity' : 'Coach Focus',
+                    'value' => $isActivitiesView ? (string) ($recommendedActivity['title'] ?? 'Quick Drill') : $focusLabel,
+                    'detail' => $isActivitiesView
+                        ? 'Best fit from current setup and saved learning signals'
+                        : 'The current coaching emphasis applied before each practice run',
                 ],
                 [
                     'label' => 'Pacing',
@@ -819,10 +883,11 @@ class FeaturePageController extends Controller
                     'description' => 'A quick recommendation based on the currently saved defaults.',
                     'items' => [
                         [
-                            'title' => 'Recommended launch',
-                            'value' => $preferredCategoryName,
-                            'body' => 'Start with the preferred track, keep the current focus and pacing, then let Practice generate a fresh question set for that context.',
+                            'title' => 'Recommended activity',
+                            'value' => (string) ($recommendedActivity['title'] ?? 'Quick Drill'),
+                            'body' => $recommendedReason,
                             'list' => [
+                                'Preferred track: '.$preferredCategoryName,
                                 'Coach focus: '.$focusLabel,
                                 'Pacing: '.$pacingLabel,
                                 'Response preference: '.$responseLabel,
@@ -838,13 +903,8 @@ class FeaturePageController extends Controller
                     ],
                 ],
             ],
-            'actionsDescription' => 'Open the dedicated routes that turn Learning Lab decisions into a live mock interview.',
-            'actions' => [
-                ['label' => 'Launch '.$preferredCategoryName, 'href' => $practiceLaunch($preferredCategoryId, ['activity' => 'track-launch']), 'style' => 'primary'],
-                ['label' => 'Open Practice', 'href' => route('practice'), 'style' => 'secondary'],
-                ['label' => 'Open Camera Readiness', 'href' => route('camera-readiness'), 'style' => 'secondary'],
-                ['label' => 'Adjust Session Setup', 'href' => route('session-setup'), 'style' => 'ghost'],
-            ],
+            'actionsDescription' => $actionsDescription,
+            'actions' => $actions,
         ];
     }
 
@@ -1207,10 +1267,9 @@ class FeaturePageController extends Controller
                     ],
                 ],
             ],
-            'actionsDescription' => 'The camera and interviewer controls already live inside Practice, while Mobile LAN helps with phone testing.',
+            'actionsDescription' => 'The camera and interviewer controls already live inside Practice. Use Session Setup when you want to adjust the next run first.',
             'actions' => [
                 ['label' => 'Open Practice', 'href' => route('practice'), 'style' => 'primary'],
-                ['label' => 'Open Mobile LAN', 'href' => route('mobile-lan'), 'style' => 'secondary'],
                 ['label' => 'Adjust Session Setup', 'href' => route('session-setup'), 'style' => 'ghost'],
             ],
         ];
@@ -1226,7 +1285,7 @@ class FeaturePageController extends Controller
         return [
             'eyebrow' => 'Phone testing and shared-network access',
             'title' => 'Mobile LAN',
-            'description' => 'Check the current LAN-related environment values, review the phone testing workflow, and see which interview features work best over local network access.',
+            'description' => 'Check the current LAN-related environment values, review the admin phone testing workflow, and see which admin pages work best over local network access.',
             'gradient' => 'from-blue-light-500/10 via-white to-orange-500/10 dark:from-blue-light-500/5 dark:via-gray-900 dark:to-orange-500/5',
             'summaryCards' => [
                 [
@@ -1293,9 +1352,9 @@ class FeaturePageController extends Controller
                         [
                             'title' => 'Test feature coverage',
                             'value' => 'Step 4',
-                            'body' => 'Dashboard, progress views, chatbot UI, and the responsive sidebar should all load on a phone once the LAN host is correct.',
+                            'body' => 'Admin dashboard, user management, API management, monitoring records, and the responsive sidebar should all load on a phone once the LAN host is correct.',
                             'list' => [
-                                'Best first checks: Dashboard, Practice, Interview Chatbot, and Session Setup',
+                                'Best first checks: Admin Dashboard, User Management, API Management, and Monitoring Records',
                                 'Camera and microphone features still depend on browser security rules',
                             ],
                             'tone' => 'warning',
@@ -1303,44 +1362,44 @@ class FeaturePageController extends Controller
                     ],
                 ],
                 [
-                    'title' => 'What Works Best On Phone',
+                    'title' => 'Admin Pages That Work Best On Phone',
                     'description' => 'The responsive UI is already in place, but not every browser capability behaves the same over LAN HTTP.',
                     'columns' => 'md:grid-cols-2',
                     'items' => [
                         [
-                            'title' => 'Dashboard and analytics',
+                            'title' => 'Admin dashboard and monitoring',
                             'value' => 'Good fit',
-                            'body' => 'Dashboard, progress, feedback review, and category insights remain strong candidates for phone testing.',
+                            'body' => 'Admin dashboard and monitoring records remain strong candidates for phone testing.',
                             'list' => [
                                 'These pages are primarily data and layout driven',
-                                'They help confirm the responsive sidebar and dark mode work well on mobile',
+                                'They help confirm the admin sidebar and dark mode work well on mobile',
                             ],
                             'tone' => 'brand',
                         ],
                         [
-                            'title' => 'Chatbot guidance',
+                            'title' => 'User management',
                             'value' => 'Good fit',
-                            'body' => 'The chatbot page works well for testing provider selection, quick prompts, and generated replies from a phone.',
+                            'body' => 'User Management works well for checking account lists, profile fields, role controls, and protected admin forms from a phone.',
                             'list' => [
-                                'Provider health checks can still be launched from the chatbot page',
-                                'Local fallback remains available even when no remote keys are configured',
+                                'Review add-user and edit-user forms on mobile',
+                                'Confirm role and delete controls stay readable',
                             ],
                             'tone' => 'blue',
                         ],
                         [
-                            'title' => 'Practice workflow',
+                            'title' => 'API management',
                             'value' => 'Mostly ready',
-                            'body' => 'Core practice screens and question flows still work, but media-related features are more sensitive on mobile browsers.',
+                            'body' => 'API Management can be checked on phone for provider visibility, status cards, and configuration notes.',
                             'list' => [
-                                'Question generation, saved sessions, and feedback remain usable',
-                                'Voice and camera support may vary depending on origin security and browser support',
+                                'Provider status checks still depend on backend availability',
+                                'Configuration cards should remain readable in narrow screens',
                             ],
                             'tone' => 'success',
                         ],
                         [
                             'title' => 'Camera and microphone',
                             'value' => $mediaSafe ? 'Best case' : 'Needs caution',
-                            'body' => 'Plain LAN HTTP can block camera, microphone, and speech APIs on many mobile browsers.',
+                            'body' => 'Plain LAN HTTP can block camera, microphone, and speech APIs on many mobile browsers if an admin needs to test media-heavy user flows separately.',
                             'list' => [
                                 'HTTPS or localhost is still the safest path for media-heavy testing',
                                 'If phone media fails, confirm the same feature works on desktop first',
@@ -1352,25 +1411,25 @@ class FeaturePageController extends Controller
             ],
             'secondarySections' => [
                 [
-                    'title' => 'Current Session Defaults',
-                    'description' => 'These settings are worth checking after the app loads on a phone.',
+                    'title' => 'Current Admin Checks',
+                    'description' => 'These admin routes are worth checking after the app loads on a phone.',
                     'items' => [
                         [
-                            'title' => 'Preferred Category',
-                            'value' => (string) ($context['preferredCategory']['name'] ?? 'Interview Practice'),
-                            'body' => 'A quick way to confirm workspace bootstrap data loaded correctly on mobile.',
+                            'title' => 'Admin Dashboard',
+                            'value' => 'Overview',
+                            'body' => 'A quick way to confirm the admin shell, summary cards, and quick links load correctly on mobile.',
                             'tone' => 'brand',
                         ],
                         [
-                            'title' => 'Question Count',
-                            'value' => $this->questionCountLabel($context['questionCountOptions'], (int) ($context['setup']['questionCount'] ?? 3)),
-                            'body' => 'Useful for checking if saved defaults sync across devices and reloads.',
+                            'title' => 'User Management',
+                            'value' => 'Accounts',
+                            'body' => 'Useful for checking account forms, role controls, and protected admin actions on a smaller viewport.',
                             'tone' => 'blue',
                         ],
                         [
-                            'title' => 'Response Preference',
-                            'value' => $this->responsePreferenceLabel((string) ($context['setup']['voiceMode'] ?? 'text')),
-                            'body' => 'Helps confirm the setup state is available before opening Practice on mobile.',
+                            'title' => 'API Management',
+                            'value' => 'Providers',
+                            'body' => 'Helps confirm provider configuration visibility stays readable on phone screens.',
                             'tone' => 'success',
                         ],
                     ],
@@ -1381,8 +1440,8 @@ class FeaturePageController extends Controller
                     'items' => [
                         [
                             'title' => 'Sidebar navigation',
-                            'value' => '15 destinations',
-                            'body' => 'Confirm the expanded sidebar still feels usable and readable on a smaller viewport.',
+                            'value' => 'Admin routes',
+                            'body' => 'Confirm the admin sidebar still feels usable and readable on a smaller viewport.',
                             'tone' => 'brand',
                         ],
                         [
@@ -1392,19 +1451,19 @@ class FeaturePageController extends Controller
                             'tone' => 'blue',
                         ],
                         [
-                            'title' => 'Chatbot and practice',
-                            'value' => 'Core workflow',
-                            'body' => 'Open both pages to confirm the main interview flow works before testing media features.',
+                            'title' => 'Admin workflow pages',
+                            'value' => 'Core controls',
+                            'body' => 'Open User Management, API Management, and Monitoring Records before checking any media-sensitive user flows.',
                             'tone' => 'success',
                         ],
                     ],
                 ],
             ],
-            'actionsDescription' => 'Use these pages as the fastest checks once the app is visible from a phone.',
+            'actionsDescription' => 'Use these admin pages as the fastest checks once the app is visible from a phone.',
             'actions' => [
-                ['label' => 'Open Dashboard', 'href' => route('dashboard'), 'style' => 'primary'],
-                ['label' => 'Open Practice', 'href' => route('practice'), 'style' => 'secondary'],
-                ['label' => 'Open Interview Chatbot', 'href' => route('chatbot'), 'style' => 'ghost'],
+                ['label' => 'Open Admin Dashboard', 'href' => route('admin.dashboard'), 'style' => 'primary'],
+                ['label' => 'Open API Management', 'href' => route('admin.apis'), 'style' => 'secondary'],
+                ['label' => 'Open Monitoring Records', 'href' => route('admin.monitoring'), 'style' => 'ghost'],
             ],
         ];
     }

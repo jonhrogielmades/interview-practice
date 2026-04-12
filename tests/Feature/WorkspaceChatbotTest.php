@@ -12,6 +12,18 @@ class WorkspaceChatbotTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config()->set('services.gemini.api_key', null);
+        config()->set('services.groq.api_key', null);
+        config()->set('services.openrouter.api_key', null);
+        config()->set('services.claude.api_key', null);
+        config()->set('services.wisdomgate.api_key', null);
+        config()->set('services.cohere.api_key', null);
+    }
+
     public function test_chatbot_endpoint_returns_local_fallback_reply(): void
     {
         config()->set('services.gemini.api_key', null);
@@ -398,7 +410,7 @@ class WorkspaceChatbotTest extends TestCase
         config()->set('services.gemini.model', 'gemini-2.5-flash');
         config()->set('services.groq.api_key', 'groq-test-key');
         config()->set('services.groq.model', 'openai/gpt-oss-20b');
-        config()->set('services.interview_chatbot.provider_priority', 'gemini,groq,openrouter,wisdomgate,cohere');
+        config()->set('services.interview_chatbot.provider_priority', 'gemini,groq,openrouter,claude,wisdomgate,cohere');
         config()->set('services.openrouter.api_key', null);
         config()->set('services.wisdomgate.api_key', null);
         config()->set('services.cohere.api_key', null);
@@ -538,6 +550,56 @@ class WorkspaceChatbotTest extends TestCase
         });
     }
 
+    public function test_chatbot_endpoint_uses_selected_claude_provider_when_configured(): void
+    {
+        config()->set('services.claude.api_key', 'claude-test-key');
+        config()->set('services.claude.model', 'claude-haiku-4-5-20251001');
+        config()->set('services.claude.version', '2023-06-01');
+        config()->set('services.gemini.api_key', null);
+        config()->set('services.groq.api_key', null);
+        config()->set('services.openrouter.api_key', null);
+        config()->set('services.wisdomgate.api_key', null);
+        config()->set('services.cohere.api_key', null);
+
+        Http::fake([
+            'https://api.anthropic.com/v1/messages' => Http::response([
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => 'Claude provider reply',
+                    ],
+                ],
+                'model' => 'claude-haiku-4-5-20251001',
+            ]),
+        ]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot'), [
+            'message' => 'Give me a model answer for a Philippine job interview.',
+            'providerId' => 'claude',
+            'categoryId' => 'job',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'reply' => 'Claude provider reply',
+                'provider' => 'Claude API (claude-haiku-4-5-20251001)',
+                'providerId' => 'claude',
+                'requestedProviderId' => 'claude',
+                'usedFallback' => false,
+            ]);
+
+        Http::assertSent(function ($request) {
+            return $request->url() === 'https://api.anthropic.com/v1/messages'
+                && $request->hasHeader('x-api-key')
+                && $request->hasHeader('anthropic-version')
+                && $request['model'] === 'claude-haiku-4-5-20251001'
+                && $request['system'] !== null
+                && $request['messages'][0]['role'] === 'user';
+        });
+    }
+
     public function test_chatbot_endpoint_uses_selected_wisdomgate_provider_when_configured(): void
     {
         config()->set('services.wisdomgate.api_key', 'wisdomgate-test-key');
@@ -628,7 +690,7 @@ class WorkspaceChatbotTest extends TestCase
         });
     }
 
-    public function test_provider_status_endpoint_reports_all_five_api_providers_as_working_when_responses_are_healthy(): void
+    public function test_provider_status_endpoint_reports_all_six_api_providers_as_working_when_responses_are_healthy(): void
     {
         config()->set('services.gemini.api_key', 'gemini-test-key');
         config()->set('services.gemini.model', 'gemini-2.5-flash');
@@ -636,6 +698,9 @@ class WorkspaceChatbotTest extends TestCase
         config()->set('services.groq.model', 'openai/gpt-oss-20b');
         config()->set('services.openrouter.api_key', 'openrouter-test-key');
         config()->set('services.openrouter.model', 'openrouter/free');
+        config()->set('services.claude.api_key', 'claude-test-key');
+        config()->set('services.claude.model', 'claude-haiku-4-5-20251001');
+        config()->set('services.claude.version', '2023-06-01');
         config()->set('services.wisdomgate.api_key', 'wisdomgate-test-key');
         config()->set('services.wisdomgate.model', 'gpt-5');
         config()->set('services.wisdomgate.base_url', null);
@@ -675,6 +740,15 @@ class WorkspaceChatbotTest extends TestCase
                 ],
                 'model' => 'openrouter/free',
             ]),
+            'https://api.anthropic.com/v1/messages' => Http::response([
+                'content' => [
+                    [
+                        'type' => 'text',
+                        'text' => 'READY',
+                    ],
+                ],
+                'model' => 'claude-haiku-4-5-20251001',
+            ]),
             'https://wisgate.ai/v1/chat/completions' => Http::response([
                 'choices' => [
                     [
@@ -696,22 +770,24 @@ class WorkspaceChatbotTest extends TestCase
         ]);
 
         $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot.providers.status'), [
-            'providers' => ['gemini', 'groq', 'openrouter', 'wisdomgate', 'cohere'],
+            'providers' => ['gemini', 'groq', 'openrouter', 'claude', 'wisdomgate', 'cohere'],
         ]);
 
         $response
             ->assertOk()
-            ->assertJsonCount(5, 'providers')
+            ->assertJsonCount(6, 'providers')
             ->assertJsonPath('providers.0.id', 'gemini')
             ->assertJsonPath('providers.0.state', 'working')
             ->assertJsonPath('providers.1.id', 'groq')
             ->assertJsonPath('providers.1.state', 'working')
             ->assertJsonPath('providers.2.id', 'openrouter')
             ->assertJsonPath('providers.2.state', 'working')
-            ->assertJsonPath('providers.3.id', 'wisdomgate')
+            ->assertJsonPath('providers.3.id', 'claude')
             ->assertJsonPath('providers.3.state', 'working')
-            ->assertJsonPath('providers.4.id', 'cohere')
-            ->assertJsonPath('providers.4.state', 'working');
+            ->assertJsonPath('providers.4.id', 'wisdomgate')
+            ->assertJsonPath('providers.4.state', 'working')
+            ->assertJsonPath('providers.5.id', 'cohere')
+            ->assertJsonPath('providers.5.state', 'working');
     }
 
     public function test_chatbot_endpoint_retries_wisdomgate_fallback_model_after_a_timeout(): void

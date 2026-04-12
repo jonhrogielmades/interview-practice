@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Notifications\SystemNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +31,10 @@ class GoogleAuthController extends Controller
         return $driver->redirect();
     }
 
-    public function callback(Request $request): RedirectResponse
+    public function callback(
+        Request $request,
+        SystemNotificationService $notifications,
+    ): RedirectResponse
     {
         if ($response = $this->missingConfigurationResponse()) {
             return $response;
@@ -75,6 +79,8 @@ class GoogleAuthController extends Controller
 
         $displayName = $googleUser->getName() ?: Str::headline(Str::before($email, '@'));
 
+        $isNewUser = false;
+
         if ($user) {
             $user->forceFill([
                 'google_id' => $googleUser->getId(),
@@ -96,12 +102,19 @@ class GoogleAuthController extends Controller
                 'google_avatar' => $googleUser->getAvatar(),
                 'email_verified_at' => now(),
             ]);
+
+            $isNewUser = true;
+        }
+
+        if ($isNewUser) {
+            $notifications->sendWelcomeNotification($user, 'Google sign-in');
+            $notifications->notifyAdminsAboutRegistration($user, 'Google sign-in');
         }
 
         Auth::login($user, true);
         $request->session()->regenerate();
 
-        return redirect()->to($this->safeIntendedUrl($request) ?? route('dashboard'));
+        return redirect()->intended(route('dashboard'));
     }
 
     protected function resolveGoogleUser()
@@ -172,39 +185,6 @@ class GoogleAuthController extends Controller
             ->withErrors([
                 'email' => 'Google sign-in could not be completed. Please try again.',
             ]);
-    }
-
-    protected function safeIntendedUrl(Request $request): ?string
-    {
-        $intendedUrl = $request->session()->pull('url.intended');
-
-        if (! is_string($intendedUrl) || trim($intendedUrl) === '') {
-            return null;
-        }
-
-        $intendedHost = parse_url($intendedUrl, PHP_URL_HOST);
-
-        if (! is_string($intendedHost) || $intendedHost === '') {
-            return $intendedUrl;
-        }
-
-        return $this->originFromUrl($intendedUrl) === strtolower($request->getSchemeAndHttpHost())
-            ? $intendedUrl
-            : null;
-    }
-
-    protected function originFromUrl(string $url): ?string
-    {
-        $scheme = parse_url($url, PHP_URL_SCHEME);
-        $host = parse_url($url, PHP_URL_HOST);
-
-        if (! is_string($scheme) || $scheme === '' || ! is_string($host) || $host === '') {
-            return null;
-        }
-
-        $port = parse_url($url, PHP_URL_PORT);
-
-        return strtolower($scheme.'://'.$host.(is_int($port) ? ':'.$port : ''));
     }
 
     protected function missingConfigurationResponse(): ?RedirectResponse

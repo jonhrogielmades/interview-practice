@@ -144,6 +144,26 @@ test('google callback retries with stateless auth after an invalid state error',
     ]);
 });
 
+test('authenticated users can still reach dashboard routes with a legacy tutorial session present', function () {
+    $user = User::factory()->create();
+    $legacyTutorialSession = [
+        'post_auth_tutorial' => [
+            'redirect_to' => route('dashboard'),
+            'destination_label' => 'Continue to dashboard',
+        ],
+    ];
+
+    $this->actingAs($user)
+        ->withSession($legacyTutorialSession)
+        ->get(route('dashboard'))
+        ->assertRedirect(route('user.dashboard'));
+
+    $this->actingAs($user)
+        ->withSession($legacyTutorialSession)
+        ->get(route('user.dashboard'))
+        ->assertOk();
+});
+
 test('an authenticated user can upload a profile avatar', function () {
     Storage::fake('public');
 

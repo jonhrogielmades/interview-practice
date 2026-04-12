@@ -15,6 +15,8 @@
             'secondary' => 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03]',
             'ghost' => 'border border-brand-300 bg-transparent text-brand-600 hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10',
         ];
+
+        $isActivitiesView = ($featurePage['viewMode'] ?? 'overview') === 'activities';
     @endphp
 
     <x-common.page-breadcrumb :pageTitle="$featurePage['title']" />
@@ -50,8 +52,31 @@
         </div>
     </section>
 
+    <nav class="mb-6 flex flex-col gap-3 sm:flex-row" aria-label="Learning Lab sections">
+        <a
+            href="{{ $featurePage['overviewHref'] }}"
+            @class([
+                'inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium transition',
+                'bg-brand-500 text-white shadow-theme-xs' => ! $isActivitiesView,
+                'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03]' => $isActivitiesView,
+            ])>
+            Learning Lab Overview
+        </a>
+
+        <a
+            href="{{ $featurePage['activitiesHref'] }}"
+            @class([
+                'inline-flex items-center justify-center rounded-lg px-4 py-3 text-sm font-medium transition',
+                'bg-brand-500 text-white shadow-theme-xs' => $isActivitiesView,
+                'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03]' => ! $isActivitiesView,
+            ])>
+            Learning Activities
+        </a>
+    </nav>
+
     <div class="grid gap-6 xl:grid-cols-12">
         <section class="space-y-6 xl:col-span-8">
+            @if (! $isActivitiesView)
             <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="mb-5">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Learning Modules</h3>
@@ -93,12 +118,14 @@
                     @endforeach
                 </div>
             </article>
+            @endif
 
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            @if ($isActivitiesView)
+            <article id="learning-activities" class="scroll-mt-24 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="mb-5">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Learning Activities</h3>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        These activities are connected to Practice through launch links that carry category and drill context into the workspace.
+                        These system-specific activities send the module and drill context to Practice, then you choose the category before the interview starts.
                     </p>
                 </div>
 
@@ -107,15 +134,53 @@
                         <div @class([
                             'rounded-2xl border p-4',
                             $toneClasses[$activity['tone'] ?? 'neutral'] ?? $toneClasses['neutral'],
+                            'ring-2 ring-brand-200 dark:ring-brand-500/30' => !empty($activity['recommended']),
                         ])>
                             <div class="flex flex-wrap items-start justify-between gap-3">
                                 <h4 class="text-base font-semibold text-gray-900 dark:text-white/90">{{ $activity['title'] }}</h4>
-                                <span class="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700 shadow-theme-xs dark:bg-gray-900/80 dark:text-gray-200">
-                                    {{ $activity['tag'] }}
-                                </span>
+                                <div class="flex flex-wrap justify-end gap-2">
+                                    @if (!empty($activity['recommended']))
+                                        <span class="inline-flex items-center rounded-full bg-brand-500 px-3 py-1 text-xs font-semibold text-white shadow-theme-xs">
+                                            Recommended
+                                        </span>
+                                    @endif
+                                    <span class="inline-flex items-center rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-gray-700 shadow-theme-xs dark:bg-gray-900/80 dark:text-gray-200">
+                                        {{ $activity['tag'] }}
+                                    </span>
+                                </div>
                             </div>
 
                             <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $activity['summary'] }}</p>
+
+                            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                                <div class="rounded-xl border border-white/70 bg-white/75 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/80">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Starting Level</p>
+                                    <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">{{ $activity['levelLabel'] }}</p>
+                                </div>
+                                <div class="rounded-xl border border-white/70 bg-white/75 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/80">
+                                    <p class="text-xs uppercase tracking-wide text-gray-500">Target Score</p>
+                                    <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">{{ $activity['targetScoreLabel'] }}</p>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 rounded-xl border border-white/70 bg-white/75 p-4 dark:border-gray-800 dark:bg-gray-900/80">
+                                <p class="text-sm font-semibold text-gray-900 dark:text-white/90">{{ $activity['passRule'] }}</p>
+                                <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-300">{{ $activity['retryRule'] }}</p>
+                            </div>
+
+                            <div class="mt-4 space-y-2">
+                                @foreach ($activity['levels'] as $level)
+                                    <div class="rounded-xl border border-white/70 bg-white/75 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/80">
+                                        <div class="flex flex-wrap items-center justify-between gap-2">
+                                            <p class="text-sm font-semibold text-gray-900 dark:text-white/90">{{ $level['label'] }}</p>
+                                            <span class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-700 dark:bg-gray-800 dark:text-gray-200">
+                                                {{ $level['targetLabel'] }}
+                                            </span>
+                                        </div>
+                                        <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">{{ $level['questionFocus'] }}</p>
+                                    </div>
+                                @endforeach
+                            </div>
 
                             <div class="mt-4">
                                 <a
@@ -128,7 +193,9 @@
                     @endforeach
                 </div>
             </article>
+            @endif
 
+            @if (! $isActivitiesView)
             <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                 <div class="mb-5">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Practice Track Connections</h3>
@@ -180,6 +247,7 @@
                     @endforeach
                 </div>
             </article>
+            @endif
         </section>
 
         <section class="space-y-6 xl:col-span-4">

@@ -50,6 +50,12 @@ return [
         'model' => env('OPENROUTER_MODEL', 'openrouter/free'),
     ],
 
+    'claude' => [
+        'api_key' => env('ANTHROPIC_API_KEY') ?: env('CLAUDE_API_KEY'),
+        'model' => env('ANTHROPIC_MODEL') ?: env('CLAUDE_MODEL', 'claude-haiku-4-5-20251001'),
+        'version' => env('ANTHROPIC_VERSION', '2023-06-01'),
+    ],
+
     'wisdomgate' => [
         'api_key' => env('WISDOMGATE_API_KEY') ?: env('HUGGINGFACE_API_KEY'),
         'model' => env('WISDOMGATE_MODEL') ?: env('HUGGINGFACE_MODEL', 'wisdom-ai-dsv3'),
@@ -63,7 +69,7 @@ return [
 
     'interview_chatbot' => [
         'default_provider' => env('INTERVIEW_CHATBOT_DEFAULT_PROVIDER', 'auto'),
-        'provider_priority' => env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,openrouter,wisdomgate,cohere'),
+        'provider_priority' => env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,openrouter,claude,wisdomgate,cohere'),
     ],
 
     'google' => [

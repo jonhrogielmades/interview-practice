@@ -1,48 +1,22 @@
-{{-- Notification Dropdown Component --}}
-<div class="relative" x-data="{
-    dropdownOpen: false,
-    notifying: true,
-    toggleDropdown() {
-        this.dropdownOpen = !this.dropdownOpen;
-        this.notifying = false;
-    },
-    closeDropdown() {
-        this.dropdownOpen = false;
-    },
-    handleItemClick() {
-        console.log('Notification item clicked');
-        this.closeDropdown();
-    },
-    handleViewAllClick() {
-        console.log('View All Notifications clicked');
-        this.closeDropdown();
-    }
-}" @click.away="closeDropdown()">
-    <!-- Notification Button -->
+@php
+    use Illuminate\Support\Str;
+
+    $badgeCount = $unreadCount > 9 ? '9+' : (string) $unreadCount;
+@endphp
+
+<div class="relative" x-data="{ dropdownOpen: false, notifying: @js($unreadCount > 0) }" @click.away="dropdownOpen = false">
     <button
         class="relative flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-dark-900 h-11 w-11 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-        @click="toggleDropdown()"
+        @click="dropdownOpen = !dropdownOpen; notifying = false"
         type="button"
     >
-        <!-- Notification Badge -->
-        <span
-            x-show="notifying"
-            class="absolute right-0 top-0.5 z-1 h-2 w-2 rounded-full bg-orange-400"
-        >
-            <span
-                class="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 -z-1 animate-ping"
-            ></span>
-        </span>
+        @if ($unreadCount > 0)
+            <span class="absolute -right-1 -top-1 z-10 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-brand-500 px-1.5 text-[10px] font-semibold text-white">
+                {{ $badgeCount }}
+            </span>
+        @endif
 
-        <!-- Bell Icon -->
-        <svg
-            class="fill-current"
-            width="20"
-            height="20"
-            viewBox="0 0 20 20"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-        >
+        <svg class="fill-current" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path
                 fill-rule="evenodd"
                 clip-rule="evenodd"
@@ -52,7 +26,6 @@
         </svg>
     </button>
 
-    <!-- Dropdown Start -->
     <div
         x-show="dropdownOpen"
         x-transition:enter="transition ease-out duration-100"
@@ -61,162 +34,123 @@
         x-transition:leave="transition ease-in duration-75"
         x-transition:leave-start="transform opacity-100 scale-100"
         x-transition:leave-end="transform opacity-0 scale-95"
-        class="absolute right-0 mt-[17px] flex h-[min(30rem,calc(100vh-7rem))] w-[min(22rem,calc(100vw-1.5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-[361px] dark:border-gray-800 dark:bg-gray-dark"
+        class="absolute right-0 mt-[17px] flex h-[min(32rem,calc(100vh-7rem))] w-[min(24rem,calc(100vw-1.5rem))] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg sm:w-[380px] dark:border-gray-800 dark:bg-gray-dark"
         style="display: none;"
     >
-        <!-- Dropdown Header -->
-        <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-800">
-            <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notification</h5>
+        <div class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
+            <div>
+                <h5 class="text-lg font-semibold text-gray-800 dark:text-white/90">Notifications</h5>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $unreadCount }} unread {{ Str::plural('notification', $unreadCount) }}</p>
+            </div>
 
-            <button @click="closeDropdown()" class="text-gray-500 dark:text-gray-400" type="button">
-                <svg
-                    class="fill-current"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                >
-                    <path
-                        fill-rule="evenodd"
-                        clip-rule="evenodd"
-                        d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
-                        fill=""
-                    />
-                </svg>
-            </button>
+            <div class="flex items-center gap-2">
+                @if ($unreadCount > 0)
+                    <form method="POST" action="{{ route('notifications.read-all') }}">
+                        @csrf
+                        @method('PATCH')
+                        <button type="submit" class="rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/5">
+                            Mark all read
+                        </button>
+                    </form>
+                @endif
+
+                @if (count($notifications) > 0)
+                    <form method="POST" action="{{ route('notifications.clear') }}" onsubmit="return confirm('Delete all notifications? This cannot be undone.');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit" class="rounded-lg border border-error-200 bg-error-50 px-3 py-1.5 text-xs font-medium text-error-700 transition hover:bg-error-100 dark:border-error-500/20 dark:bg-error-500/10 dark:text-error-300">
+                            Clear
+                        </button>
+                    </form>
+                @endif
+
+                <button @click="dropdownOpen = false" class="text-gray-500 dark:text-gray-400" type="button">
+                    <svg class="fill-current" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z" fill="" />
+                    </svg>
+                </button>
+            </div>
         </div>
 
-        <!-- Notification List -->
-        <ul class="custom-scrollbar flex h-auto min-h-0 flex-1 flex-col overflow-y-auto">
-            @php
-                $notifications = [
-                    [
-                        'id' => 1,
-                        'userName' => 'Terry Franci',
-                        'userImage' => '/images/user/user-02.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Nganter App',
-                        'type' => 'Project',
-                        'time' => '5 min ago',
-                        'status' => 'online',
-                    ],
-                    [
-                        'id' => 2,
-                        'userName' => 'Alex Johnson',
-                        'userImage' => '/images/user/user-03.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Nganter App',
-                        'type' => 'Project',
-                        'time' => '10 min ago',
-                        'status' => 'offline',
-                    ],
-                    [
-                        'id' => 3,
-                        'userName' => 'Sarah Williams',
-                        'userImage' => '/images/user/user-04.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Dashboard UI',
-                        'type' => 'Project',
-                        'time' => '15 min ago',
-                        'status' => 'online',
-                    ],
-                    [
-                        'id' => 4,
-                        'userName' => 'Mike Brown',
-                        'userImage' => '/images/user/user-05.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - E-commerce',
-                        'type' => 'Project',
-                        'time' => '20 min ago',
-                        'status' => 'online',
-                    ],
-                    [
-                        'id' => 5,
-                        'userName' => 'Emma Davis',
-                        'userImage' => '/images/user/user-06.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Mobile App',
-                        'type' => 'Project',
-                        'time' => '25 min ago',
-                        'status' => 'offline',
-                    ],
-                    [
-                        'id' => 6,
-                        'userName' => 'John Smith',
-                        'userImage' => '/images/user/user-07.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Landing Page',
-                        'type' => 'Project',
-                        'time' => '30 min ago',
-                        'status' => 'online',
-                    ],
-                    [
-                        'id' => 7,
-                        'userName' => 'Lisa Anderson',
-                        'userImage' => '/images/user/user-08.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - Blog System',
-                        'type' => 'Project',
-                        'time' => '35 min ago',
-                        'status' => 'online',
-                    ],
-                    [
-                        'id' => 8,
-                        'userName' => 'David Wilson',
-                        'userImage' => '/images/user/user-09.jpg',
-                        'action' => 'requests permission to change',
-                        'project' => 'Project - CRM Dashboard',
-                        'type' => 'Project',
-                        'time' => '40 min ago',
-                        'status' => 'online',
-                    ],
-                ];
-            @endphp
+        <div class="custom-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto">
+            @forelse ($notifications as $notification)
+                @php
+                    $chipClasses = match ($notification['tone']) {
+                        'success' => 'bg-success-50 text-success-700 dark:bg-success-500/15 dark:text-success-300',
+                        'warning' => 'bg-warning-50 text-warning-700 dark:bg-warning-500/15 dark:text-warning-300',
+                        'danger' => 'bg-error-50 text-error-700 dark:bg-error-500/15 dark:text-error-300',
+                        'blue' => 'bg-blue-light-50 text-blue-light-700 dark:bg-blue-light-500/15 dark:text-blue-light-300',
+                        default => 'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-300',
+                    };
+                    $chipLabel = match ($notification['icon']) {
+                        'shield' => 'S',
+                        'user' => 'U',
+                        'profile' => 'P',
+                        'practice' => 'I',
+                        'trash' => 'D',
+                        'sparkles' => 'W',
+                        default => Str::upper(Str::substr($notification['title'], 0, 1)),
+                    };
+                @endphp
 
-            @foreach ($notifications as $notification)
-                <li @click="handleItemClick()">
-                    <a
-                        class="flex min-w-0 gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
-                        href="#"
-                    >
-                        <span class="relative block w-full h-10 rounded-full z-1 max-w-10">
-                            <img src="{{ $notification['userImage'] }}" alt="User" class="overflow-hidden rounded-full" />
-                            <span
-                                class="absolute bottom-0 right-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900 {{ $notification['status'] === 'online' ? 'bg-success-500' : 'bg-error-500' }}"
-                            ></span>
-                        </span>
-
-                        <span class="block min-w-0">
-                            <span class="content-break mb-1.5 block text-theme-sm text-gray-500 dark:text-gray-400">
-                                <span class="font-medium text-gray-800 dark:text-white/90">
-                                    {{ $notification['userName'] }}
+                <article class="border-b border-gray-100 last:border-b-0 dark:border-gray-800">
+                    <div class="flex items-start gap-2 rounded-xl px-3 py-3 transition hover:bg-gray-50 dark:hover:bg-white/5 {{ $notification['isRead'] ? '' : 'bg-brand-50/40 dark:bg-brand-500/5' }}">
+                        <form method="POST" action="{{ route('notifications.read', $notification['id']) }}" class="min-w-0 flex-1">
+                            @csrf
+                            @method('PATCH')
+                            <input type="hidden" name="redirect_to" value="{{ $notification['actionUrl'] }}" />
+                            <button
+                                type="submit"
+                                class="flex w-full items-start gap-3 text-left"
+                                @click="dropdownOpen = false"
+                            >
+                                <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold {{ $chipClasses }}">
+                                    {{ $chipLabel }}
                                 </span>
-                                {{ $notification['action'] }}
-                                <span class="font-medium text-gray-800 dark:text-white/90">
-                                    {{ $notification['project'] }}
+
+                                <span class="block min-w-0 flex-1">
+                                    <span class="flex items-center justify-between gap-3">
+                                        <span class="truncate text-sm font-semibold text-gray-900 dark:text-white">{{ $notification['title'] }}</span>
+                                        @unless ($notification['isRead'])
+                                            <span class="inline-flex h-2.5 w-2.5 shrink-0 rounded-full bg-brand-500"></span>
+                                        @endunless
+                                    </span>
+                                    <span class="mt-1 block text-sm leading-6 text-gray-500 dark:text-gray-400">{{ $notification['body'] }}</span>
+                                    <span class="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                                        <span>{{ $notification['time'] }}</span>
+                                        <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                                        <span>{{ $notification['actionLabel'] }}</span>
+                                    </span>
                                 </span>
-                            </span>
+                            </button>
+                        </form>
 
-                            <span class="flex flex-wrap items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                                <span>{{ $notification['type'] }}</span>
-                                <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
-                                <span>{{ $notification['time'] }}</span>
-                            </span>
-                        </span>
-                    </a>
-                </li>
-            @endforeach
-        </ul>
+                        <form method="POST" action="{{ route('notifications.destroy', $notification['id']) }}" onsubmit="return confirm('Delete this notification?');">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 transition hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 dark:hover:text-error-300" title="Delete notification">
+                                <span class="sr-only">Delete notification</span>
+                                <svg class="fill-current" width="16" height="16" viewBox="0 0 20 20" aria-hidden="true">
+                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                                </svg>
+                            </button>
+                        </form>
+                    </div>
+                </article>
+            @empty
+                <div class="flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-gray-200 px-6 py-10 text-center dark:border-gray-800">
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">No notifications yet</p>
+                    <p class="mt-2 text-sm leading-6 text-gray-500 dark:text-gray-400">New account activity, admin actions, and saved practice events will appear here.</p>
+                </div>
+            @endforelse
+        </div>
 
-        <!-- View All Button -->
         <a
-            href="#"
-            class="mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
-            @click.prevent="handleViewAllClick()"
+            href="{{ route('notifications.index') }}"
+            class="mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 text-theme-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]"
+            @click="dropdownOpen = false"
         >
-            View All Notification
+            View all notifications
         </a>
     </div>
-    <!-- Dropdown End -->
 </div>

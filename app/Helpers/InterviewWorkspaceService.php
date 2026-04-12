@@ -203,6 +203,13 @@ class InterviewWorkspaceService
             'relevance',
             'grammar',
             'professionalism',
+            'eyeContact',
+            'posture',
+            'headMovement',
+            'facialComposure',
+            'manuscriptVerbal',
+            'manuscriptNonVerbal',
+            'manuscriptOverall',
         ]);
 
         return [
@@ -223,6 +230,13 @@ class InterviewWorkspaceService
                 'relevance' => round((float) ($criteria['relevance'] ?? 0), 1),
                 'grammar' => round((float) ($criteria['grammar'] ?? 0), 1),
                 'professionalism' => round((float) ($criteria['professionalism'] ?? 0), 1),
+                'eyeContact' => round((float) ($criteria['eyeContact'] ?? 0), 1),
+                'posture' => round((float) ($criteria['posture'] ?? 0), 1),
+                'headMovement' => round((float) ($criteria['headMovement'] ?? 0), 1),
+                'facialComposure' => round((float) ($criteria['facialComposure'] ?? 0), 1),
+                'manuscriptVerbal' => round((float) ($criteria['manuscriptVerbal'] ?? 0), 2),
+                'manuscriptNonVerbal' => round((float) ($criteria['manuscriptNonVerbal'] ?? 0), 2),
+                'manuscriptOverall' => round((float) ($criteria['manuscriptOverall'] ?? 0), 2),
             ],
             'completed' => (bool) $session->completed,
             'answers' => $session->answers->map(function ($answer) {
@@ -259,6 +273,9 @@ class InterviewWorkspaceService
                             'grammar' => $this->sanitizeText(data_get($feedbackSummary, 'criteria.grammar'), 500),
                             'professionalism' => $this->sanitizeText(data_get($feedbackSummary, 'criteria.professionalism'), 500),
                         ],
+                        'manuscriptRubric' => $this->normalizeManuscriptRubric(
+                            (array) ($feedbackSummary['manuscriptRubric'] ?? [])
+                        ),
                         'processEvaluations' => $this->normalizeProcessEvaluations(
                             (array) ($feedbackSummary['processEvaluations'] ?? [])
                         ),
@@ -335,6 +352,9 @@ class InterviewWorkspaceService
                     'grammar' => $this->sanitizeText(data_get($input, 'feedbackSummary.criteria.grammar'), 500),
                     'professionalism' => $this->sanitizeText(data_get($input, 'feedbackSummary.criteria.professionalism'), 500),
                 ],
+                'manuscriptRubric' => $this->normalizeManuscriptRubric(
+                    (array) data_get($input, 'feedbackSummary.manuscriptRubric', [])
+                ),
                 'processEvaluations' => $this->normalizeProcessEvaluations(
                     (array) data_get($input, 'feedbackSummary.processEvaluations', [])
                 ),
@@ -415,8 +435,24 @@ class InterviewWorkspaceService
             'facialExpressionScore' => array_key_exists('facialExpressionScore', $input) && $input['facialExpressionScore'] !== null
                 ? $this->normalizeScore($input['facialExpressionScore'])
                 : null,
+            'eyeContactScore' => array_key_exists('eyeContactScore', $input) && $input['eyeContactScore'] !== null
+                ? $this->normalizeScore($input['eyeContactScore'])
+                : null,
+            'postureScore' => array_key_exists('postureScore', $input) && $input['postureScore'] !== null
+                ? $this->normalizeScore($input['postureScore'])
+                : null,
+            'headMovementScore' => array_key_exists('headMovementScore', $input) && $input['headMovementScore'] !== null
+                ? $this->normalizeScore($input['headMovementScore'])
+                : null,
+            'facialComposureScore' => array_key_exists('facialComposureScore', $input) && $input['facialComposureScore'] !== null
+                ? $this->normalizeScore($input['facialComposureScore'])
+                : null,
             'bodyLanguageLabel' => $this->sanitizeText($input['bodyLanguageLabel'] ?? null, 255),
             'facialExpressionLabel' => $this->sanitizeText($input['facialExpressionLabel'] ?? null, 255),
+            'eyeContactLabel' => $this->sanitizeText($input['eyeContactLabel'] ?? null, 255),
+            'postureLabel' => $this->sanitizeText($input['postureLabel'] ?? null, 255),
+            'headMovementLabel' => $this->sanitizeText($input['headMovementLabel'] ?? null, 255),
+            'facialComposureLabel' => $this->sanitizeText($input['facialComposureLabel'] ?? null, 255),
             'tip' => $this->sanitizeText($input['tip'] ?? null, 500),
         ];
 
@@ -432,12 +468,61 @@ class InterviewWorkspaceService
             'relevance' => $this->normalizeScore($criteria['relevance'] ?? 0),
             'grammar' => $this->normalizeScore($criteria['grammar'] ?? 0),
             'professionalism' => $this->normalizeScore($criteria['professionalism'] ?? 0),
+            'eyeContact' => $this->normalizeScore($criteria['eyeContact'] ?? 0),
+            'posture' => $this->normalizeScore($criteria['posture'] ?? 0),
+            'headMovement' => $this->normalizeScore($criteria['headMovement'] ?? 0),
+            'facialComposure' => $this->normalizeScore($criteria['facialComposure'] ?? 0),
+            'manuscriptVerbal' => $this->normalizeRubricScore($criteria['manuscriptVerbal'] ?? 0),
+            'manuscriptNonVerbal' => $this->normalizeRubricScore($criteria['manuscriptNonVerbal'] ?? 0),
+            'manuscriptOverall' => $this->normalizeRubricScore($criteria['manuscriptOverall'] ?? 0),
         ];
     }
 
     protected function normalizeScore(mixed $value): float
     {
         return round(max(0, min(10, (float) $value)), 1);
+    }
+
+    protected function normalizeRubricScore(mixed $value): float
+    {
+        return round(max(0, min(5, (float) $value)), 2);
+    }
+
+    protected function normalizeManuscriptRubric(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $normalized = [
+            'verbal' => array_key_exists('verbal', $input) && $input['verbal'] !== null
+                ? $this->normalizeRubricScore($input['verbal'])
+                : null,
+            'nonVerbal' => array_key_exists('nonVerbal', $input) && $input['nonVerbal'] !== null
+                ? $this->normalizeRubricScore($input['nonVerbal'])
+                : null,
+            'overall' => array_key_exists('overall', $input) && $input['overall'] !== null
+                ? $this->normalizeRubricScore($input['overall'])
+                : null,
+            'hasNonVerbal' => array_key_exists('hasNonVerbal', $input)
+                ? (bool) $input['hasNonVerbal']
+                : null,
+            'readinessLabel' => $this->sanitizeText($input['readinessLabel'] ?? null, 120),
+            'criteria' => [
+                'clarity' => $this->normalizeRubricScore(data_get($input, 'criteria.clarity', 0)),
+                'relevance' => $this->normalizeRubricScore(data_get($input, 'criteria.relevance', 0)),
+                'grammar' => $this->normalizeRubricScore(data_get($input, 'criteria.grammar', 0)),
+                'professionalism' => $this->normalizeRubricScore(data_get($input, 'criteria.professionalism', 0)),
+                'eyeContact' => $this->normalizeRubricScore(data_get($input, 'criteria.eyeContact', 0)),
+                'posture' => $this->normalizeRubricScore(data_get($input, 'criteria.posture', 0)),
+                'headMovement' => $this->normalizeRubricScore(data_get($input, 'criteria.headMovement', 0)),
+                'facialComposure' => $this->normalizeRubricScore(data_get($input, 'criteria.facialComposure', 0)),
+            ],
+        ];
+
+        $filtered = array_filter($normalized, fn ($value) => $value !== null && $value !== []);
+
+        return $filtered === [] ? [] : $filtered;
     }
 
     protected function sanitizeIdentifier(mixed $value): ?string

@@ -6,7 +6,7 @@ use App\Support\InterviewPracticeCatalog;
 
 class MenuHelper
 {
-    public static function getAuthenticatedMenuGroups(): array
+    public static function getUserMenuGroups(): array
     {
         return [
             [
@@ -14,8 +14,8 @@ class MenuHelper
                 'items' => [
                     [
                         'icon' => 'dashboard',
-                        'name' => 'Dashboard',
-                        'path' => '/dashboard',
+                        'name' => 'User Dashboard',
+                        'path' => '/user/dashboard',
                     ],
                     [
                         'icon' => 'calendar',
@@ -32,21 +32,7 @@ class MenuHelper
                         'icon' => 'book-open',
                         'name' => 'Learning Lab',
                         'path' => '/learning-lab',
-                    ],
-                    [
-                        'icon' => 'camera',
-                        'name' => 'Camera Readiness',
-                        'path' => '/camera-readiness',
-                    ],
-                    [
-                        'icon' => 'sparkles',
-                        'name' => 'Field Builder',
-                        'path' => '/field-builder',
-                    ],
-                    [
-                        'icon' => 'chat',
-                        'name' => 'Question Generator',
-                        'path' => '/question-generator',
+                        'subItems' => self::getLearningActivityItems(),
                     ],
                 ],
             ],
@@ -57,11 +43,6 @@ class MenuHelper
                         'icon' => 'ai-assistant',
                         'name' => 'Interview Chatbot',
                         'path' => '/chatbot',
-                    ],
-                    [
-                        'icon' => 'shield',
-                        'name' => 'Provider Health',
-                        'path' => '/provider-health',
                     ],
                 ],
             ],
@@ -88,11 +69,6 @@ class MenuHelper
                         'name' => 'Category Insights',
                         'path' => '/category-insights',
                     ],
-                    [
-                        'icon' => 'wifi',
-                        'name' => 'Mobile LAN',
-                        'path' => '/mobile-lan',
-                    ],
                 ],
             ],
             [
@@ -101,6 +77,62 @@ class MenuHelper
                     [
                         'icon' => 'user-profile',
                         'name' => 'User Profile',
+                        'path' => '/profile',
+                    ],
+                ],
+            ],
+        ];
+    }
+
+    public static function getAdminMenuGroups(): array
+    {
+        return [
+            [
+                'title' => 'Administration',
+                'items' => [
+                    [
+                        'icon' => 'shield',
+                        'name' => 'Admin Dashboard',
+                        'path' => '/admin/dashboard',
+                    ],
+                    [
+                        'icon' => 'user-profile',
+                        'name' => 'User Management',
+                        'path' => '/admin/users',
+                    ],
+                    [
+                        'icon' => 'task',
+                        'name' => 'Question Bank & Announcements',
+                        'path' => '/admin/content',
+                    ],
+                    [
+                        'icon' => 'charts',
+                        'name' => 'Monitoring Records',
+                        'path' => '/admin/monitoring',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'System',
+                'items' => [
+                    [
+                        'icon' => 'ai-assistant',
+                        'name' => 'API Management',
+                        'path' => '/admin/apis',
+                    ],
+                    [
+                        'icon' => 'wifi',
+                        'name' => 'Mobile LAN',
+                        'path' => '/admin/mobile-lan',
+                    ],
+                ],
+            ],
+            [
+                'title' => 'Account',
+                'items' => [
+                    [
+                        'icon' => 'user-profile',
+                        'name' => 'Admin Profile',
                         'path' => '/profile',
                     ],
                 ],
@@ -130,7 +162,9 @@ class MenuHelper
     public static function getMenuGroups(): array
     {
         return auth()->check()
-            ? self::getAuthenticatedMenuGroups()
+            ? (auth()->user()?->isAdmin()
+                ? self::getAdminMenuGroups()
+                : self::getUserMenuGroups())
             : self::getGuestMenuGroups();
     }
 
@@ -147,6 +181,44 @@ class MenuHelper
             })
             ->values()
             ->all();
+    }
+
+    protected static function getLearningActivityItems(): array
+    {
+        $items = [
+            [
+                'icon' => 'book-open',
+                'name' => 'Learning Lab Overview',
+                'path' => '/learning-lab',
+                'pro' => false,
+            ],
+            [
+                'icon' => 'task',
+                'name' => 'Learning Activities',
+                'path' => '/learning-lab/activities',
+                'pro' => false,
+            ],
+        ];
+
+        foreach (InterviewPracticeCatalog::learningActivityCatalog() as $activityId => $activity) {
+            $launchLevel = collect($activity['levels'] ?? [])->first() ?? ['level' => 1, 'targetScore' => 7.0];
+            $query = http_build_query([
+                'source' => 'learning-lab',
+                'module' => (string) ($activity['module'] ?? 'answer-blueprint'),
+                'activity' => $activityId,
+                'level' => (int) ($launchLevel['level'] ?? 1),
+                'target' => (float) ($launchLevel['targetScore'] ?? 7.0),
+            ], '', '&', PHP_QUERY_RFC3986);
+
+            $items[] = [
+                'icon' => (string) ($activity['icon'] ?? 'task'),
+                'name' => (string) ($activity['sidebarLabel'] ?? $activity['title'] ?? 'Learning Activity'),
+                'path' => '/practice?'.$query,
+                'pro' => false,
+            ];
+        }
+
+        return $items;
     }
 
     protected static function getPracticeCategoryIcon(string $categoryId): string

@@ -27,7 +27,10 @@ export async function writePracticeSessions(sessions) {
     for (const session of sessions.slice(-100).reverse()) {
         await requestWorkspace("storeSession", {
             method: "POST",
-            body: session
+            body: {
+                ...session,
+                notify: false
+            }
         });
     }
 
@@ -39,7 +42,10 @@ export async function writePracticeSessions(sessions) {
 export async function appendPracticeSession(session) {
     await requestWorkspace("storeSession", {
         method: "POST",
-        body: session
+        body: {
+            ...session,
+            notify: true
+        }
     });
 
     const sessions = readPracticeSessions();

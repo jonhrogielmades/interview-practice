@@ -1,5 +1,5 @@
 <header
-    class="sticky top-0 flex w-full bg-white border-gray-200 z-99999 dark:border-gray-800 dark:bg-gray-900 xl:border-b"
+    class="sticky top-0 flex w-full bg-white border-gray-200 z-99999 transition-opacity duration-200 dark:border-gray-800 dark:bg-gray-900 xl:border-b"
     x-data="{
         isApplicationMenuOpen: false,
         toggleApplicationMenu() {
@@ -49,9 +49,19 @@
             </button>
 
             <!-- Logo (mobile only) -->
-            <a href="/" class="xl:hidden">
-                <img class="h-8 w-auto max-w-[160px] dark:hidden" src="/images/logo/logo.svg" alt="Logo" />
-                <img class="hidden h-8 w-auto max-w-[160px] dark:block" src="/images/logo/logo-dark.svg" alt="Logo" />
+            <a href="/" class="xl:hidden flex min-w-0 items-center gap-3">
+                <span class="flex h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-gray-200 shadow-theme-xs dark:border-gray-700">
+                    <img src="/images/logo/interviewpilot-icon.png" alt="InterviewPilot"
+                        class="h-full w-full object-cover object-top" />
+                </span>
+                <span class="min-w-0">
+                    <span class="block truncate text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
+                        InterviewPilot
+                    </span>
+                    <span class="block truncate text-[11px] font-medium uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
+                        Interview Practice System
+                    </span>
+                </span>
             </a>
 
             <!-- Application Menu Toggle (mobile only) -->
@@ -82,7 +92,7 @@
                             class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-white/3 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800 xl:w-[430px]" />
                         <button
                             class="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
-                            <span> ⌘ </span>
+                            <span> Ctrl </span>
                             <span> K </span>
                         </button>
                     </div>
@@ -111,6 +121,24 @@
                             fill="currentColor" />
                     </svg>
                 </button>
+
+                <!-- Theme Color Picker -->
+                <div class="flex h-11 items-center gap-1 rounded-lg border border-gray-200 bg-white px-1.5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900"
+                    role="group" aria-label="Theme color">
+                    <template x-for="option in $store.theme.colors" :key="option.id">
+                        <button
+                            type="button"
+                            class="flex h-8 w-8 items-center justify-center rounded-lg border text-gray-500 transition hover:bg-gray-100 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:text-gray-400 dark:hover:bg-gray-800"
+                            :class="$store.theme.color === option.id ? 'border-brand-500 bg-brand-50 dark:bg-brand-500/10' : 'border-transparent'"
+                            :aria-label="`Use ${option.label} theme color`"
+                            :aria-pressed="$store.theme.color === option.id"
+                            :title="`${option.label} theme color`"
+                            @click="$store.theme.setColor(option.id)">
+                            <span class="h-4 w-4 rounded-md"
+                                :style="`background: linear-gradient(135deg, ${option.swatch} 0%, ${option.swatch} 50%, ${option.accent} 50%, ${option.accent} 100%)`"></span>
+                        </button>
+                    </template>
+                </div>
 
                 <!-- Notification Dropdown -->
                 <x-header.notification-dropdown />

@@ -113,10 +113,20 @@
         </article>
 
         <article class="rounded-2xl border border-brand-100 bg-brand-50/60 p-5 dark:border-brand-500/20 dark:bg-brand-500/5">
-            <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Overall Summary</h3>
-            <p id="progressSummaryText" class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
-                Complete more sessions to unlock stronger score trends and performance insights.
-            </p>
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Overall Summary</h3>
+                <p id="progressSummaryText" class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    Complete more sessions to unlock stronger score trends and performance insights.
+                </p>
+            </article>
+
+        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Capstone Rubric</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Weighted 1-to-5 view of verbal, selected non-verbal, and overall readiness.
+                </p>
+            </div>
+            <div id="progressCapstoneRubricGrid" class="grid gap-3 sm:grid-cols-2"></div>
         </article>
 
         <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
@@ -150,11 +160,11 @@
             <div class="flex flex-col gap-3">
                 <button id="progressExportJsonBtn" type="button"
                     class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600">
-                    Export JSON Report
+                    Export Capstone JSON
                 </button>
                 <button id="progressExportCsvBtn" type="button"
                     class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
-                    Export CSV Sessions
+                    Export Session CSV
                 </button>
                 <a href="{{ route('practice') }}"
                     class="inline-flex items-center justify-center rounded-lg border border-brand-300 px-4 py-3 text-sm font-medium text-brand-600 transition hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10">

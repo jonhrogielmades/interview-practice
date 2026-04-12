@@ -176,7 +176,7 @@
                             <p data-profile-postal-code class="text-sm font-medium text-gray-800 dark:text-white/90" x-text="address.postalCode || 'Not set'"></p>
                         </div>
                         <div>
-                            <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">TAX ID</p>
+                            <p class="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">National ID / PhilSys ID</p>
                             <p data-profile-tax-id class="text-sm font-medium text-gray-800 dark:text-white/90" x-text="address.taxId || 'Not set'"></p>
                         </div>
                     </div>
@@ -247,7 +247,7 @@
                         <input x-model.trim="draftAddress.country" type="text" placeholder="Country" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                         <input x-model.trim="draftAddress.cityState" type="text" placeholder="City/State" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                         <input x-model.trim="draftAddress.postalCode" type="text" placeholder="Postal Code" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
-                        <input x-model.trim="draftAddress.taxId" type="text" placeholder="TAX ID" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                        <input x-model.trim="draftAddress.taxId" type="text" placeholder="National ID / PhilSys ID" class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
                     </div>
 
                     <div class="mt-6 flex items-center gap-3 px-2 lg:justify-end">

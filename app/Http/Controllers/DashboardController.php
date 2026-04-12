@@ -19,9 +19,10 @@ class DashboardController extends Controller
         $latestFeedback = is_array($latestEvaluation['feedbackSummary'] ?? null)
             ? $latestEvaluation['feedbackSummary']
             : [];
+        $capstoneRubric = $this->capstoneRubric($latestEvaluation, $latestFeedback);
 
         return view('pages.dashboard.interview', [
-            'title' => 'Interview Dashboard',
+            'title' => 'User Dashboard',
             'summaryCards' => [
                 [
                     'label' => 'Total Sessions',
@@ -76,12 +77,7 @@ class DashboardController extends Controller
                 'summary' => $latestFeedback['overall'] ?? 'No saved AI evaluation summary yet. Once you answer a question in Practice, the dashboard will show criterion-based feedback here.',
                 'nextStep' => $latestFeedback['nextStep'] ?? 'Start a practice session and save at least one answer to generate AI evaluation feedback.',
                 'items' => $this->buildEvaluationItems($latestEvaluation, $latestFeedback),
-            ],
-            'focusItems' => $this->focusItems($evaluations),
-            'weeklySignals' => [
-                ['label' => 'Practice streak', 'value' => $this->practiceStreakLabel($sessions)],
-                ['label' => 'Top category', 'value' => $this->topCategory($sessions)],
-                ['label' => 'Best dimension', 'value' => $this->bestDimension($sessions)],
+                'capstoneRubric' => $capstoneRubric,
             ],
         ]);
     }
@@ -172,85 +168,24 @@ class DashboardController extends Controller
         })->values()->all();
     }
 
-    protected function focusItems(Collection $evaluations): array
+    protected function capstoneRubric(?array $latestEvaluation, array $latestFeedback): array
     {
-        $items = $evaluations
-            ->flatMap(function (array $evaluation) {
-                return collect($evaluation['feedbackSummary']['improvements'] ?? []);
-            })
-            ->filter(fn ($item) => is_string($item) && trim($item) !== '')
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->take(3)
-            ->values()
-            ->all();
+        $visualSnapshot = (array) ($latestFeedback['visualSnapshot'] ?? []);
 
-        return $items !== []
-            ? $items
-            : [
-                'Strengthen answer structure with more specific examples.',
-                'Keep your wording direct, confident, and professional.',
-                'Save at least one evaluated answer to surface AI coaching priorities here.',
-            ];
-    }
-
-    protected function practiceStreakLabel(Collection $sessions): string
-    {
-        $dates = $sessions
-            ->pluck('savedAt')
-            ->filter(fn ($value) => is_string($value) && $value !== '')
-            ->map(fn (string $value) => Carbon::parse($value)->toDateString())
-            ->unique()
-            ->values();
-
-        if ($dates->isEmpty()) {
-            return '0 days';
-        }
-
-        $streak = 1;
-        $previous = Carbon::parse($dates->first());
-
-        foreach ($dates->slice(1) as $date) {
-            $current = Carbon::parse($date);
-
-            if (! $current->equalTo($previous->copy()->subDay())) {
-                break;
-            }
-
-            $streak += 1;
-            $previous = $current;
-        }
-
-        return sprintf('%d day%s', $streak, $streak === 1 ? '' : 's');
-    }
-
-    protected function topCategory(Collection $sessions): string
-    {
-        $topCategory = $sessions
-            ->pluck('categoryName')
-            ->filter(fn ($value) => is_string($value) && $value !== '')
-            ->countBy()
-            ->sortDesc()
-            ->keys()
-            ->first();
-
-        return $topCategory ?: 'No data yet';
-    }
-
-    protected function bestDimension(Collection $sessions): string
-    {
-        $criteria = [
-            'Clarity' => round((float) $sessions->avg(fn (array $session) => (float) data_get($session, 'criteriaAverages.clarity', 0)), 1),
-            'Relevance' => round((float) $sessions->avg(fn (array $session) => (float) data_get($session, 'criteriaAverages.relevance', 0)), 1),
-            'Grammar' => round((float) $sessions->avg(fn (array $session) => (float) data_get($session, 'criteriaAverages.grammar', 0)), 1),
-            'Professionalism' => round((float) $sessions->avg(fn (array $session) => (float) data_get($session, 'criteriaAverages.professionalism', 0)), 1),
-        ];
-
-        arsort($criteria);
-        $label = array_key_first($criteria);
-
-        return $sessions->isNotEmpty() && $label ? $label : 'No data yet';
+        return InterviewPracticeCatalog::buildRubricSummary(
+            [
+                'clarity' => $latestEvaluation['clarity'] ?? 0,
+                'relevance' => $latestEvaluation['relevance'] ?? 0,
+                'grammar' => $latestEvaluation['grammar'] ?? 0,
+                'professionalism' => $latestEvaluation['professionalism'] ?? 0,
+            ],
+            [
+                'eyeContact' => data_get($visualSnapshot, 'eyeContactScore', data_get($visualSnapshot, 'bodyLanguageScore', 0)),
+                'posture' => data_get($visualSnapshot, 'postureScore', data_get($visualSnapshot, 'bodyLanguageScore', 0)),
+                'headMovement' => data_get($visualSnapshot, 'headMovementScore', data_get($visualSnapshot, 'bodyLanguageScore', 0)),
+                'facialComposure' => data_get($visualSnapshot, 'facialComposureScore', data_get($visualSnapshot, 'facialExpressionScore', 0)),
+            ],
+        );
     }
 
     protected function formatSavedAt(string $value): string

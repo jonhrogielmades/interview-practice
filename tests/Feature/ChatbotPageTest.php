@@ -5,7 +5,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-test('chatbot page shows the five supported ai providers for interview coaching', function () {
+test('chatbot page shows the six supported ai providers for interview coaching', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
@@ -15,6 +15,7 @@ test('chatbot page shows the five supported ai providers for interview coaching'
         ->assertSeeText('Gemini API')
         ->assertSeeText('Groq API')
         ->assertSeeText('OpenRouter API')
+        ->assertSeeText('Claude API')
         ->assertSeeText('Wisdom Gate API')
         ->assertSeeText('Cohere API')
         ->assertSeeText('Philippines-only interview guidance');

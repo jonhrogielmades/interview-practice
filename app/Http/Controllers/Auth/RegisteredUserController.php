@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Support\Notifications\SystemNotificationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,10 @@ use Illuminate\Validation\Rule;
 
 class RegisteredUserController extends Controller
 {
-    public function store(Request $request): RedirectResponse
+    public function store(
+        Request $request,
+        SystemNotificationService $notifications,
+    ): RedirectResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique(User::class, 'email')],
@@ -26,6 +30,9 @@ class RegisteredUserController extends Controller
             'email' => $email,
             'password' => $validated['password'],
         ]);
+
+        $notifications->sendWelcomeNotification($user, 'email and password');
+        $notifications->notifyAdminsAboutRegistration($user, 'email and password');
 
         Auth::login($user);
         $request->session()->regenerate();

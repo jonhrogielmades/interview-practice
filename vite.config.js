@@ -15,6 +15,12 @@ export default defineConfig(({ mode }) => {
             }),
             tailwindcss(),
         ],
+        css: {
+            // Prevent Vite from inheriting a parent PostCSS config outside this app.
+            postcss: {
+                plugins: [],
+            },
+        },
         server: {
             host: '0.0.0.0',
             port: devServerPort,

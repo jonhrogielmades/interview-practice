@@ -19,8 +19,8 @@
                     </h1>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
                         Use a dedicated AI interview coach from the sidebar. This page is limited to interview topics in the
-                        Philippines and works with the five supported free API options in this project: Gemini, Groq,
-                        OpenRouter, Wisdom Gate, and Cohere.
+                        Philippines and works with the supported AI API options in this project: Gemini, Groq,
+                        OpenRouter, Claude, Wisdom Gate, and Cohere.
                     </p>
                     <div class="mt-5 flex flex-wrap gap-3">
                         <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
@@ -30,7 +30,7 @@
                             Philippine context only
                         </span>
                         <span class="inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
-                            5 supported AI APIs
+                            6 supported AI APIs
                         </span>
                     </div>
                 </div>
@@ -61,7 +61,7 @@
             </button>
         </div>
 
-        <div class="grid gap-3 p-6 sm:grid-cols-2 xl:grid-cols-5">
+        <div class="grid gap-3 p-6 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             @foreach ($chatbotProviders as $provider)
                 @php
                     $isConfigured = (bool) ($provider['configured'] ?? false);
@@ -321,7 +321,7 @@
                             Responses stay in a Philippine interview context for students, fresh graduates, and early-career applicants.
                         </li>
                         <li class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-900/70">
-                            The five supported APIs are surfaced here, and the page falls back gracefully when keys are missing.
+                            The supported APIs are surfaced here, and the page falls back gracefully when keys are missing.
                         </li>
                     </ul>
                 </article>

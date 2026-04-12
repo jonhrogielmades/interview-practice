@@ -1,40 +1,33 @@
 # InterviewPilot
 
-InterviewPilot is an AI-based interview practice system built with Laravel 12, Tailwind CSS v4, Alpine.js, and Vite.
+InterviewPilot is an AI-based interview practice system built with Laravel 12, Tailwind CSS v4, Alpine.js, and Vite. The current prototype is aligned to the capstone manuscript for an "AI-Based Interview Practice System" focused on simulation, automated feedback, learning support, reporting, and administrative monitoring.
 
 ## Features
 
-- Category-based mock interview practice
-- Multi-provider interview chatbot with Gemini, Groq, OpenRouter, Hugging Face, Cohere, and local fallback support
-- Session setup defaults for question count, coach focus, and pacing
-- Progress tracking and category insights
-- Responsive dashboard UI with dark mode support
-- Voice-ready practice workflow
-- Text, voice, and hybrid response modes
-- Job interview practice track for hiring scenarios
-- Scholarship interview practice track for academic and grant applications
-- College admission interview practice track for university applicants
-- IT / programming interview track for technical candidates
-- AI-generated question sets per selected category
-- Field builder flow for tailoring the target role, course, or specialization
-- AI answer review summaries with strengths, improvements, and next steps
-- Criteria-based scoring for clarity, relevance, grammar, and professionalism
-- Printable feedback summaries from the practice workspace
-- Saved session setup persistence for returning users
-- Saved session history with question-by-question answer records
-- Session cleanup tools for deleting one session or clearing all saved history
-- Quick prompts that adapt to the active interview category
-- Live provider health checks for configured AI services
-- Auto routing across provider priority with graceful fallback
-- Local PH coach fallback when external AI keys are unavailable
-- AI interviewer voice playback for reading questions aloud
-- Camera preview with face visibility status during mock interviews
-- Google OAuth sign-in support
-- Email sign-in and sign-up flows from the homepage
-- Profile management for personal details, address, role, location, and avatar
-- Weekly dashboard signals and latest evaluation snapshot
-- Dedicated feedback center, session review, and category insights pages
-- Mobile LAN access workflow for testing on phones over the same network
+- Category-based interview simulation for job, scholarship, admission, and Information Technology scenarios
+- AI avatar interviewer support with spoken-question playback and category-backed question generation
+- Text, voice, and hybrid response modes with browser speech-to-text support
+- Verbal evaluation across clarity, relevance, grammar, and professionalism
+- Selected non-verbal coaching for eye contact orientation, posture, head movement, and facial composure
+- Weighted manuscript-aligned 1-to-5 capstone rubric layered on top of the existing runtime scoring
+- Learning activities, answer blueprints, delivery rehearsal, and visual-presence coaching
+- Saved session history, progress analytics, session review, feedback center, and category insights
+- Downloadable JSON and CSV report exports for documentation and review
+- Admin dashboard plus user management, API management, content planning, and monitoring records
+- Notification center support for reminders and practice-related updates
+- Google OAuth, email authentication, profile management, and responsive dashboard UI
+- Mobile LAN access workflow for local-network testing on phones
+
+## Manuscript Alignment
+
+The current system is aligned to the manuscript in these ways:
+
+- Interview categories are limited to job, scholarship, admission, and IT practice tracks.
+- Practice emphasizes an AI-guided interview flow with category selection, question generation, answer capture, feedback, and review.
+- Runtime 10-point signals are translated into the manuscript's weighted 1-to-5 rubric for verbal, non-verbal, and overall readiness reporting.
+- Admin surfaces now cover user management, API routing visibility, question-bank and announcement planning, and monitoring records.
+
+The prototype still uses the current Laravel + Blade + browser-capability implementation. Where the manuscript describes separate AI-processing services, this repo currently represents those behaviors through the existing integrated application and frontend logic.
 
 ## Requirements
 
@@ -66,11 +59,13 @@ copy .env.example .env
 ```env
 DB_DATABASE=interviewpilot_db
 INTERVIEW_CHATBOT_DEFAULT_PROVIDER=auto
-INTERVIEW_CHATBOT_PROVIDER_PRIORITY=gemini,groq,openrouter,huggingface,cohere
+INTERVIEW_CHATBOT_PROVIDER_PRIORITY=gemini,groq,openrouter,claude,wisdomgate,cohere
 GEMINI_API_KEY=
 GROQ_API_KEY=
 OPENROUTER_API_KEY=
-HUGGINGFACE_API_KEY=
+ANTHROPIC_API_KEY=
+CLAUDE_API_KEY=
+WISDOMGATE_API_KEY=
 COHERE_API_KEY=
 ```
 

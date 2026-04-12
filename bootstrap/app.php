@@ -13,6 +13,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(fn () => route('signin'));
         $middleware->redirectUsersTo(fn () => route('dashboard'));
+        $middleware->alias([
+            'admin' => \App\Http\Middleware\EnsureUserIsAdmin::class,
+            'user-area' => \App\Http\Middleware\RedirectAdminsToAdminDashboard::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
