@@ -77,17 +77,38 @@ npm run build
 
 ## Mobile LAN Access
 
-To open the app from a phone on the same Wi-Fi network, set `APP_URL` and
-`VITE_DEV_SERVER_HOST` in `.env` to your computer's LAN IP, then start:
+To open the app from a phone on the same Wi-Fi network:
 
-```bash
-composer run dev:lan
-```
+1. Find your computer's LAN IP address:
+   - Windows: Run `ipconfig` in Command Prompt, look for "IPv4 Address" under your active network adapter
+   - Mac/Linux: Run `ifconfig` or `ip addr`, look for your local network IP
 
-Open `http://YOUR-LAN-IP:8000` on the phone.
+2. Set `APP_URL` in `.env` to your LAN IP:
+   ```env
+   APP_URL=http://192.168.1.100
+   ```
 
-Camera, microphone, and speech APIs on mobile browsers usually require HTTPS
-or `localhost`, so those features may stay blocked on plain LAN HTTP.
+3. Start the development server:
+   ```bash
+   php artisan serve --host=0.0.0.0 --port=8000
+   ```
+
+4. On your phone, open `http://YOUR-LAN-IP:8000`
+
+**Important Notes:**
+- Use HTTP (not HTTPS) for LAN access - mobile browsers may block camera/microphone on self-signed HTTPS
+- Grant camera and microphone permissions when prompted
+- Use Chrome or Edge on mobile for best speech recognition support
+- Camera and voice features work on mobile but may have limitations compared to desktop
+
+## Mobile Responsiveness
+
+The app is fully responsive and works on phones and tablets:
+- Touch-friendly buttons (minimum 44px touch targets)
+- Responsive layouts that adapt to screen size
+- Mobile-optimized camera preview and controls
+- Voice input and speech synthesis support
+- Optimized for both portrait and landscape orientations
 
 ## Project Structure
 

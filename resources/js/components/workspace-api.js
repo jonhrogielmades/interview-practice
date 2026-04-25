@@ -127,6 +127,59 @@ export async function requestWorkspace(routeKey, options = {}) {
     return payload;
 }
 
+export async function requestWorkspaceBlob(routeKey, options = {}) {
+    const routes = getWorkspaceRoutes();
+    const url = routes[routeKey];
+
+    if (!url) {
+        throw new Error(`Workspace route "${routeKey}" is not configured.`);
+    }
+
+    const headers = {
+        Accept: options.accept || "*/*",
+        "X-CSRF-TOKEN": getCsrfToken(),
+        ...(options.headers || {})
+    };
+
+    let body = options.body;
+
+    if (body && !(body instanceof FormData) && typeof body !== "string" && !(body instanceof Blob)) {
+        headers["Content-Type"] = "application/json";
+        body = JSON.stringify(body);
+    }
+
+    const response = await fetch(url, {
+        method: options.method || "GET",
+        headers,
+        credentials: "same-origin",
+        body,
+        signal: options.signal
+    });
+
+    if (!response.ok) {
+        const contentType = response.headers.get("Content-Type") || "";
+        let payload = {};
+
+        if (contentType.includes("application/json")) {
+            payload = await response.json().catch(() => ({}));
+        } else {
+            payload = {
+                message: await response.text().catch(() => "")
+            };
+        }
+
+        const message = payload?.message
+            || Object.values(payload?.errors || {}).flat()[0]
+            || "The workspace request could not be completed.";
+        throw new Error(message);
+    }
+
+    return {
+        blob: await response.blob(),
+        contentType: response.headers.get("Content-Type") || ""
+    };
+}
+
 async function migrateLegacyWorkspaceToDatabase() {
     const routes = getWorkspaceRoutes();
     const serverWorkspace = normalizeWorkspaceState(window.__INTERVIEW_WORKSPACE__);

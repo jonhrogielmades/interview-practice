@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\InterviewChatbotService;
+use App\Helpers\InterviewerSpeechService;
 use App\Helpers\InterviewWorkspaceService;
 use App\Support\Notifications\SystemNotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Throwable;
 
 class WorkspaceController extends Controller
 {
@@ -207,5 +210,33 @@ class WorkspaceController extends Controller
         return response()->json([
             'providers' => $chatbot->providerStatuses($validated['providers'] ?? null),
         ]);
+    }
+
+    public function interviewerSpeak(Request $request, InterviewerSpeechService $speech): Response|JsonResponse
+    {
+        $validated = $request->validate([
+            'text' => ['required', 'string', 'max:4000'],
+        ]);
+
+        if (! $speech->isConfigured()) {
+            return response()->json([
+                'message' => 'AI voice is not configured on the server.',
+            ], 503);
+        }
+
+        try {
+            $audio = $speech->synthesize($validated['text']);
+
+            return response($audio['audio'], 200, [
+                'Content-Type' => $audio['contentType'],
+                'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            ]);
+        } catch (Throwable $error) {
+            report($error);
+
+            return response()->json([
+                'message' => 'The interviewer voice could not be generated right now.',
+            ], 502);
+        }
     }
 }

@@ -1,10 +1,38 @@
+import os from 'os';
 import { defineConfig, loadEnv } from 'vite';
 import laravel from 'laravel-vite-plugin';
 import tailwindcss from '@tailwindcss/vite';
 
+function resolveLanHost() {
+    const interfaces = os.networkInterfaces();
+
+    for (const addresses of Object.values(interfaces)) {
+        if (!addresses) {
+            continue;
+        }
+
+        for (const address of addresses) {
+            if (address.family !== 'IPv4' || address.internal) {
+                continue;
+            }
+
+            if (
+                address.address.startsWith('10.') ||
+                address.address.startsWith('172.') ||
+                address.address.startsWith('192.168.') ||
+                address.address.startsWith('169.254.')
+            ) {
+                return address.address;
+            }
+        }
+    }
+
+    return '127.0.0.1';
+}
+
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, process.cwd(), '');
-    const devServerHost = env.VITE_DEV_SERVER_HOST || '127.0.0.1';
+    const devServerHost = env.VITE_DEV_SERVER_HOST || resolveLanHost();
     const devServerPort = Number(env.VITE_DEV_SERVER_PORT || 5173);
 
     return {

@@ -328,6 +328,7 @@
         window.__INTERVIEW_WORKSPACE__ = @json($interviewWorkspaceBootstrap ?? ['setup' => null, 'sessions' => []]);
         window.__INTERVIEW_WORKSPACE_ROUTES__ = @json($interviewWorkspaceRoutes ?? []);
         window.__INTERVIEW_CHATBOT__ = @json($interviewChatbotBootstrap ?? ['defaultProviderId' => 'auto', 'providers' => []]);
+        window.__INTERVIEW_AUDIO__ = @json($interviewAudioBootstrap ?? ['configured' => false, 'provider' => 'browser']);
     </script>
     
 </head>

@@ -483,9 +483,9 @@ export function initChatbotPage() {
 
                 return `
                     <div class="flex ${alignClass}">
-                        <div class="flex ${rowClass} w-full max-w-4xl items-end gap-3">
+                        <div class="flex ${rowClass} w-full min-w-0 max-w-4xl items-start gap-2 sm:gap-3">
                             ${renderConversationAvatar(isAssistant, profileConfig)}
-                            <article class="content-break w-full max-w-3xl px-4 py-4 shadow-theme-xs ${bubbleClass}">
+                            <article class="chatbot-message-bubble content-break w-full min-w-0 px-4 py-4 shadow-theme-xs ${bubbleClass}">
                                 <div class="mb-3 flex flex-wrap items-center gap-2">
                                     <span class="text-xs font-semibold uppercase tracking-wide ${isAssistant ? "text-gray-500 dark:text-gray-400" : "text-white/80"}">
                                         ${escapeHtml(isAssistant ? profileConfig.assistantName : profileConfig.userName)}
@@ -493,7 +493,7 @@ export function initChatbotPage() {
                                     ${providerChip}
                                     ${fallbackChip}
                                 </div>
-                                <div class="text-sm leading-7">${formatMessage(message.text)}</div>
+                                <div class="chatbot-message-text ${isAssistant ? "chatbot-message-text-ai" : ""} text-sm leading-7">${formatMessage(message.text, { isAssistant })}</div>
                             </article>
                         </div>
                     </div>
@@ -574,21 +574,21 @@ export function initChatbotPage() {
             elements.generatedQuestions.innerHTML = "";
             elements.feedbackPanel.innerHTML = `
                 <div class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
-                    <p class="content-break text-sm leading-6 text-gray-700 dark:text-gray-300">${escapeHtml(state.feedbackSummary.overall || "No review summary was returned.")}</p>
+                    <p class="chatbot-ai-copy content-break text-sm leading-6 text-gray-700 dark:text-gray-300">${escapeHtml(state.feedbackSummary.overall || "No review summary was returned.")}</p>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/40">
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Strengths</h4>
                         <ul class="mt-3 space-y-2">
-                            ${strengths.map((item) => `<li class="content-break rounded-xl bg-success-50 px-3 py-2 text-sm leading-6 text-success-700 dark:bg-success-500/10 dark:text-success-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No strengths returned yet.</li>`}
+                            ${strengths.map((item) => `<li class="chatbot-ai-copy content-break rounded-xl bg-success-50 px-3 py-2 text-sm leading-6 text-success-700 dark:bg-success-500/10 dark:text-success-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No strengths returned yet.</li>`}
                         </ul>
                     </div>
 
                     <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/40">
                         <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Improvements</h4>
                         <ul class="mt-3 space-y-2">
-                            ${improvements.map((item) => `<li class="content-break rounded-xl bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No improvement items returned yet.</li>`}
+                            ${improvements.map((item) => `<li class="chatbot-ai-copy content-break rounded-xl bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300">${escapeHtml(item)}</li>`).join("") || `<li class="content-break rounded-xl bg-gray-50 px-3 py-2 text-sm text-gray-600 dark:bg-gray-900/70 dark:text-gray-400">No improvement items returned yet.</li>`}
                         </ul>
                     </div>
                 </div>
@@ -601,7 +601,7 @@ export function initChatbotPage() {
                         ${renderCriterionNote("Grammar", criteria.grammar)}
                         ${renderCriterionNote("Professionalism", criteria.professionalism)}
                     </div>
-                    <div class="content-break mt-4 rounded-xl bg-brand-50 px-3 py-3 text-sm leading-6 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                    <div class="chatbot-ai-copy content-break mt-4 rounded-xl bg-brand-50 px-3 py-3 text-sm leading-6 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                         <strong class="font-semibold">Next step:</strong> ${escapeHtml(state.feedbackSummary.nextStep || "Keep refining your answer with a more specific example and stronger closing statement.")}
                     </div>
                 </div>
@@ -619,7 +619,7 @@ export function initChatbotPage() {
                 .map((question, index) => `
                     <article class="rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
                         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">Question ${index + 1}</p>
-                        <p class="content-break mt-2 text-sm leading-7 text-gray-700 dark:text-gray-300">${escapeHtml(question)}</p>
+                        <p class="chatbot-ai-copy content-break mt-2 text-sm leading-7 text-gray-700 dark:text-gray-300">${escapeHtml(question)}</p>
                     </article>
                 `)
                 .join("");
@@ -634,7 +634,7 @@ export function initChatbotPage() {
 
     function renderCriterionNote(label, value) {
         return `
-            <div class="content-break rounded-xl bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 dark:bg-gray-900/70 dark:text-gray-300">
+            <div class="chatbot-ai-copy content-break rounded-xl bg-gray-50 px-3 py-3 text-sm leading-6 text-gray-700 dark:bg-gray-900/70 dark:text-gray-300">
                 <strong class="font-semibold">${escapeHtml(label)}:</strong> ${escapeHtml(value || "No note returned yet.")}
             </div>
         `;
@@ -889,8 +889,72 @@ export function initChatbotPage() {
             .replace(/'/g, "&#39;");
     }
 
-    function formatMessage(text) {
-        return escapeHtml(text).replace(/\n/g, "<br>");
+    function formatMessage(text, options = {}) {
+        const normalizedText = options.isAssistant
+            ? normalizeAssistantMessage(text)
+            : normalizeMessageText(text);
+        const blocks = normalizedText
+            .split(/\n{2,}/)
+            .map((block) => block.trim())
+            .filter(Boolean);
+
+        if (blocks.length === 0) {
+            return "";
+        }
+
+        return blocks
+            .map((block) => {
+                const lines = block
+                    .split(/\n/)
+                    .map((line) => line.trim())
+                    .filter(Boolean);
+
+                if (lines.length === 0) {
+                    return "";
+                }
+
+                return `<p>${lines.map(formatInlineMarkdown).join("<br>")}</p>`;
+            })
+            .join("");
+    }
+
+    function normalizeMessageText(text) {
+        return String(text ?? "")
+            .replace(/\r\n?/g, "\n")
+            .trim();
+    }
+
+    function normalizeAssistantMessage(text) {
+        return normalizeMessageText(text)
+            .replace(/\s+(\d+\.\s+\*\*)/g, "\n\n$1")
+            .replace(/(^|\s+)(\d{1,2}\s*[\.)]\s+(?=(?:\*\*)?[A-Z]))/g, "\n\n$2")
+            .replace(/\s+([*-]\s*(?:Purpose|Example Answer|Sample Answer|Suggested Answer|Better Answer|Why(?: it[\u2019']s)? asked|Philippine context|How to answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):)/gi, "\n$1")
+            .replace(/\s+(\*\*(?:Purpose|Example Answer|Sample Answer|Suggested Answer|Better Answer|Why(?: it[\u2019']s)? asked|Philippine context|How to answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):\*\*)/gi, "\n$1")
+            .replace(/\s+(\*\*(?:Why(?: it[\u2019']s)? asked|Philippine context|How to answer|Sample answer|Suggested answer|Better answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):\*\*)/gi, "\n\n$1")
+            .replace(/\s+(\*\*(?:Why(?: it['’]s)? asked|Philippine context|How to answer|Sample answer|Suggested answer|Better answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):\*\*)/gi, "\n$1")
+            .replace(/\s+(-\s+\*\*)/g, "\n$1")
+            .replace(/\n(\*\*(?:Why(?: it[\u2019']s)? asked|Philippine context|How to answer|Sample answer|Suggested answer|Better answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):\*\*)/gi, "\n\n$1")
+            .replace(/\n(-\s+\*\*)/g, "\n\n$1")
+            .replace(/\n{3,}/g, "\n\n")
+            .trim();
+    }
+
+    function formatInlineMarkdown(text) {
+        const value = String(text ?? "");
+        const labelMatch = value.match(/^(?:[*-]\s*)?(Purpose|Example Answer|Sample Answer|Suggested Answer|Better Answer|Why(?: it[\u2019']s)? asked|Philippine context|How to answer|Follow[- ]?up|Next step|Strengths?|Improvements?|Clarity|Relevance|Grammar|Professionalism|Tip):\s*/i);
+
+        if (labelMatch) {
+            const rest = value.slice(labelMatch[0].length);
+
+            return `<strong>${escapeHtml(labelMatch[1])}:</strong> ${formatInlineBold(rest)}`;
+        }
+
+        return formatInlineBold(value);
+    }
+
+    function formatInlineBold(text) {
+        return escapeHtml(text)
+            .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
     }
 
     function scrollConversationToBottom() {

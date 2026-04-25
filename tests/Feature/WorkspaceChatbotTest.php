@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\User;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Exceptions;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
@@ -788,6 +789,30 @@ class WorkspaceChatbotTest extends TestCase
             ->assertJsonPath('providers.4.state', 'working')
             ->assertJsonPath('providers.5.id', 'cohere')
             ->assertJsonPath('providers.5.state', 'working');
+    }
+
+    public function test_provider_status_endpoint_handles_connection_timeouts_without_reporting_exceptions(): void
+    {
+        config()->set('services.claude.api_key', 'claude-test-key');
+        config()->set('services.claude.model', 'claude-haiku-4-5-20251001');
+
+        Exceptions::fake();
+
+        Http::fake([
+            'https://api.anthropic.com/v1/messages' => fn () => throw new ConnectionException('Operation timed out'),
+        ]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot.providers.status'), [
+            'providers' => ['claude'],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJsonPath('providers.0.id', 'claude')
+            ->assertJsonPath('providers.0.state', 'unavailable')
+            ->assertJsonPath('providers.0.message', 'The app could not reach this provider during the live check.');
+
+        Exceptions::assertNothingReported();
     }
 
     public function test_chatbot_endpoint_retries_wisdomgate_fallback_model_after_a_timeout(): void

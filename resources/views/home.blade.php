@@ -21,9 +21,9 @@
         ? (auth()->user()?->isAdmin() ? 'Open Admin' : 'Start Practice')
         : 'Get Started';
     $heroMetrics = [
-        ['value' => count($practiceTracks), 'label' => 'Interview tracks', 'icon' => 'tracks'],
-        ['value' => count($platformFeatures), 'label' => 'Feedback features', 'icon' => 'feedback'],
-        ['value' => count($workflow), 'label' => 'Coaching steps', 'icon' => 'coaching'],
+        ['value' => count($practiceTracks), 'label' => 'Interview tracks'],
+        ['value' => count($platformFeatures), 'label' => 'Feedback features'],
+        ['value' => count($workflow), 'label' => 'Coaching steps'],
     ];
     $courseMeta = [
         'job' => [
@@ -54,6 +54,7 @@
             'rating' => '4.9',
             'learners' => '2.8k',
             'sessions' => '180+',
+            'image' => asset('images/user/user-21.jpg'),
             'bio' => 'Former recruitment lead helping fresh graduates answer with stronger structure and confidence.',
         ],
         [
@@ -62,6 +63,7 @@
             'rating' => '4.8',
             'learners' => '3.1k',
             'sessions' => '220+',
+            'image' => asset('images/user/user-24.jpg'),
             'bio' => 'Guides entry-level applicants through follow-up questions, delivery, and local interview expectations.',
         ],
         [
@@ -70,6 +72,7 @@
             'rating' => '4.9',
             'learners' => '1.9k',
             'sessions' => '140+',
+            'image' => asset('images/user/user-18.jpg'),
             'bio' => 'Works on scholarship and college interview answers that sound clear, grounded, and sincere.',
         ],
         [
@@ -78,6 +81,7 @@
             'rating' => '4.8',
             'learners' => '2.4k',
             'sessions' => '160+',
+            'image' => asset('images/user/user-31.jpg'),
             'bio' => 'Focuses on capstone storytelling, debugging answers, and technical communication for junior IT roles.',
         ],
     ];
@@ -86,31 +90,37 @@
             'quote' => 'The mock interview flow helped me stop rambling and answer with a much stronger structure.',
             'name' => 'Aira Lopez',
             'role' => 'BSIT Student',
+            'image' => asset('images/user/user-11.jpg'),
         ],
         [
             'quote' => 'The follow-up prompts felt realistic, and the feedback center made my weak spots obvious fast.',
             'name' => 'Kevin Reyes',
             'role' => 'Fresh Graduate',
+            'image' => asset('images/user/user-12.jpg'),
         ],
         [
             'quote' => 'I used the scholarship track before my panel interview and sounded much less rehearsed.',
             'name' => 'Trisha Mendoza',
             'role' => 'Scholarship Applicant',
+            'image' => asset('images/user/user-13.jpg'),
         ],
         [
             'quote' => 'Voice rehearsal plus the pacing modes gave me a cleaner answer style after only a few sessions.',
             'name' => 'Mark Santos',
             'role' => 'Job Seeker',
+            'image' => asset('images/user/user-14.jpg'),
         ],
         [
             'quote' => 'The IT track pushed me to explain my capstone clearly instead of listing tools without context.',
             'name' => 'Janna Flores',
             'role' => 'Junior Developer Applicant',
+            'image' => asset('images/user/user-15.jpg'),
         ],
         [
             'quote' => 'It feels closer to a real interview than reading questions from a document or random notes.',
             'name' => 'Paolo Garcia',
             'role' => 'Career Shifter',
+            'image' => asset('images/user/user-16.jpg'),
         ],
     ];
     $pricingPlans = [
@@ -390,21 +400,21 @@
         <main class="relative z-10">
             <section id="home" class="scroll-mt-28">
                 <div class="mx-auto max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8 lg:pb-32 lg:pt-20">
-                    <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between xl:gap-12">
-                        <div class="w-full max-w-xl lg:w-5/12">
+                    <div class="grid gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:items-center">
+                        <div class="max-w-2xl">
                             <span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-semibold text-brand-700 shadow-theme-xs dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300">
                                 <span class="h-2 w-2 rounded-full bg-brand-500"></span>
                                 New AI Interview Labs Available
                             </span>
 
-                            <h1 class="mt-6 text-5xl font-semibold leading-[1.05] text-gray-900 sm:text-6xl xl:text-7xl dark:text-white">
+                            <h1 class="mt-8 text-5xl font-semibold leading-[1.02] text-gray-900 sm:text-6xl dark:text-white">
                                 Master Interview Skills
                                 <span class="block text-brand-500">Online Anytime,</span>
                                 Anywhere
                             </h1>
 
-                            <p class="mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-xl sm:leading-9 lg:text-2xl lg:leading-10 dark:text-gray-300">
-                                Provide an accessible web-based platform for repeated interview simulation, automated feedback, guided learning, and progress monitoring.
+                            <p class="mt-6 max-w-xl text-lg leading-8 text-gray-600 dark:text-gray-300">
+                                {{ $manuscriptOverview['purpose'] }}
                             </p>
 
                             <div class="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -439,58 +449,87 @@
                                 @endauth
                             </div>
 
-                            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-600 dark:text-gray-300">
+                            <div class="mt-9 flex flex-wrap gap-6 text-sm text-gray-600 dark:text-gray-300">
                                 @foreach ($heroMetrics as $metric)
-                                    <div class="flex items-center gap-2">
-                                        <span class="inline-flex h-5 w-5 items-center justify-center text-brand-500 dark:text-brand-300">
-                                            @switch($metric['icon'])
-                                                @case('tracks')
-                                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M3 6v13M12 6v13M21 6v13" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                @break
-
-                                                @case('feedback')
-                                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M7 18.5A8.38 8.38 0 0 1 3 19l1.3-3.9A8 8 0 1 1 7 18.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                @break
-
-                                                @case('coaching')
-                                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                                        <path d="M12 9a6 6 0 1 0 0 12a6 6 0 1 0 0-12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M12 15l3.4 5.89l1.598-3.233l3.598.232l-3.4-5.889" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                        <path d="M6.802 12l-3.4 5.89l3.598-.233l1.598 3.232l3.4-5.889" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                                    </svg>
-                                                @break
-                                            @endswitch
+                                    <div class="flex items-center gap-3">
+                                        <span class="inline-flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
+                                            {{ $metric['value'] }}
                                         </span>
-                                        <small class="text-sm leading-none text-gray-600 dark:text-gray-300">
-                                            <span class="font-bold text-gray-900 dark:text-white">{{ $metric['value'] }}</span>
-                                            {{ $metric['label'] }}
-                                        </small>
+                                        <span class="font-medium">{{ $metric['label'] }}</span>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        <div class="w-full lg:flex lg:w-7/12 lg:justify-end">
-                            <div class="home-panel relative mx-auto w-full max-w-3xl overflow-hidden border-white/80 bg-white/85 p-4 shadow-[0_35px_80px_-45px_rgba(15,23,42,0.45)] lg:mx-0 dark:border-gray-800 dark:bg-gray-900/80 sm:p-5">
+                        <div class="relative mx-auto w-full max-w-2xl">
+                            <div class="home-panel relative overflow-hidden border-white/80 bg-white/85 p-4 shadow-[0_35px_80px_-45px_rgba(15,23,42,0.45)] dark:border-gray-800 dark:bg-gray-900/80 sm:p-5">
                                 <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(70,95,255,0.18),_transparent_42%),radial-gradient(circle_at_bottom_right,_rgba(11,165,236,0.14),_transparent_35%)]"></div>
                                 <div class="relative overflow-hidden rounded-[28px] border border-brand-100 bg-gray-950 dark:border-gray-800 dark:bg-gray-900">
-                                    <div class="relative w-full overflow-hidden bg-gray-950">
-                                        <img
-                                            src="{{ asset('images/ai/video-thumb.png') }}"
-                                            alt="Interview practice preview"
-                                            class="block h-auto w-full"
-                                        />
-                                        <div class="absolute inset-0 bg-gradient-to-t from-gray-950/60 via-gray-950/10 to-transparent"></div>
+                                    <div class="relative aspect-video w-full overflow-hidden bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_45%,#38bdf8_100%)]">
+                                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.22),_transparent_32%),radial-gradient(circle_at_bottom_right,_rgba(255,255,255,0.14),_transparent_28%)]"></div>
                                         <div class="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur-md">
                                             <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
-                                            Interview preview
+                                            Interview simulation
+                                        </div>
+
+                                        <div class="absolute left-5 top-18 w-[34%] max-w-[180px] rotate-[-8deg] rounded-[26px] border border-white/20 bg-white/12 p-3 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.75)] backdrop-blur-md sm:left-8 sm:top-20 sm:w-[32%] sm:p-4">
+                                            <div class="overflow-hidden rounded-[20px]">
+                                                <img
+                                                    src="{{ asset('images/user/user-24.jpg') }}"
+                                                    alt="Interview coach"
+                                                    class="h-40 w-full object-cover sm:h-52"
+                                                />
+                                            </div>
+                                            <div class="mt-3 rounded-[18px] bg-white/90 px-3 py-2 text-gray-900">
+                                                <p class="text-[10px] font-semibold uppercase tracking-[0.22em] text-brand-600">Interviewer</p>
+                                                <p class="mt-1 text-sm font-semibold">Career Coach</p>
+                                                <p class="text-xs text-gray-500">Follow-up questions ready</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="absolute right-5 top-16 w-[30%] max-w-[168px] rotate-[9deg] rounded-[24px] border border-white/20 bg-white/12 p-3 shadow-[0_24px_60px_-28px_rgba(15,23,42,0.75)] backdrop-blur-md sm:right-8 sm:top-18 sm:w-[28%] sm:p-4">
+                                            <div class="overflow-hidden rounded-[18px]">
+                                                <img
+                                                    src="{{ asset('images/user/user-31.jpg') }}"
+                                                    alt="Interview candidate"
+                                                    class="h-32 w-full object-cover sm:h-40"
+                                                />
+                                            </div>
+                                            <div class="mt-3 space-y-2">
+                                                <div class="h-2 rounded-full bg-white/30"></div>
+                                                <div class="h-2 w-4/5 rounded-full bg-white/70"></div>
+                                                <div class="h-2 w-2/3 rounded-full bg-cyan-200"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="absolute inset-x-0 bottom-5 mx-auto w-[78%] max-w-sm rounded-[28px] border border-white/60 bg-white/92 p-4 shadow-[0_28px_80px_-30px_rgba(15,23,42,0.7)] backdrop-blur-xl sm:bottom-7 sm:w-[62%] sm:p-5">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <p class="text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-600">AI feedback</p>
+                                                    <h3 class="mt-1 text-base font-semibold text-gray-900 sm:text-lg">Interview readiness snapshot</h3>
+                                                </div>
+                                                <span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">8.9 / 10</span>
+                                            </div>
+                                            <div class="mt-4 space-y-3">
+                                                <div>
+                                                    <div class="flex items-center justify-between text-xs font-medium text-gray-500">
+                                                        <span>Confidence</span>
+                                                        <span>92%</span>
+                                                    </div>
+                                                    <div class="mt-1.5 h-2 rounded-full bg-gray-200">
+                                                        <div class="h-2 w-[92%] rounded-full bg-brand-500"></div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="flex items-center justify-between text-xs font-medium text-gray-500">
+                                                        <span>Clarity</span>
+                                                        <span>88%</span>
+                                                    </div>
+                                                    <div class="mt-1.5 h-2 rounded-full bg-gray-200">
+                                                        <div class="h-2 w-[88%] rounded-full bg-cyan-500"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -623,12 +662,7 @@
                         @foreach ($mentorCards as $mentor)
                             <article class="rounded-[30px] border border-gray-200 bg-white px-6 py-8 text-center shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-gray-800 dark:bg-gray-900">
                                 <div class="relative mx-auto w-fit">
-                                    <div class="inline-flex h-20 w-20 items-center justify-center rounded-full border-4 border-warning-300 bg-warning-50 text-warning-500 dark:bg-warning-500/10 dark:text-warning-300">
-                                        <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
+                                    <img src="{{ $mentor['image'] }}" alt="{{ $mentor['name'] }}" class="h-20 w-20 rounded-full border-4 border-warning-300 object-cover" />
                                     <span class="absolute -bottom-2 left-1/2 inline-flex -translate-x-1/2 rounded-full bg-warning-500 px-3 py-1 text-[11px] font-semibold text-white shadow-theme-xs">
                                         {{ $mentor['rating'] }}
                                     </span>
@@ -722,12 +756,7 @@
                                 <p class="mt-5 text-base leading-7 text-gray-600 dark:text-gray-300">"{{ $testimonial['quote'] }}"</p>
 
                                 <div class="mt-6 flex items-center gap-4">
-                                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
-                                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
+                                    <img src="{{ $testimonial['image'] }}" alt="{{ $testimonial['name'] }}" class="h-12 w-12 rounded-full object-cover" />
                                     <div>
                                         <p class="font-semibold text-gray-900 dark:text-white">{{ $testimonial['name'] }}</p>
                                         <p class="text-sm text-gray-500 dark:text-gray-400">{{ $testimonial['role'] }}</p>

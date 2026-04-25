@@ -1,5 +1,7 @@
 
 
+import ApexCharts from 'apexcharts';
+
 export const initChartOne = () => {
     const chartElement = document.querySelector('#chartOne');
     if (!chartElement) return;

@@ -1,9 +1,21 @@
 <div
-  x-show="loaded"
-  x-init="window.addEventListener('DOMContentLoaded', () => {setTimeout(() => loaded = false, 350)})"
-  class="fixed left-0 top-0 z-999999 flex h-screen w-screen items-center justify-center bg-white dark:bg-black"
+  id="globalPageLoader"
+  data-page-loader
+  class="page-loader is-active"
+  role="status"
+  aria-live="polite"
+  aria-label="Loading InterviewPilot"
+  aria-hidden="false"
 >
-  <div
-    class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"
-  ></div>
+  <div class="page-loader-content">
+    <div class="page-loader-logo-wrap">
+      <div class="page-loader-ring" aria-hidden="true"></div>
+      <img
+        src="{{ asset('images/logo/interviewpilot-icon.png') }}"
+        alt="InterviewPilot"
+        class="page-loader-logo"
+      >
+    </div>
+    <span class="page-loader-text">Loading...</span>
+  </div>
 </div>

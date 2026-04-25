@@ -2,7 +2,7 @@ import { practiceData, readSessionSetup } from "./practice-config";
 import { appendPracticeSession } from "./practice-storage";
 import { buildFeedbackSummary, normalizeFeedbackSummary } from "./feedback-utils";
 import { buildManuscriptRubric, formatRubricScore } from "./manuscript-rubric";
-import { requestWorkspace } from "./workspace-api";
+import { requestWorkspace, requestWorkspaceBlob } from "./workspace-api";
 
 export function initPractice() {
     const practiceRoot = document.getElementById("practiceApp");
@@ -12,6 +12,7 @@ export function initPractice() {
     }
 
     const rawChatbotBootstrap = window.__INTERVIEW_CHATBOT__ || {};
+    const rawInterviewerAudioBootstrap = window.__INTERVIEW_AUDIO__ || {};
     const state = {
         selectedCategory: null,
         selectedFieldPlan: null,
@@ -34,6 +35,12 @@ export function initPractice() {
         recognitionBaseText: "",
         recognitionInterimText: "",
         restartVoiceTimeout: null,
+        voiceConversationEnabled: false,
+        voiceAutoSubmitTimeout: null,
+        questionSpeechTimeout: null,
+        interviewerSpeechActive: false,
+        interviewerSpeechRate: 1,
+        answerSubmitting: false,
         isApplyingTranscript: false,
         manualInputUsed: false,
         voiceInputUsed: false,
@@ -59,8 +66,22 @@ export function initPractice() {
         fieldBuilderRequestId: 0,
         liveVisualSnapshot: null,
         lastProcessEvaluations: null,
-        learningActivityContext: null
+        learningActivityContext: null,
+        practiceStarted: false,
+        welcomeDelivered: false,
+        openingIntroductionSpeaking: false,
+        openingIntroductionQuestionPending: false,
+        openingIntroductionFocusPending: false,
+        openingConversationActive: false,
+        openingConversationAcknowledging: false,
+        openingConversationCompleted: false,
+        openingConversationFocusPending: false,
+        openingConversationReply: "",
+        autoAdvanceTimeout: null
     };
+
+    const VOICE_AUTO_SUBMIT_DELAY_MS = 2600;
+    const VOICE_COMMAND_HELP_TEXT = "You can say: repeat question, next question, pause, continue, send answer, clear answer, camera on, camera off, give me a hint, new questions, or end interview.";
 
     const elements = {
         questionCountSelect: document.getElementById("questionCountSelect"),
@@ -95,6 +116,10 @@ export function initPractice() {
         openPracticeModalBtn: document.getElementById("openPracticeModalBtn"),
         editPracticeFieldBtn: document.getElementById("editPracticeFieldBtn"),
         closePracticeModalBtn: document.getElementById("closePracticeModalBtn"),
+        practiceQuestionAgentModal: document.getElementById("practiceQuestionAgentModal"),
+        practiceQuestionAgentModalBackdrop: document.getElementById("practiceQuestionAgentModalBackdrop"),
+        openPracticeQuestionAgentModalBtn: document.getElementById("openPracticeQuestionAgentModalBtn"),
+        closePracticeQuestionAgentModalBtn: document.getElementById("closePracticeQuestionAgentModalBtn"),
         practiceModalCategoryName: document.getElementById("practiceModalCategoryName"),
         practiceModalSummaryText: document.getElementById("practiceModalSummaryText"),
         practiceModalStateTag: document.getElementById("practiceModalStateTag"),
@@ -109,6 +134,8 @@ export function initPractice() {
         practiceStatusTag: document.getElementById("practiceStatusTag"),
         practiceLabelTag: document.getElementById("practiceLabelTag"),
         selectedPracticeFieldTag: document.getElementById("selectedPracticeFieldTag"),
+        openingIntroductionSection: document.getElementById("openingIntroductionSection"),
+        openingIntroductionText: document.getElementById("openingIntroductionText"),
         coachModeValue: document.getElementById("coachModeValue"),
         timerTargetValue: document.getElementById("timerTargetValue"),
         questionTimerValue: document.getElementById("questionTimerValue"),
@@ -118,11 +145,13 @@ export function initPractice() {
         coachTipText: document.getElementById("coachTipText"),
         questionKeywordTags: document.getElementById("questionKeywordTags"),
         responseInput: document.getElementById("responseInput"),
+        startPracticeBtn: document.getElementById("startPracticeBtn"),
         startVoiceBtn: document.getElementById("startVoiceBtn"),
         stopVoiceBtn: document.getElementById("stopVoiceBtn"),
         submitAnswerBtn: document.getElementById("submitAnswerBtn"),
         nextQuestionBtn: document.getElementById("nextQuestionBtn"),
         endSessionBtn: document.getElementById("endSessionBtn"),
+        askQuestionAloudBtn: document.getElementById("askQuestionAloudBtn"),
         voiceStatusText: document.getElementById("voiceStatusText"),
         voiceStatusDot: document.getElementById("voiceStatusDot"),
         practiceMessage: document.getElementById("practiceMessage"),
@@ -158,6 +187,17 @@ export function initPractice() {
     const interviewerControls = {
         startCamera: () => {},
         askCurrentQuestion: () => {},
+        playOpeningIntroduction: ({ onSettled } = {}) => {
+            onSettled?.({ status: "unavailable" });
+        },
+        speakOpeningAcknowledgement: ({ onSettled } = {}) => {
+            onSettled?.({ status: "unavailable" });
+            return false;
+        },
+        speakAssistantMessage: ({ onSettled } = {}) => {
+            onSettled?.({ status: "unavailable" });
+            return false;
+        },
         stopCamera: () => {},
         stopSpeaking: () => {}
     };
@@ -482,7 +522,7 @@ export function initPractice() {
         };
     }
 
-    function createDefaultVisualSnapshot(reason = "Start the camera to unlock selected non-verbal coaching.") {
+    function createDefaultVisualSnapshot(reason = "Turn on the camera to unlock selected non-verbal coaching.") {
         return {
             headline: "Camera coaching is waiting",
             tip: reason,
@@ -604,6 +644,10 @@ export function initPractice() {
 
     function isCategoryModalOpen() {
         return Boolean(elements.practiceCategoryModal) && !elements.practiceCategoryModal.classList.contains("hidden");
+    }
+
+    function isQuestionAgentModalOpen() {
+        return Boolean(elements.practiceQuestionAgentModal) && !elements.practiceQuestionAgentModal.classList.contains("hidden");
     }
 
     function lockBodyScroll() {
@@ -733,14 +777,14 @@ export function initPractice() {
     }
 
     function updatePracticeModalSummary() {
-        const modalIsOpen = isPracticeModalOpen();
+        const workspaceVisible = isPracticeModalOpen();
         const questionTotal = state.selectedCategory ? (getActiveQuestionCount() || state.questionCount) : 0;
         const answeredLabel = `${state.answeredCount} / ${questionTotal}`;
         const fieldTitle = getSelectedFieldTitle();
         const fieldSummary = getSelectedFieldSummary();
 
         elements.practiceModalAnsweredValue.textContent = answeredLabel;
-        elements.practiceModalWorkspaceValue.textContent = modalIsOpen ? "Open" : "Closed";
+        elements.practiceModalWorkspaceValue.textContent = workspaceVisible ? "Visible" : "Hidden";
         elements.practiceModalFieldValue.textContent = fieldTitle || "Not set";
         elements.practiceModalFieldMeta.textContent = fieldSummary || "Choose a sidebar track to create a field with the chatbot.";
         elements.editPracticeFieldBtn.disabled = !state.selectedCategory && !state.pendingCategory;
@@ -748,19 +792,19 @@ export function initPractice() {
         if (!state.selectedCategory) {
             if (state.pendingCategory) {
                 elements.practiceModalCategoryName.textContent = `${state.pendingCategory.name} selected`;
-                elements.practiceModalSummaryText.textContent = `Finish the field builder for ${state.pendingCategory.name} before opening the interview modal.`;
+                elements.practiceModalSummaryText.textContent = `Finish the field builder for ${state.pendingCategory.name} before opening the workspace.`;
                 elements.practiceModalActiveCategory.textContent = state.pendingCategory.name;
-                elements.openPracticeModalBtn.textContent = "Open Interview Modal";
+                elements.openPracticeModalBtn.textContent = "Focus Live Interview";
                 elements.openPracticeModalBtn.disabled = true;
                 elements.editPracticeFieldBtn.disabled = false;
                 setPracticeModalStateTag("Field setup", "warning");
                 return;
             }
 
-            elements.practiceModalCategoryName.textContent = "Select a track to launch";
-            elements.practiceModalSummaryText.textContent = "Choose a track from the sidebar. The interview flow and AI interviewer will open in a modal.";
+            elements.practiceModalCategoryName.textContent = "Choose a track for live practice";
+            elements.practiceModalSummaryText.textContent = "Choose a track from the sidebar. The interviewer will ask aloud and continue after each submitted answer.";
             elements.practiceModalActiveCategory.textContent = "None selected";
-            elements.openPracticeModalBtn.textContent = "Open Interview Modal";
+            elements.openPracticeModalBtn.textContent = "Focus Live Interview";
             elements.openPracticeModalBtn.disabled = true;
             elements.editPracticeFieldBtn.disabled = true;
             setPracticeModalStateTag("Waiting", "neutral");
@@ -772,36 +816,57 @@ export function initPractice() {
         elements.editPracticeFieldBtn.disabled = false;
 
         if (state.questionAgentLoading) {
-            elements.practiceModalSummaryText.textContent = `Generating a fresh ${state.questionCount}-question set for ${state.selectedCategory.name}${fieldTitle ? ` focused on ${fieldTitle}` : ""} inside the Interview Workspace modal.`;
-            elements.openPracticeModalBtn.textContent = modalIsOpen ? "Interview Modal Open" : "Continue Interview Modal";
-            elements.openPracticeModalBtn.disabled = modalIsOpen;
+            elements.practiceModalSummaryText.textContent = `Generating a fresh ${state.questionCount}-question set for ${state.selectedCategory.name}${fieldTitle ? ` focused on ${fieldTitle}` : ""} inside the Interview Workspace.`;
+            elements.openPracticeModalBtn.textContent = workspaceVisible ? "Focus Live Interview" : "Enter Live Interview";
+            elements.openPracticeModalBtn.disabled = false;
             setPracticeModalStateTag("Preparing", "warning");
             return;
         }
 
-        if (modalIsOpen) {
-            elements.practiceModalSummaryText.textContent = getActiveQuestionCount() > 0
-                ? `${state.questionSetSummary} Continue your session in the modal.`
-                : `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is open in the modal. Generate a fresh question set to begin.`;
-            elements.openPracticeModalBtn.textContent = "Interview Modal Open";
-            elements.openPracticeModalBtn.disabled = true;
-            setPracticeModalStateTag("Live", "success");
+        if (workspaceVisible) {
+            elements.openPracticeModalBtn.textContent = "Focus Live Interview";
+            elements.openPracticeModalBtn.disabled = false;
+
+            if (getActiveQuestionCount() > 0) {
+                elements.practiceModalSummaryText.textContent = `${state.questionSetSummary} Continue your live interview below.`;
+                setPracticeModalStateTag("Live", "success");
+                return;
+            }
+
+            elements.practiceModalSummaryText.textContent = `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is open below. Generate a fresh question set for the interviewer.`;
+            setPracticeModalStateTag("Visible", "neutral");
             return;
         }
 
         elements.openPracticeModalBtn.disabled = false;
-        elements.openPracticeModalBtn.textContent = "Continue Interview Modal";
+        elements.openPracticeModalBtn.textContent = "Enter Live Interview";
 
         if (state.timerPaused) {
-            elements.practiceModalSummaryText.textContent = `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is paused. Reopen the modal to continue from the current question.`;
+            elements.practiceModalSummaryText.textContent = `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is paused. Reopen the workspace to continue from the current question.`;
             setPracticeModalStateTag("Paused", "warning");
             return;
         }
 
         elements.practiceModalSummaryText.textContent = getActiveQuestionCount() > 0
-            ? `${state.questionSetSummary} Reopen the modal to continue the interview and AI interviewer tools.`
-            : `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is ready. Reopen the modal to generate your next AI question set.`;
+            ? `${state.questionSetSummary} Open the workspace to continue the interview and AI interviewer tools.`
+            : `${state.selectedCategory.name}${fieldTitle ? ` for ${fieldTitle}` : ""} is ready. Open the workspace to generate a fresh AI question set.`;
         setPracticeModalStateTag("Ready", "neutral");
+    }
+
+    function syncOpeningIntroduction() {
+        if (!elements.openingIntroductionSection || !elements.openingIntroductionText) {
+            return;
+        }
+
+        const shouldShow = Boolean(state.selectedCategory) && getActiveQuestionCount() > 0 && state.questionIndex === 0;
+
+        elements.openingIntroductionSection.classList.toggle("hidden", !shouldShow);
+
+        if (!shouldShow) {
+            return;
+        }
+
+        elements.openingIntroductionText.textContent = buildInterviewerWelcomeLead();
     }
 
     function startTimer({ reset = true } = {}) {
@@ -855,26 +920,79 @@ export function initPractice() {
         startTimer({ reset: false });
     }
 
-    function openPracticeModal({ focusResponse = false } = {}) {
+    function cancelAutoAdvance() {
+        if (!state.autoAdvanceTimeout) {
+            return;
+        }
+
+        window.clearTimeout(state.autoAdvanceTimeout);
+        state.autoAdvanceTimeout = null;
+    }
+
+    function cancelVoiceAutoSubmit() {
+        if (!state.voiceAutoSubmitTimeout) {
+            return;
+        }
+
+        window.clearTimeout(state.voiceAutoSubmitTimeout);
+        state.voiceAutoSubmitTimeout = null;
+    }
+
+    function cancelPendingQuestionSpeech() {
+        if (!state.questionSpeechTimeout) {
+            return;
+        }
+
+        window.clearTimeout(state.questionSpeechTimeout);
+        state.questionSpeechTimeout = null;
+    }
+
+    function openPracticeModal({ focusResponse = false, playOpening = false } = {}) {
         if (!elements.practiceSessionModal || !state.selectedCategory) {
             return;
         }
 
         if (!isPracticeModalOpen()) {
             elements.practiceSessionModal.classList.remove("hidden");
-            elements.practiceSessionModal.classList.add("flex");
             elements.practiceSessionModal.setAttribute("aria-hidden", "false");
-            lockBodyScroll();
         }
 
         resumeTimerIfNeeded();
         updatePracticeModalSummary();
+        elements.practiceSessionModal.scrollIntoView({ behavior: "smooth", block: "start" });
+
+        if (playOpening) {
+            const introductionStarted = playOpeningIntroductionIfNeeded({
+                startQuestionAfter: Boolean(getActiveQuestionCount() > 0),
+                focusResponse
+            });
+
+            if (introductionStarted) {
+                return;
+            }
+        }
 
         if (focusResponse) {
             window.setTimeout(() => {
                 elements.responseInput.focus();
             }, 0);
         }
+    }
+
+    function handleStartPracticeClick() {
+        if (state.selectedCategory) {
+            openPracticeModal({ focusResponse: Boolean(getActiveQuestionCount() > 0) });
+            return;
+        }
+
+        if (state.pendingCategory) {
+            openPracticeFieldModal(state.pendingCategory, {
+                prefillNeed: getFieldPlanForCategory(state.pendingCategory)?.userNeed || ""
+            });
+            return;
+        }
+
+        openCategoryModal();
     }
 
     function openCategoryModal() {
@@ -909,20 +1027,53 @@ export function initPractice() {
         }
     }
 
+    function openQuestionAgentModal({ focusInput = false } = {}) {
+        if (!elements.practiceQuestionAgentModal) {
+            return;
+        }
+
+        if (!isQuestionAgentModalOpen()) {
+            elements.practiceQuestionAgentModal.classList.remove("hidden");
+            elements.practiceQuestionAgentModal.classList.add("flex");
+            elements.practiceQuestionAgentModal.setAttribute("aria-hidden", "false");
+            lockBodyScroll();
+        }
+
+        if (focusInput) {
+            window.setTimeout(() => {
+                elements.practiceQuestionAgentInput.focus();
+            }, 0);
+        }
+    }
+
+    function closeQuestionAgentModal({ returnFocus = true } = {}) {
+        if (!elements.practiceQuestionAgentModal || !isQuestionAgentModalOpen()) {
+            return;
+        }
+
+        elements.practiceQuestionAgentModal.classList.add("hidden");
+        elements.practiceQuestionAgentModal.classList.remove("flex");
+        elements.practiceQuestionAgentModal.setAttribute("aria-hidden", "true");
+        unlockBodyScroll();
+
+        if (returnFocus) {
+            elements.openPracticeQuestionAgentModalBtn?.focus();
+        }
+    }
+
     function closePracticeModal({ returnFocus = true } = {}) {
         if (!elements.practiceSessionModal || !isPracticeModalOpen()) {
             return;
         }
 
         pauseTimer();
+        cancelPendingQuestionSpeech();
         stopVoiceInput({ commitTranscript: false });
         interviewerControls.stopSpeaking();
         interviewerControls.stopCamera();
 
         elements.practiceSessionModal.classList.add("hidden");
-        elements.practiceSessionModal.classList.remove("flex");
         elements.practiceSessionModal.setAttribute("aria-hidden", "true");
-        unlockBodyScroll();
 
         updatePracticeModalSummary();
 
@@ -1019,7 +1170,7 @@ export function initPractice() {
             return `Your current field for ${category.name} is ${fieldPlan.title}. Refine it or build a new one with the chatbot before continuing to practice.`;
         }
 
-        return `Tell me the ${String(category.fieldLabel || "field").toLowerCase()} you want for ${category.name}, and I will turn it into a focused practice setup before the interview modal opens.`;
+        return `Tell me the ${String(category.fieldLabel || "field").toLowerCase()} you want for ${category.name}, and I will turn it into a focused practice setup before the workspace opens.`;
     }
 
     function buildFallbackFieldSummary(category, title, userNeed = "") {
@@ -1146,7 +1297,7 @@ export function initPractice() {
         if (state.fieldBuilderHistory.length === 0) {
             elements.practiceFieldChatMessages.innerHTML = `
                 <div class="content-break rounded-2xl border border-dashed border-gray-300 px-4 py-5 text-sm leading-6 text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                    Share the role, course, or specialization you want, and the chatbot will prepare a focused field before practice starts.
+                    Share the role, course, or specialization you want, and the chatbot will prepare a focused field before practice begins.
                 </div>
             `;
             return;
@@ -1231,7 +1382,7 @@ export function initPractice() {
 
         elements.practiceFieldPreviewTitle.textContent = previewPlan?.title || "No field created yet";
         elements.practiceFieldPreviewSummary.textContent = previewPlan?.summary
-            || "Tell the chatbot what role, course, or specialization you want so the practice questions can be tailored before the interview modal opens.";
+            || "Tell the chatbot what role, course, or specialization you want so the practice questions can be tailored before the workspace opens.";
 
         renderFieldSuggestionChips(activeCategory);
         renderFieldBuilderMessages();
@@ -1480,7 +1631,7 @@ export function initPractice() {
         }
 
         if (action === "replay-question") {
-            interviewerControls.askCurrentQuestion();
+            askQuestionLikeConversation();
             showMessage("info", "The current question is being replayed aloud by the interviewer.");
             return;
         }
@@ -1535,7 +1686,7 @@ export function initPractice() {
                     ? "Voice rehearsal is available"
                     : "Use text rehearsal in this browser",
                 action: state.speechRecognition ? "start-voice" : "replay-question",
-                actionLabel: state.speechRecognition ? "Start Voice" : "Replay Question",
+                actionLabel: state.speechRecognition ? "Mic On" : "Repeat Question",
                 enabled: Boolean(state.selectedCategory)
             },
             {
@@ -1548,10 +1699,10 @@ export function initPractice() {
                     : getScoreTone(averageScore([bodyScore, faceScore])),
                 summary: visualSnapshot.tip,
                 meta: bodyScore === null && faceScore === null
-                    ? "Start the camera for live coaching"
+                    ? "Turn on the camera for live coaching"
                     : `Body ${getScoreLabel(bodyScore, "0.0 / 10")} • Face ${getScoreLabel(faceScore, "0.0 / 10")}`,
                 action: "start-camera",
-                actionLabel: "Start Camera",
+                actionLabel: "Camera On",
                 enabled: true
             }
         ];
@@ -1578,7 +1729,7 @@ export function initPractice() {
                 title: "Question Replay Drill",
                 tag: "Listening",
                 tone: "success",
-                summary: `Hear the active ${categoryName} question again so the answer starts naturally before typing or speaking.`,
+                summary: `Hear the active ${categoryName} question again so the answer flows naturally before typing or speaking.`,
                 action: "replay-question",
                 actionLabel: "Replay Question",
                 enabled: Boolean(state.selectedCategory)
@@ -1591,7 +1742,7 @@ export function initPractice() {
                     ? "Practice your answer aloud and let the browser capture a first draft in real time."
                     : "Switch to Chrome or Edge on localhost or HTTPS to unlock voice-first rehearsal.",
                 action: "start-voice",
-                actionLabel: "Start Voice",
+                actionLabel: "Mic On",
                 enabled: Boolean(state.selectedCategory && state.speechRecognition)
             },
             {
@@ -1606,7 +1757,7 @@ export function initPractice() {
                     ? visualSnapshot.bodyLanguage.summary
                     : "Turn on the camera to check centering, posture, head movement, and facial composure.",
                 action: "start-camera",
-                actionLabel: visualSnapshot.bodyLanguage.available ? "Refresh Camera" : "Start Camera",
+                actionLabel: visualSnapshot.bodyLanguage.available ? "Refresh Camera" : "Camera On",
                 enabled: true
             }
         ];
@@ -1687,7 +1838,7 @@ export function initPractice() {
             ? getScoreLabel(facialExpressions.average, "0.0 / 10")
             : String(facialExpressions.status || "Waiting");
         elements.livePresenceSummary.textContent = snapshot.headline || "Camera coaching is waiting";
-        elements.livePresenceTip.textContent = snapshot.tip || "Start the camera to unlock live coaching.";
+        elements.livePresenceTip.textContent = snapshot.tip || "Turn on the camera to unlock live coaching.";
         elements.livePresenceTag.textContent = snapshot.tag || (combinedAvailable ? getScoreLabel(combinedScore, "0.0 / 10") : "Standby");
         elements.livePresenceTag.className = getToneBadgeClass(
             snapshot.tagTone || (combinedAvailable ? getScoreTone(combinedScore) : "neutral")
@@ -1720,6 +1871,7 @@ export function initPractice() {
         renderLearningLab();
         updateFieldSummaryUI();
         updatePracticeModalSummary();
+        syncOpeningIntroduction();
     }
 
     function setVoiceStatus(text, tone = "idle") {
@@ -1747,15 +1899,447 @@ export function initPractice() {
         updateTipsPanel();
     }
 
+    function getResponseText() {
+        return String(elements.responseInput.value || "").trim();
+    }
+
+    function getResponseWordCount(value = getResponseText()) {
+        return String(value || "").split(/\s+/).filter(Boolean).length;
+    }
+
+    function escapeRegExp(value) {
+        return String(value || "").replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function isVoiceAutoSubmitReady(value = getResponseText()) {
+        const answer = String(value || "").trim();
+
+        return answer.length >= 8 && getResponseWordCount(answer) >= 2;
+    }
+
+    function normalizeVoiceCommandText(value) {
+        return String(value || "")
+            .toLowerCase()
+            .replace(/[^\p{L}\p{N}\s]/gu, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function stripVoiceCommandLeadIn(value) {
+        let command = normalizeVoiceCommandText(value);
+
+        for (let index = 0; index < 3; index += 1) {
+            const nextCommand = command
+                .replace(/^(hey\s+)?(ai|interviewer|coach|assistant|sir|maam|ma am)\s+/u, "")
+                .replace(/^(please|kindly|can you|could you|would you|will you|i need you to|i want you to|i would like you to|let us|lets)\s+/u, "")
+                .replace(/^(just|okay|ok)\s+/u, "")
+                .trim();
+
+            if (nextCommand === command) {
+                break;
+            }
+
+            command = nextCommand;
+        }
+
+        return command;
+    }
+
+    function includesVoicePhrase(text, phrases) {
+        return phrases.some((phrase) => {
+            const normalizedPhrase = normalizeVoiceCommandText(phrase);
+
+            return new RegExp(`(^|\\s)${escapeRegExp(normalizedPhrase)}(\\s|$)`, "u").test(text);
+        });
+    }
+
+    function isCommandLikeSpeech(rawText, commandText) {
+        if (!commandText) {
+            return false;
+        }
+
+        const normalizedRaw = normalizeVoiceCommandText(rawText);
+        const hasLeadIn = normalizedRaw !== commandText;
+        const firstWord = commandText.split(/\s+/)[0] || "";
+        const directCommandWords = [
+            "repeat", "say", "pause", "hold", "wait", "resume", "continue", "proceed",
+            "next", "skip", "pass", "submit", "send", "save", "done", "finish", "end",
+            "stop", "turn", "start", "open", "close", "mute", "unmute", "camera", "mic",
+            "microphone", "clear", "reset", "restart", "delete", "help", "commands", "hint",
+            "guide", "outline", "structure", "time", "progress", "slower", "faster", "normal",
+            "regenerate", "new", "different", "sample", "advice", "tips", "coach", "give",
+            "how", "what", "where"
+        ];
+
+        return hasLeadIn || directCommandWords.includes(firstWord);
+    }
+
+    function detectTrailingSubmitCommand(value) {
+        const normalized = normalizeVoiceCommandText(value);
+
+        return /(?:^|\s)(that is my answer|thats my answer|that is all|thats all|send my answer|send the answer|submit my answer|submit the answer|save my answer|done answering|i am done|im done|finished answering)$/.test(normalized);
+    }
+
+    function detectVoiceConversationCommand(value = getResponseText()) {
+        const normalizedOriginal = normalizeVoiceCommandText(value);
+        const normalized = stripVoiceCommandLeadIn(value);
+        const wordCount = getResponseWordCount(normalized);
+        const commandLike = isCommandLikeSpeech(value, normalized);
+
+        if (!normalized) {
+            return null;
+        }
+
+        if (detectTrailingSubmitCommand(value)) {
+            return { intent: "submit-answer", source: "local" };
+        }
+
+        if (!commandLike || wordCount > (normalizedOriginal === normalized ? 14 : 28)) {
+            return null;
+        }
+
+        if (
+            includesVoicePhrase(normalized, ["repeat", "repeat question", "say again", "read it again", "again please", "one more time", "what is the question", "what was the question"])
+        ) {
+            return { intent: "repeat-question", source: "local" };
+        }
+
+        if (normalized === "help" || normalized === "commands" || includesVoicePhrase(normalized, ["what can i say", "what can you do", "voice commands", "show commands"])) {
+            return { intent: "command-help", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["pause", "hold on", "wait", "one moment", "give me a second", "give me a minute"])) {
+            return { intent: "pause-interview", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["continue", "resume", "go on", "proceed", "start now", "start interview", "continue interview"])) {
+            return { intent: "resume-interview", source: "local" };
+        }
+
+        if (
+            includesVoicePhrase(normalized, ["next question", "skip question", "pass question", "move on", "move to next question"])
+            || normalized === "next"
+            || normalized === "skip"
+            || normalized === "pass"
+        ) {
+            return { intent: "next-question", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["send answer", "submit answer", "save answer", "review my answer", "check my answer", "score my answer"])) {
+            return { intent: "submit-answer", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["end interview", "finish interview", "stop interview", "end session", "finish session", "stop practice", "i am done with the interview", "im done with the interview"])) {
+            return { intent: "end-interview", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["stop listening", "turn off mic", "mic off", "microphone off", "mute mic", "mute microphone"])) {
+            return { intent: "mic-off", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["mic on", "microphone on", "turn on mic", "turn on microphone", "start listening"])) {
+            return { intent: "mic-on", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["camera on", "turn on camera", "start camera", "open camera"])) {
+            return { intent: "camera-on", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["camera off", "turn off camera", "stop camera", "close camera"])) {
+            return { intent: "camera-off", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["clear answer", "delete answer", "reset answer", "restart answer", "start over", "clear my answer"])) {
+            return { intent: "clear-answer", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["hint", "give me a hint", "outline", "guide me", "help me answer", "structure my answer", "answer structure"])) {
+            return { intent: "answer-outline", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["sample answer", "model answer", "example answer", "what should i say", "how should i answer", "give me advice", "give me tips", "coach me"])) {
+            return { intent: "coach-advice", source: "provider" };
+        }
+
+        if (includesVoicePhrase(normalized, ["new questions", "new question set", "fresh questions", "different questions", "regenerate questions", "replace questions"])) {
+            return { intent: "regenerate-questions", source: "provider" };
+        }
+
+        if (includesVoicePhrase(normalized, ["how much time", "time check", "check time", "timer", "time left"])) {
+            return { intent: "time-check", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["progress", "question number", "what number", "how many questions", "where am i"])) {
+            return { intent: "progress-check", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["speak slower", "slow down", "slower"])) {
+            return { intent: "speech-slower", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["speak faster", "faster"])) {
+            return { intent: "speech-faster", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["normal speed", "speak normally", "normal pace"])) {
+            return { intent: "speech-normal", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["quick pace", "quick timer", "short timer"])) {
+            return { intent: "set-pacing", value: "Quick", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["standard pace", "standard timer", "normal timer"])) {
+            return { intent: "set-pacing", value: "Standard", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["extended pace", "long timer", "more time"])) {
+            return { intent: "set-pacing", value: "Extended", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["confidence coach", "confidence mode"])) {
+            return { intent: "set-focus", value: "Confidence Coach", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["clarity coach", "clarity mode"])) {
+            return { intent: "set-focus", value: "Clarity Coach", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["professional coach", "professional mode"])) {
+            return { intent: "set-focus", value: "Professional Coach", source: "local" };
+        }
+
+        if (includesVoicePhrase(normalized, ["balanced coach", "balanced mode"])) {
+            return { intent: "set-focus", value: "Balanced Coach", source: "local" };
+        }
+
+        return null;
+    }
+
+    function shouldResumeVoiceConversation() {
+        const openingConversationListening = isOpeningConversationListening();
+
+        return Boolean(
+            state.voiceConversationEnabled
+            && state.selectedCategory
+            && getActiveQuestionCount() > 0
+            && !state.answerSubmitting
+            && !state.feedbackLoading
+            && !state.savingSession
+            && !state.questionAgentLoading
+            && (!isOpeningIntroductionBlockingQuestion() || openingConversationListening)
+            && !state.interviewerSpeechActive
+        );
+    }
+
+    function scheduleVoiceAutoSubmit() {
+        cancelVoiceAutoSubmit();
+
+        if (!state.voiceConversationEnabled || !state.recognitionActive) {
+            return;
+        }
+
+        state.voiceAutoSubmitTimeout = window.setTimeout(() => {
+            state.voiceAutoSubmitTimeout = null;
+            autoSubmitVoiceAnswer();
+        }, VOICE_AUTO_SUBMIT_DELAY_MS);
+    }
+
+    function pauseVoiceForInterviewer({ commitTranscript = false } = {}) {
+        cancelVoiceAutoSubmit();
+
+        if (!state.speechRecognition || !state.recognitionActive) {
+            return;
+        }
+
+        stopVoiceInput({
+            commitTranscript,
+            disableConversation: false,
+            quiet: true
+        });
+    }
+
+    function handleInterviewerQuestionSettled(result = {}) {
+        const status = String(result?.status || "ended");
+
+        state.interviewerSpeechActive = false;
+        cancelPendingQuestionSpeech();
+        updateSessionActionButtons();
+
+        if (["stopped", "superseded"].includes(status)) {
+            return;
+        }
+
+        if (!shouldResumeVoiceConversation()) {
+            return;
+        }
+
+        startVoiceInput({ automatic: true });
+    }
+
+    function askQuestionLikeConversation() {
+        cancelPendingQuestionSpeech();
+        state.interviewerSpeechActive = true;
+        pauseVoiceForInterviewer({ commitTranscript: false });
+        updateSessionActionButtons();
+
+        state.questionSpeechTimeout = window.setTimeout(() => {
+            state.questionSpeechTimeout = null;
+            const speechStarted = interviewerControls.askCurrentQuestion({
+                onSettled: handleInterviewerQuestionSettled
+            });
+
+            if (!speechStarted) {
+                handleInterviewerQuestionSettled({ status: "unavailable" });
+                return;
+            }
+
+            if (typeof speechStarted.then === "function") {
+                speechStarted.then((started) => {
+                    if (!started) {
+                        handleInterviewerQuestionSettled({ status: "unavailable" });
+                    }
+                }).catch((error) => {
+                    console.error(error);
+                    handleInterviewerQuestionSettled({ status: "error" });
+                });
+            }
+        }, 180);
+
+        return true;
+    }
+
+    function speakAssistantMessageLikeConversation(text, { resumeListening = true, label = "Interviewer responding" } = {}) {
+        const message = String(text || "").trim();
+
+        if (!message) {
+            if (resumeListening && shouldResumeVoiceConversation()) {
+                startVoiceInput({ automatic: true });
+            }
+
+            return false;
+        }
+
+        state.interviewerSpeechActive = true;
+        pauseVoiceForInterviewer({ commitTranscript: false });
+        elements.practiceLabelTag.textContent = label;
+        updateSessionActionButtons();
+
+        const settleAssistantMessage = (result = {}) => {
+            const status = String(result?.status || "ended");
+
+            state.interviewerSpeechActive = false;
+            updateSessionActionButtons();
+
+            if (["stopped", "superseded"].includes(status)) {
+                return;
+            }
+
+            if (resumeListening && shouldResumeVoiceConversation()) {
+                startVoiceInput({ automatic: true });
+            }
+        };
+
+        const speechStarted = interviewerControls.speakAssistantMessage({
+            text: message,
+            onSettled: settleAssistantMessage
+        });
+
+        if (!speechStarted) {
+            settleAssistantMessage({ status: "unavailable" });
+            return false;
+        }
+
+        if (typeof speechStarted.then === "function") {
+            speechStarted.then((started) => {
+                if (!started) {
+                    settleAssistantMessage({ status: "unavailable" });
+                }
+            }).catch((error) => {
+                console.error(error);
+                settleAssistantMessage({ status: "error" });
+            });
+        }
+
+        return true;
+    }
+
+    function beginPracticeRound({ speakQuestion = true, focusResponse = true } = {}) {
+        if (!state.selectedCategory) {
+            showMessage("warning", "Choose a category before entering practice.");
+            return false;
+        }
+
+        if (getActiveQuestionCount() === 0) {
+            showMessage("warning", "Generate a question set before entering practice.");
+            return false;
+        }
+
+        if (shouldDeliverInterviewerWelcome()) {
+            playOpeningIntroductionIfNeeded({
+                startQuestionAfter: speakQuestion,
+                focusResponse
+            });
+            return false;
+        }
+
+        if (isOpeningIntroductionBlockingQuestion()) {
+            queueFirstQuestionAfterOpening({ focusResponse });
+            return false;
+        }
+
+        if (!state.practiceStarted) {
+            state.practiceStarted = true;
+            startTimer({ reset: true });
+            elements.practiceLabelTag.textContent = "Prompt live";
+            updateSessionActionButtons();
+        }
+
+        clearMessage();
+
+        if (speakQuestion) {
+            askQuestionLikeConversation();
+        }
+
+        if (focusResponse) {
+            window.setTimeout(() => {
+                elements.responseInput.focus();
+            }, 0);
+        }
+
+        return true;
+    }
+
+    function autoStartCurrentQuestion({ focusResponse = true } = {}) {
+        return beginPracticeRound({ speakQuestion: true, focusResponse });
+    }
+
     function updateSessionActionButtons() {
         const hasActiveSession = Boolean(state.selectedCategory) && getActiveQuestionCount() > 0;
         const speechSupported = Boolean(state.speechRecognition);
+        const canStartPractice = hasActiveSession && !state.savingSession && !state.questionAgentLoading && !state.feedbackLoading;
+        const openingSpeechBlocking = isOpeningIntroductionBlockingQuestion();
+        const canControlQuestion = canStartPractice && !openingSpeechBlocking;
 
-        elements.startVoiceBtn.disabled = !speechSupported || !hasActiveSession || state.recognitionActive || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
-        elements.stopVoiceBtn.disabled = !speechSupported || !state.recognitionActive;
-        elements.submitAnswerBtn.disabled = !hasActiveSession || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
-        elements.nextQuestionBtn.disabled = !hasActiveSession || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
-        elements.endSessionBtn.disabled = !state.selectedCategory || state.savingSession || state.feedbackLoading;
+        if (elements.startPracticeBtn) {
+            elements.startPracticeBtn.disabled = !canControlQuestion;
+            elements.startPracticeBtn.textContent = openingSpeechBlocking
+                ? "Opening Introduction..."
+                : state.practiceStarted ? "Repeat Question" : "Interviewer Will Ask";
+        }
+
+        elements.startVoiceBtn.disabled = !speechSupported || !hasActiveSession || openingSpeechBlocking || state.recognitionActive || state.voiceConversationEnabled || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
+        elements.startVoiceBtn.textContent = state.recognitionActive
+            ? "Mic Live"
+            : state.voiceConversationEnabled ? "Mic Waiting" : "Mic On";
+        elements.stopVoiceBtn.disabled = !speechSupported || (!state.recognitionActive && !state.voiceConversationEnabled);
+        elements.submitAnswerBtn.disabled = !hasActiveSession || openingSpeechBlocking || state.answerSubmitting || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
+        elements.nextQuestionBtn.disabled = !hasActiveSession || openingSpeechBlocking || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
+        elements.endSessionBtn.disabled = !state.selectedCategory || state.answerSubmitting || state.savingSession || state.feedbackLoading;
+        if (elements.askQuestionAloudBtn) {
+            elements.askQuestionAloudBtn.disabled = !hasActiveSession || openingSpeechBlocking || state.answerSubmitting || state.savingSession || state.questionAgentLoading || state.feedbackLoading;
+            elements.askQuestionAloudBtn.textContent = openingSpeechBlocking ? "Opening Intro Playing" : "Repeat Question";
+        }
         if (elements.printFeedbackBtn) {
             elements.printFeedbackBtn.disabled = state.feedbackHistory.length === 0;
         }
@@ -1804,8 +2388,21 @@ export function initPractice() {
         }
     }
 
-    function stopVoiceInput({ commitTranscript = true } = {}) {
+    function stopVoiceInput({ commitTranscript = true, disableConversation = true, quiet = false } = {}) {
+        cancelVoiceAutoSubmit();
         cancelRecognitionRestart();
+        if (disableConversation) {
+            state.voiceConversationEnabled = false;
+            if (state.openingConversationActive && !state.openingConversationAcknowledging) {
+                state.openingConversationActive = false;
+                state.openingConversationFocusPending = false;
+                state.openingConversationReply = "";
+
+                if (!state.practiceStarted && state.selectedCategory && getActiveQuestionCount() > 0) {
+                    elements.practiceLabelTag.textContent = "Ready for the interviewer";
+                }
+            }
+        }
         state.recognitionShouldRestart = false;
 
         if (commitTranscript) {
@@ -1816,7 +2413,9 @@ export function initPractice() {
         }
 
         if (state.speechRecognition && state.recognitionActive) {
-            setVoiceStatus("Stopping voice input...", "processing");
+            if (!quiet) {
+                setVoiceStatus("Turning mic off...", "processing");
+            }
             updateSessionActionButtons();
             try {
                 state.speechRecognition.stop();
@@ -1824,12 +2423,14 @@ export function initPractice() {
                 console.error(error);
             }
         } else {
-            setVoiceStatus(
-                state.speechRecognition
-                    ? "Voice input is idle."
-                    : "Voice input is not supported in this browser. Use Chrome or Edge on localhost/HTTPS.",
-                state.speechRecognition ? "idle" : "warning"
-            );
+            if (!quiet) {
+                setVoiceStatus(
+                    state.speechRecognition
+                        ? "Mic is idle."
+                        : "Mic transcription is not supported in this browser. Use Chrome or Edge on localhost/HTTPS.",
+                    state.speechRecognition ? "idle" : "warning"
+                );
+            }
             updateSessionActionButtons();
         }
     }
@@ -1852,25 +2453,63 @@ export function initPractice() {
         syncCurrentMode();
     }
 
-    function startVoiceInput() {
+    function startVoiceInput({ automatic = false } = {}) {
+        const openingConversationListening = isOpeningConversationListening();
+
         if (!state.selectedCategory) {
-            showMessage("warning", "Choose a category before starting voice input.");
+            if (!automatic) {
+                showMessage("warning", "Choose a category before turning on the mic.");
+            }
             return;
         }
 
         if (getActiveQuestionCount() === 0) {
-            showMessage("warning", "Generate a question set before starting voice input.");
+            if (!automatic) {
+                showMessage("warning", "Generate a question set before turning on the mic.");
+            }
             return;
         }
 
         if (!state.speechRecognition) {
-            showMessage("warning", "Voice input is not supported in this browser.");
+            if (!automatic) {
+                showMessage("warning", "Mic transcription is not supported in this browser.");
+            }
+            return;
+        }
+
+        state.voiceConversationEnabled = true;
+
+        if (state.interviewerSpeechActive || (isOpeningIntroductionBlockingQuestion() && !openingConversationListening)) {
+            setVoiceStatus("Mic will listen after the interviewer finishes speaking.", "processing");
+            updateSessionActionButtons();
+            return;
+        }
+
+        if (state.feedbackLoading || state.savingSession || state.answerSubmitting || state.questionAgentLoading) {
+            setVoiceStatus("Mic will listen when the interviewer is ready.", "processing");
+            updateSessionActionButtons();
             return;
         }
 
         if (state.recognitionActive) {
-            showMessage("info", "Voice input is already active.");
+            if (!automatic) {
+                showMessage("info", "Mic is already active.");
+            }
             return;
+        }
+
+        if (!state.practiceStarted && !openingConversationListening) {
+            const practiceReady = beginPracticeRound({ speakQuestion: true, focusResponse: false });
+
+            if (!practiceReady) {
+                return;
+            }
+
+            if (state.interviewerSpeechActive) {
+                setVoiceStatus("Mic will listen after the interviewer finishes speaking.", "processing");
+                updateSessionActionButtons();
+                return;
+            }
         }
 
         cancelRecognitionRestart();
@@ -1878,7 +2517,12 @@ export function initPractice() {
         state.recognitionBaseText = elements.responseInput.value.trim();
         state.recognitionInterimText = "";
         state.manualInputUsed = Boolean(state.recognitionBaseText);
-        setVoiceStatus("Requesting microphone access...", "processing");
+        setVoiceStatus(
+            automatic
+                ? openingConversationListening ? "Mic is listening for your greeting..." : "Mic is listening for your answer..."
+                : "Requesting microphone access...",
+            "processing"
+        );
         updateSessionActionButtons();
         clearMessage();
 
@@ -1889,15 +2533,15 @@ export function initPractice() {
             updateSessionActionButtons();
 
             if (error?.name === "InvalidStateError") {
-                setVoiceStatus("Voice input is already starting...", "processing");
+                setVoiceStatus("Mic is already turning on...", "processing");
                 return;
             }
 
             console.error(error);
-            setVoiceStatus("Voice input could not start.", "error");
+            setVoiceStatus("Mic could not turn on.", "error");
             showMessage(
                 "error",
-                "Voice input could not start. Use Chrome or Edge on localhost/HTTPS and allow microphone access."
+                "Mic transcription could not turn on. Use Chrome or Edge on localhost/HTTPS and allow microphone access."
             );
         }
     }
@@ -1912,7 +2556,7 @@ export function initPractice() {
             "service-not-allowed": "This browser blocked the speech-recognition service for this page."
         };
 
-        return messages[errorCode] || "Voice input encountered an error. Please try again.";
+        return messages[errorCode] || "Mic transcription encountered an error. Please try again.";
     }
 
     function getQuestionAgentToneClasses() {
@@ -1930,6 +2574,196 @@ export function initPractice() {
 
     function getActiveQuestion() {
         return state.activeQuestions[state.questionIndex] || "";
+    }
+
+    function shouldDeliverInterviewerWelcome() {
+        return state.questionIndex === 0 && !state.welcomeDelivered && getActiveQuestionCount() > 0;
+    }
+
+    function isOpeningConversationListening() {
+        return Boolean(
+            state.questionIndex === 0
+            && state.openingConversationActive
+            && !state.openingConversationAcknowledging
+        );
+    }
+
+    function isOpeningIntroductionBlockingQuestion() {
+        return Boolean(
+            state.questionIndex === 0
+            && (
+                state.openingIntroductionSpeaking
+                || state.openingConversationActive
+                || state.openingConversationAcknowledging
+            )
+        );
+    }
+
+    function shouldStartOpeningConversation() {
+        return Boolean(
+            state.questionIndex === 0
+            && !state.practiceStarted
+            && !state.openingConversationCompleted
+            && state.voiceConversationEnabled
+            && state.speechRecognition
+        );
+    }
+
+    function queueFirstQuestionAfterOpening({ focusResponse = true } = {}) {
+        if (!state.selectedCategory || getActiveQuestionCount() === 0 || state.questionIndex !== 0) {
+            return false;
+        }
+
+        state.openingIntroductionQuestionPending = true;
+        state.openingIntroductionFocusPending = state.openingIntroductionFocusPending || Boolean(focusResponse);
+        elements.practiceLabelTag.textContent = state.openingConversationActive
+            ? "Opening conversation live"
+            : "Opening introduction live";
+        showMessage(
+            "info",
+            state.openingConversationActive
+                ? "The interviewer is finishing the quick greeting. The first question will follow automatically."
+                : "The opening introduction is still speaking. The first question will follow automatically after it finishes."
+        );
+        updateSessionActionButtons();
+
+        return true;
+    }
+
+    function startOpeningConversationListening({ focusResponse = true } = {}) {
+        state.openingConversationActive = true;
+        state.openingConversationAcknowledging = false;
+        state.openingConversationCompleted = false;
+        state.openingConversationFocusPending = Boolean(focusResponse);
+        state.openingConversationReply = "";
+        elements.responseInput.value = "";
+        resetRecognitionDraft();
+        elements.practiceLabelTag.textContent = "Opening conversation";
+        showMessage("info", "Answer the greeting naturally. The first interview question will follow automatically.");
+        setVoiceStatus("Mic is ready for your quick greeting.", "processing");
+        updateSessionActionButtons();
+        startVoiceInput({ automatic: true });
+    }
+
+    function finishOpeningIntroduction(result = {}) {
+        const status = String(result?.status || "ended");
+        const introductionWasHeard = status === "ended";
+        const canContinueAfterFallback = ["empty", "error", "unavailable"].includes(status);
+        const shouldStartQuestion = state.openingIntroductionQuestionPending
+            && (introductionWasHeard || canContinueAfterFallback)
+            && isPracticeModalOpen()
+            && Boolean(state.selectedCategory)
+            && getActiveQuestionCount() > 0
+            && state.questionIndex === 0
+            && !state.questionAgentLoading
+            && !state.feedbackLoading;
+        const focusResponse = state.openingIntroductionFocusPending;
+
+        state.openingIntroductionSpeaking = false;
+        state.interviewerSpeechActive = false;
+        state.openingIntroductionQuestionPending = false;
+        state.openingIntroductionFocusPending = false;
+        state.welcomeDelivered = introductionWasHeard || (canContinueAfterFallback && shouldStartQuestion);
+        updateSessionActionButtons();
+
+        if (shouldStartQuestion) {
+            if (introductionWasHeard && shouldStartOpeningConversation()) {
+                startOpeningConversationListening({ focusResponse });
+                return;
+            }
+
+            if (introductionWasHeard) {
+                clearMessage();
+            } else {
+                showMessage("warning", "The opening voice could not play, so the interviewer is moving straight to the first question.");
+            }
+
+            autoStartCurrentQuestion({ focusResponse });
+            return;
+        }
+
+        if (!state.practiceStarted && state.selectedCategory && getActiveQuestionCount() > 0) {
+            elements.practiceLabelTag.textContent = "Ready for the interviewer";
+        }
+
+        if (["empty", "error", "unavailable"].includes(status)) {
+            showMessage("warning", "The opening voice could not play. The first question is ready on screen.");
+        }
+    }
+
+    function playOpeningIntroductionIfNeeded({ startQuestionAfter = false, focusResponse = false } = {}) {
+        if (state.openingIntroductionSpeaking) {
+            if (startQuestionAfter) {
+                queueFirstQuestionAfterOpening({ focusResponse });
+            }
+
+            return true;
+        }
+
+        if (!shouldDeliverInterviewerWelcome() || !isPracticeModalOpen()) {
+            return false;
+        }
+
+        state.openingIntroductionSpeaking = true;
+        state.interviewerSpeechActive = true;
+        state.openingIntroductionQuestionPending = Boolean(startQuestionAfter);
+        state.openingIntroductionFocusPending = Boolean(focusResponse);
+        elements.practiceLabelTag.textContent = "Opening introduction live";
+        pauseVoiceForInterviewer({ commitTranscript: false });
+        updateSessionActionButtons();
+        interviewerControls.playOpeningIntroduction({
+            onSettled: finishOpeningIntroduction
+        });
+
+        return true;
+    }
+
+    function getInterviewerWelcomeDeliveryCue() {
+        const focusLabel = String(getSelectedFocusMode()?.label || "");
+
+        switch (focusLabel) {
+            case "Confidence Coach":
+                return "speak with calm confidence";
+            case "Clarity Coach":
+                return "keep your answer clear and well structured";
+            case "Professional Coach":
+                return "keep your answer polished and professional";
+            default:
+                return "keep your answer clear and relevant";
+        }
+    }
+
+    function buildInterviewerWelcomeLead() {
+        const categoryName = String(state.selectedCategory?.name || "interview practice").trim();
+        const fieldTitle = getSelectedFieldTitle();
+        const totalQuestions = getActiveQuestionCount();
+        const questionLabel = totalQuestions === 1 ? "question" : "questions";
+        const sessionContext = fieldTitle
+            ? `Today we will focus on ${fieldTitle} in the ${categoryName} track.`
+            : `Today we will focus on the ${categoryName} track.`;
+
+        return [
+            "Good day, and thank you for joining this practice interview.",
+            sessionContext,
+            `I will guide you through ${Math.max(totalQuestions, 1)} ${questionLabel}, one at a time.`,
+            "Before we begin, tell me briefly how you are feeling today. If you are a little nervous, that is completely normal.",
+            `Take a breath, answer naturally, and ${getInterviewerWelcomeDeliveryCue()}.`,
+            state.speechRecognition
+                ? "After your short reply, I will start the first question."
+                : "After this opening, I will begin with the first question."
+        ].join(" ");
+    }
+
+    function buildSpokenQuestionPrompt(question) {
+        const normalizedQuestion = String(question || "").trim();
+
+        if (!normalizedQuestion) {
+            return "";
+        }
+
+        return state.questionIndex === 0
+            ? `First question. ${normalizedQuestion}`
+            : normalizedQuestion;
     }
 
     function getQuestionAgentProviderById(providerId = "") {
@@ -2188,8 +3022,12 @@ export function initPractice() {
     }
 
     function resetSessionProgress() {
+        cancelAutoAdvance();
+        cancelPendingQuestionSpeech();
         stopTimer();
         stopVoiceInput({ commitTranscript: false });
+        interviewerControls.stopSpeaking();
+        state.practiceStarted = false;
         state.sessionId = createSessionId();
         state.questionIndex = 0;
         state.activeQuestions = [];
@@ -2199,6 +3037,15 @@ export function initPractice() {
         state.sessionStartedAt = new Date().toISOString();
         state.sessionSaved = false;
         state.feedbackLoading = false;
+        state.welcomeDelivered = false;
+        state.openingIntroductionSpeaking = false;
+        state.openingIntroductionQuestionPending = false;
+        state.openingIntroductionFocusPending = false;
+        state.openingConversationActive = false;
+        state.openingConversationAcknowledging = false;
+        state.openingConversationCompleted = false;
+        state.openingConversationFocusPending = false;
+        state.openingConversationReply = "";
         elements.responseInput.value = "";
         elements.questionTimerValue.textContent = "00:00";
         resetRecognitionDraft();
@@ -2242,7 +3089,7 @@ export function initPractice() {
         loadCurrentQuestion();
     }
 
-    async function generateQuestionSet(instruction = "") {
+    async function generateQuestionSet(instruction = "", { keepVoiceConversation = false } = {}) {
         if (!state.selectedCategory || state.questionAgentLoading) {
             return;
         }
@@ -2263,6 +3110,10 @@ export function initPractice() {
         setQuestionAgentStatus("Generating", "warning");
         syncQuestionAgentControls();
         resetSessionProgress();
+        if (keepVoiceConversation && state.speechRecognition) {
+            state.voiceConversationEnabled = true;
+            setVoiceStatus("Mic will continue after the new questions are ready.", "processing");
+        }
         state.learningActivityContext = learningActivityContext;
         showQuestionSetLoadingState(category);
         updateTipsPanel();
@@ -2307,12 +3158,18 @@ export function initPractice() {
             syncQuestionAgentControls();
             updateTipsPanel();
             updateSessionActionButtons();
-            openPracticeModal({ focusResponse: true });
+            if (isQuestionAgentModalOpen()) {
+                closeQuestionAgentModal({ returnFocus: false });
+            }
+            openPracticeModal({
+                focusResponse: true,
+                playOpening: true
+            });
             showMessage(
                 hasExistingProgress ? "info" : "success",
                 hasExistingProgress
-                    ? "A new AI question set is ready. The previous question progress was reset for this fresh run."
-                    : "Your AI-generated question set is ready."
+                    ? "A new AI question set is ready. The interviewer will continue automatically."
+                    : "Your AI-generated question set is ready. The interviewer will ask the first question automatically."
             );
         } catch (error) {
             if (requestId !== state.questionAgentRequestId || state.selectedCategory?.id !== category.id) {
@@ -2356,7 +3213,7 @@ export function initPractice() {
             ? getActiveQuestionCount() > 0
                 ? selectedFocus.tip
                 : `${selectedFocus.tip} Your AI question set is still being prepared.`
-            : `${selectedFocus.tip} Choose a track from the sidebar to begin practicing.`;
+            : `${selectedFocus.tip} Choose a track from the sidebar to enter live practice.`;
     }
 
     function updateSelectedCategoryButtons() {
@@ -2409,23 +3266,35 @@ export function initPractice() {
 
         const question = getActiveQuestion();
 
-        stopVoiceInput({ commitTranscript: false });
+        cancelAutoAdvance();
+        cancelPendingQuestionSpeech();
+        interviewerControls.stopSpeaking();
+        stopVoiceInput({
+            commitTranscript: false,
+            disableConversation: false,
+            quiet: state.voiceConversationEnabled
+        });
+        stopTimer();
         resetRecognitionDraft();
+        state.practiceStarted = false;
+        state.timerSeconds = 0;
+        state.timerAlertShown = false;
+        state.timerPaused = false;
 
         elements.currentQuestionText.textContent = question;
+        elements.questionTimerValue.textContent = "00:00";
         updateFocusModeDisplay();
         elements.selectedCategoryName.textContent = state.selectedCategory.name;
         elements.selectedCategoryDescription.textContent = state.questionSetSummary;
         elements.practiceStatusTag.textContent = "Session active";
         elements.practiceStatusTag.className = "inline-flex items-center rounded-full bg-success-100 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-300";
-        elements.practiceLabelTag.textContent = "Ready for answer";
+        elements.practiceLabelTag.textContent = "Interviewer ready";
         elements.selectedPracticeFieldTag.textContent = getSelectedFieldTitle() ? `Field: ${getSelectedFieldTitle()}` : "Field not set";
 
         renderKeywords(state.selectedCategory.keywords);
         updateQuestionProgress();
         elements.responseInput.value = "";
         clearMessage();
-        startTimer();
         updateTipsPanel();
         updateSessionActionButtons();
     }
@@ -2908,34 +3777,549 @@ export function initPractice() {
         `;
     }
 
-    async function submitAnswer() {
+    function continueInterviewAfterAnswer({ saved = true } = {}) {
+        cancelAutoAdvance();
+        cancelVoiceAutoSubmit();
+
+        if (!state.selectedCategory || getActiveQuestionCount() === 0) {
+            return;
+        }
+
+        if (state.questionIndex + 1 >= getActiveQuestionCount()) {
+            state.voiceConversationEnabled = false;
+            state.recognitionShouldRestart = false;
+            state.practiceStarted = false;
+            stopTimer();
+            elements.practiceLabelTag.textContent = "Interview complete";
+            updateSessionActionButtons();
+            showMessage(
+                saved ? "success" : "warning",
+                saved
+                    ? "That was the final answer. The interview is complete and saved to Progress."
+                    : "That was the final answer. The interview is complete, but saving to Progress needs another try."
+            );
+            return;
+        }
+
+        elements.practiceLabelTag.textContent = "Interviewer preparing follow-up";
+        updateSessionActionButtons();
+        showMessage(
+            saved ? "success" : "warning",
+            saved
+                ? "Answer saved. The interviewer will ask the next question automatically."
+                : "Answer evaluated. Saving had an issue, but the interviewer will continue automatically."
+        );
+
+        state.autoAdvanceTimeout = window.setTimeout(() => {
+            state.autoAdvanceTimeout = null;
+            nextQuestion({ automatic: true });
+        }, 1200);
+    }
+
+    function buildOpeningConversationAcknowledgement(reply) {
+        const normalized = String(reply || "").toLowerCase();
+
+        if (/\b(nervous|anxious|worried|scared|stress|stressed|afraid)\b/.test(normalized)) {
+            return "Thank you for being honest. A little nervousness is normal in an interview. Take one calm breath, and we will go one question at a time. I will start the interview now.";
+        }
+
+        if (/\b(good|great|fine|ready|confident|excited|prepared)\b/.test(normalized)) {
+            return "Good, I like that energy. Keep the same natural tone, stay focused, and answer like we are having a real conversation. I will start the interview now.";
+        }
+
+        if (/\b(tired|sick|not well|sleepy|exhausted)\b/.test(normalized)) {
+            return "Thanks for letting me know. Keep your pace steady, take your time, and focus on one clear answer at a time. I will start the interview now.";
+        }
+
+        return "Thank you for sharing. Let us keep this calm and conversational, just like a real interview. I will start the interview now.";
+    }
+
+    function finishOpeningConversationAcknowledgement(result = {}) {
+        const status = String(result?.status || "ended");
+        const focusResponse = state.openingConversationFocusPending;
+
+        state.interviewerSpeechActive = false;
+        state.openingConversationActive = false;
+        state.openingConversationAcknowledging = false;
+        state.openingConversationCompleted = true;
+        state.openingConversationFocusPending = false;
+        updateSessionActionButtons();
+
+        if (["stopped", "superseded"].includes(status)) {
+            return;
+        }
+
+        if (!isPracticeModalOpen() || !state.selectedCategory || getActiveQuestionCount() === 0 || state.questionIndex !== 0) {
+            return;
+        }
+
+        if (["empty", "error", "unavailable"].includes(status)) {
+            showMessage("warning", "The greeting response could not play, so the interviewer is starting the first question.");
+        } else {
+            clearMessage();
+        }
+
+        autoStartCurrentQuestion({ focusResponse });
+    }
+
+    function submitOpeningConversationReply() {
+        if (!isOpeningConversationListening()) {
+            return;
+        }
+
+        commitRecognitionInterimText();
+
+        const reply = getResponseText();
+
+        if (!isVoiceAutoSubmitReady(reply)) {
+            setVoiceStatus("Say a quick greeting or tell the interviewer how you feel.", "listening");
+            return;
+        }
+
+        const acknowledgement = buildOpeningConversationAcknowledgement(reply);
+
+        state.openingConversationReply = reply;
+        state.openingConversationActive = false;
+        state.openingConversationAcknowledging = true;
+        state.openingConversationCompleted = true;
+        state.interviewerSpeechActive = true;
+
+        stopVoiceInput({
+            commitTranscript: true,
+            disableConversation: false,
+            quiet: true
+        });
+        elements.responseInput.value = "";
+        resetRecognitionDraft();
+        elements.practiceLabelTag.textContent = "Interviewer responding";
+        showMessage("info", "The interviewer is responding to your greeting, then the first question will begin.");
+        setVoiceStatus("Interviewer is responding to your greeting.", "processing");
+        updateSessionActionButtons();
+
+        const speechStarted = interviewerControls.speakOpeningAcknowledgement({
+            text: acknowledgement,
+            onSettled: finishOpeningConversationAcknowledgement
+        });
+
+        if (!speechStarted) {
+            finishOpeningConversationAcknowledgement({ status: "unavailable" });
+            return;
+        }
+
+        if (typeof speechStarted.then === "function") {
+            speechStarted.then((started) => {
+                if (!started) {
+                    finishOpeningConversationAcknowledgement({ status: "unavailable" });
+                }
+            }).catch((error) => {
+                console.error(error);
+                finishOpeningConversationAcknowledgement({ status: "error" });
+            });
+        }
+    }
+
+    function stripTrailingSubmitCommandFromResponse(value) {
+        return String(value || "")
+            .replace(/\s*(?:that is my answer|that's my answer|thats my answer|that is all|that's all|thats all|send my answer|send the answer|submit my answer|submit the answer|save my answer|done answering|i am done|i'm done|im done|finished answering)\s*\.?$/i, "")
+            .trim();
+    }
+
+    function prepareVoiceCommandExecution({ keepConversation = true, clearDraft = true } = {}) {
+        cancelVoiceAutoSubmit();
+        stopVoiceInput({
+            commitTranscript: false,
+            disableConversation: !keepConversation,
+            quiet: true
+        });
+
+        if (keepConversation) {
+            state.voiceConversationEnabled = true;
+        }
+
+        if (clearDraft) {
+            elements.responseInput.value = "";
+            resetRecognitionDraft();
+        }
+
+        updateSessionActionButtons();
+    }
+
+    function setPacingModeByLabel(label) {
+        const index = practiceData.pacingModes.findIndex((mode) => mode.label === label);
+
+        if (index < 0) {
+            return null;
+        }
+
+        elements.pacingModeSelect.value = String(index);
+
+        const selectedPacing = getSelectedPacingMode();
+
+        state.timerTarget = selectedPacing.seconds;
+        elements.timerTargetValue.textContent = formatTime(state.timerTarget);
+        updateTipsPanel();
+
+        return selectedPacing;
+    }
+
+    function setFocusModeByLabel(label) {
+        const index = practiceData.focusModes.findIndex((mode) => mode.label === label);
+
+        if (index < 0) {
+            return null;
+        }
+
+        elements.focusModeSelect.value = String(index);
+        updateFocusModeDisplay();
+        updateTipsPanel();
+
+        return getSelectedFocusMode();
+    }
+
+    function buildTimeCheckMessage() {
+        const elapsed = formatTime(state.timerSeconds);
+        const target = formatTime(state.timerTarget);
+
+        return `Time check. You are at ${elapsed} out of the ${target} target for this answer.`;
+    }
+
+    function buildProgressCheckMessage() {
+        const totalQuestions = Math.max(getActiveQuestionCount(), 1);
+        const currentQuestion = Math.min(state.questionIndex + 1, totalQuestions);
+        const answered = state.answeredCount;
+
+        return `Progress check. You are on question ${currentQuestion} of ${totalQuestions}, with ${answered} ${answered === 1 ? "answer" : "answers"} reviewed.`;
+    }
+
+    function buildLocalCoachAdviceMessage() {
+        const question = getActiveQuestion();
+        const focus = getSelectedFocusMode();
+
+        return [
+            question ? `For this question, answer directly first: ${question}` : "Use a direct opening sentence first.",
+            "Then add one specific example, the action you took, and the result.",
+            focus?.tip ? `Coach reminder: ${focus.tip}` : "Keep it clear, natural, and professional."
+        ].join(" ");
+    }
+
+    function limitSpokenCoachReply(value) {
+        const reply = String(value || "").replace(/\s+/g, " ").trim();
+
+        if (reply.length <= 700) {
+            return reply;
+        }
+
+        return `${reply.slice(0, 680).trim()}...`;
+    }
+
+    async function requestCoachAdviceForCommand(sourceText) {
+        const question = getActiveQuestion();
+        const message = [
+            "The user gave a spoken interview command and wants immediate coaching during a live mock interview.",
+            sourceText ? `User command: ${sourceText}` : "",
+            question ? `Current question: ${question}` : "",
+            "Reply briefly in a natural interviewer voice. Give practical guidance only; do not score the answer."
+        ].filter(Boolean).join("\n");
+
+        try {
+            const payload = await requestWorkspace("chatbot", {
+                method: "POST",
+                body: {
+                    message,
+                    mode: "chat",
+                    providerId: state.questionAgentSelectedProviderId,
+                    categoryId: state.selectedCategory?.id || null,
+                    currentQuestion: question,
+                    answerDraft: getResponseText(),
+                    history: state.questionAgentHistory.slice(-6)
+                }
+            });
+
+            applyQuestionAgentProviderCatalog(payload.availableProviders, payload.requestedProviderId || state.questionAgentSelectedProviderId);
+            state.questionAgentResolvedProviderLabel = String(payload.provider || state.questionAgentResolvedProviderLabel || "");
+
+            return limitSpokenCoachReply(payload.reply || buildLocalCoachAdviceMessage());
+        } catch (error) {
+            console.error(error);
+
+            return buildLocalCoachAdviceMessage();
+        }
+    }
+
+    async function handleVoiceConversationCommand(command, { sourceText = "" } = {}) {
+        if (!command?.intent) {
+            return false;
+        }
+
+        switch (command.intent) {
+            case "repeat-question":
+                prepareVoiceCommandExecution();
+                setVoiceStatus("Repeating the question, then I will listen again.", "processing");
+                showMessage("info", "Repeating the current question.");
+                askQuestionLikeConversation();
+                return true;
+
+            case "command-help":
+                prepareVoiceCommandExecution();
+                showMessage("info", VOICE_COMMAND_HELP_TEXT);
+                speakAssistantMessageLikeConversation(VOICE_COMMAND_HELP_TEXT);
+                return true;
+
+            case "pause-interview":
+                prepareVoiceCommandExecution({ keepConversation: false });
+                cancelAutoAdvance();
+                pauseTimer();
+                interviewerControls.stopSpeaking();
+                elements.practiceLabelTag.textContent = "Interview paused";
+                showMessage("info", "Interview paused. Turn Mic On or say continue after turning the mic back on.");
+                speakAssistantMessageLikeConversation("Paused. Turn Mic On when you are ready to continue.", { resumeListening: false });
+                return true;
+
+            case "resume-interview":
+                prepareVoiceCommandExecution();
+                resumeTimerIfNeeded();
+
+                if (!state.practiceStarted) {
+                    beginPracticeRound({ speakQuestion: true, focusResponse: true });
+                } else {
+                    showMessage("info", "Continuing the interview.");
+                    askQuestionLikeConversation();
+                }
+                return true;
+
+            case "next-question":
+                prepareVoiceCommandExecution();
+                showMessage("info", "Moving to the next question.");
+                nextQuestion({ automatic: true });
+                return true;
+
+            case "submit-answer": {
+                cancelVoiceAutoSubmit();
+                stopVoiceInput({
+                    commitTranscript: true,
+                    disableConversation: false,
+                    quiet: true
+                });
+                state.voiceConversationEnabled = true;
+
+                const cleanedAnswer = stripTrailingSubmitCommandFromResponse(sourceText);
+
+                if (cleanedAnswer && cleanedAnswer !== sourceText.trim()) {
+                    elements.responseInput.value = cleanedAnswer;
+                    resetRecognitionDraft(cleanedAnswer);
+                }
+
+                if (!isVoiceAutoSubmitReady(getResponseText())) {
+                    setVoiceStatus("I need a little more answer before I can submit it.", "warning");
+                    showMessage("warning", "Give a short answer first, then say send answer.");
+                    startVoiceInput({ automatic: true });
+                    return true;
+                }
+
+                submitAnswer({ automatic: true });
+                return true;
+            }
+
+            case "end-interview":
+                prepareVoiceCommandExecution({ keepConversation: false });
+                await endSession();
+                return true;
+
+            case "mic-off":
+                prepareVoiceCommandExecution({ keepConversation: false });
+                setVoiceStatus("Mic is off.", "idle");
+                showMessage("info", "Mic is off. Use Mic On when you want to continue.");
+                return true;
+
+            case "mic-on":
+                prepareVoiceCommandExecution({ clearDraft: true });
+                startVoiceInput({ automatic: true });
+                return true;
+
+            case "camera-on":
+                prepareVoiceCommandExecution();
+                await interviewerControls.startCamera();
+                showMessage("info", "Camera command received.");
+                speakAssistantMessageLikeConversation("Camera command received. Continue when you are ready.");
+                return true;
+
+            case "camera-off":
+                prepareVoiceCommandExecution();
+                interviewerControls.stopCamera();
+                showMessage("info", "Camera is off.");
+                speakAssistantMessageLikeConversation("Camera is off. I will keep listening by mic.");
+                return true;
+
+            case "clear-answer":
+                prepareVoiceCommandExecution();
+                showMessage("info", "Answer cleared. Start again when ready.");
+                speakAssistantMessageLikeConversation("I cleared your answer. Start again when you are ready.");
+                return true;
+
+            case "answer-outline":
+                prepareVoiceCommandExecution();
+                applyLearningAction("load-outline");
+                speakAssistantMessageLikeConversation("I added an answer outline. Use it as a guide, then speak naturally.");
+                return true;
+
+            case "coach-advice": {
+                prepareVoiceCommandExecution();
+                setVoiceStatus("Asking the coach for quick guidance...", "processing");
+                const advice = await requestCoachAdviceForCommand(sourceText);
+
+                showMessage("info", advice);
+                speakAssistantMessageLikeConversation(advice);
+                return true;
+            }
+
+            case "regenerate-questions":
+                prepareVoiceCommandExecution();
+                setVoiceStatus("Generating a fresh question set...", "processing");
+                showMessage("info", "Generating a fresh question set from your voice command.");
+                await generateQuestionSet("Generate a fresh replacement question set because the user asked by voice command.", {
+                    keepVoiceConversation: true
+                });
+                return true;
+
+            case "time-check": {
+                prepareVoiceCommandExecution();
+                const message = buildTimeCheckMessage();
+
+                showMessage("info", message);
+                speakAssistantMessageLikeConversation(message);
+                return true;
+            }
+
+            case "progress-check": {
+                prepareVoiceCommandExecution();
+                const message = buildProgressCheckMessage();
+
+                showMessage("info", message);
+                speakAssistantMessageLikeConversation(message);
+                return true;
+            }
+
+            case "speech-slower":
+                prepareVoiceCommandExecution();
+                state.interviewerSpeechRate = Math.max(0.82, state.interviewerSpeechRate - 0.12);
+                showMessage("info", "Interviewer browser voice speed set slower.");
+                speakAssistantMessageLikeConversation("Okay, I will speak a little slower when browser voice is used.");
+                return true;
+
+            case "speech-faster":
+                prepareVoiceCommandExecution();
+                state.interviewerSpeechRate = Math.min(1.18, state.interviewerSpeechRate + 0.12);
+                showMessage("info", "Interviewer browser voice speed set faster.");
+                speakAssistantMessageLikeConversation("Okay, I will speak a little faster when browser voice is used.");
+                return true;
+
+            case "speech-normal":
+                prepareVoiceCommandExecution();
+                state.interviewerSpeechRate = 1;
+                showMessage("info", "Interviewer browser voice speed reset.");
+                speakAssistantMessageLikeConversation("Okay, I will return to a normal speaking speed.");
+                return true;
+
+            case "set-pacing": {
+                prepareVoiceCommandExecution();
+                const pacing = setPacingModeByLabel(command.value);
+                const message = pacing
+                    ? `Pacing updated to ${pacing.label}. Your answer target is ${formatTime(pacing.seconds)}.`
+                    : "I could not find that pacing mode.";
+
+                showMessage(pacing ? "info" : "warning", message);
+                speakAssistantMessageLikeConversation(message);
+                return true;
+            }
+
+            case "set-focus": {
+                prepareVoiceCommandExecution();
+                const focus = setFocusModeByLabel(command.value);
+                const message = focus
+                    ? `Coach focus updated to ${focus.label}. ${focus.tip}`
+                    : "I could not find that coach focus.";
+
+                showMessage(focus ? "info" : "warning", message);
+                speakAssistantMessageLikeConversation(message);
+                return true;
+            }
+
+            default:
+                return false;
+        }
+    }
+
+    async function autoSubmitVoiceAnswer() {
+        if (!shouldResumeVoiceConversation() || state.answerSubmitting) {
+            return;
+        }
+
+        commitRecognitionInterimText();
+
+        if (isOpeningConversationListening()) {
+            submitOpeningConversationReply();
+            return;
+        }
+
+        const answer = getResponseText();
+        const command = detectVoiceConversationCommand(answer);
+
+        if (command && await handleVoiceConversationCommand(command, { sourceText: answer })) {
+            return;
+        }
+
+        if (!isVoiceAutoSubmitReady(answer)) {
+            setVoiceStatus("Keep speaking. I will send your answer after a short pause.", "listening");
+            return;
+        }
+
+        submitAnswer({ automatic: true });
+    }
+
+    async function submitAnswer({ automatic = false } = {}) {
+        if (state.answerSubmitting) {
+            return;
+        }
+
         if (!state.selectedCategory) {
-            showMessage("warning", "Choose a category before submitting an answer.");
+            if (!automatic) {
+                showMessage("warning", "Choose a category before submitting an answer.");
+            }
             return;
         }
 
         if (getActiveQuestionCount() === 0) {
-            showMessage("warning", "Generate a question set first before submitting an answer.");
+            if (!automatic) {
+                showMessage("warning", "Generate a question set first before submitting an answer.");
+            }
             return;
         }
 
         if (state.recognitionActive) {
-            stopVoiceInput();
+            stopVoiceInput({
+                disableConversation: false,
+                quiet: automatic
+            });
         }
 
-        const answer = elements.responseInput.value.trim();
+        const answer = getResponseText();
         const activeQuestion = getActiveQuestion();
 
         if (!activeQuestion) {
-            showMessage("warning", "There is no active interview question yet.");
+            if (!automatic) {
+                showMessage("warning", "There is no active interview question yet.");
+            }
             return;
         }
 
         if (!answer) {
-            showMessage("error", "Blank answers are not accepted. Please type or record your response.");
+            if (!automatic) {
+                showMessage("error", "Blank answers are not accepted. Please type or record your response.");
+            }
             return;
         }
 
+        state.answerSubmitting = true;
         stopTimer();
 
         const scoreData = calculateScore(answer, state.selectedCategory.keywords);
@@ -3021,16 +4405,23 @@ export function initPractice() {
         updateSessionActionButtons();
         elements.practiceLabelTag.textContent = "Answer evaluated";
 
+        let answerWasSaved = false;
+
         try {
             await persistSessionIfNeeded();
+            answerWasSaved = true;
             showMessage("success", `${feedbackMessage}${buildLearningActivityScoreMessage(scoreData.average)}`);
         } catch (error) {
             console.error(error);
             showMessage("warning", `Your answer was evaluated, but it could not be saved to the database.${buildLearningActivityScoreMessage(scoreData.average)}`);
         }
+
+        continueInterviewAfterAnswer({ saved: answerWasSaved });
+        state.answerSubmitting = false;
+        updateSessionActionButtons();
     }
 
-    function nextQuestion() {
+    function nextQuestion({ automatic = false } = {}) {
         if (!state.selectedCategory) {
             showMessage("warning", "Please choose a category first.");
             return;
@@ -3041,11 +4432,23 @@ export function initPractice() {
             return;
         }
 
-        stopVoiceInput({ commitTranscript: false });
+        if (isOpeningIntroductionBlockingQuestion()) {
+            queueFirstQuestionAfterOpening({ focusResponse: true });
+            return;
+        }
+
+        stopVoiceInput({
+            commitTranscript: false,
+            disableConversation: false,
+            quiet: state.voiceConversationEnabled
+        });
 
         if (state.questionIndex + 1 >= getActiveQuestionCount()) {
-            showMessage("info", "You have reached the end of this session. Click End Session to save it to Progress.");
+            showMessage("info", automatic
+                ? "The interview has reached the final question."
+                : "You have reached the end of this session.");
             elements.practiceLabelTag.textContent = "Session complete";
+            state.practiceStarted = false;
             stopTimer();
             updateSessionActionButtons();
             return;
@@ -3053,11 +4456,14 @@ export function initPractice() {
 
         state.questionIndex += 1;
         loadCurrentQuestion();
+        autoStartCurrentQuestion();
     }
 
     async function endSession() {
         state.questionAgentRequestId += 1;
         state.questionAgentLoading = false;
+        cancelAutoAdvance();
+        cancelPendingQuestionSpeech();
         stopVoiceInput();
         stopTimer();
         interviewerControls.stopSpeaking();
@@ -3075,7 +4481,7 @@ export function initPractice() {
             return;
         }
 
-        elements.selectedCategoryName.textContent = "Select a track to start";
+        elements.selectedCategoryName.textContent = "Select a track for the interview";
         elements.selectedCategoryDescription.textContent = "Your chosen interview type will load a fresh AI-generated question set.";
         elements.questionCounter.textContent = "Question 0 of 0";
         elements.practiceStatusTag.textContent = "Session ended";
@@ -3097,12 +4503,22 @@ export function initPractice() {
         state.activeQuestions = [];
         state.answeredCount = 0;
         state.learningActivityContext = null;
+        state.practiceStarted = false;
+        state.welcomeDelivered = false;
         state.currentMode = "Text";
         state.sessionStartedAt = null;
         state.sessionSaved = false;
         state.feedbackHistory = [];
         state.lastProcessEvaluations = null;
         state.feedbackLoading = false;
+        state.openingIntroductionSpeaking = false;
+        state.openingIntroductionQuestionPending = false;
+        state.openingIntroductionFocusPending = false;
+        state.openingConversationActive = false;
+        state.openingConversationAcknowledging = false;
+        state.openingConversationCompleted = false;
+        state.openingConversationFocusPending = false;
+        state.openingConversationReply = "";
         state.questionSourceLabel = "Awaiting category";
         state.questionSetSummary = "Select a category and the chatbot will build a fresh question set for the workspace.";
         state.questionAgentResolvedProviderLabel = null;
@@ -3112,8 +4528,8 @@ export function initPractice() {
         updateFieldSummaryUI();
         setVoiceStatus(
             state.speechRecognition
-                ? "Voice input is idle."
-                : "Voice input is not supported in this browser. Use Chrome or Edge on localhost/HTTPS.",
+                ? "Mic is idle."
+                : "Mic transcription is not supported in this browser. Use Chrome or Edge on localhost/HTTPS.",
             state.speechRecognition ? "idle" : "warning"
         );
         updateTipsPanel();
@@ -3132,7 +4548,7 @@ export function initPractice() {
 
         if (!SpeechRecognition) {
             setVoiceStatus(
-                "Voice input is not supported in this browser. Use Chrome or Edge on localhost/HTTPS.",
+                "Mic transcription is not supported in this browser. Use Chrome or Edge on localhost/HTTPS. For mobile devices, access via your computer's LAN IP address.",
                 "warning"
             );
             updateSessionActionButtons();
@@ -3147,7 +4563,12 @@ export function initPractice() {
 
         recognition.onstart = () => {
             state.recognitionActive = true;
-            setVoiceStatus("Voice input is listening...", "listening");
+            setVoiceStatus(
+                isOpeningConversationListening()
+                    ? "Mic is listening. Say hello and share how you feel."
+                    : "Mic is listening. Pause when your answer is complete.",
+                "listening"
+            );
             updateSessionActionButtons();
             syncCurrentMode();
         };
@@ -3186,10 +4607,17 @@ export function initPractice() {
                 syncCurrentMode();
             }
 
+            const isOpeningReply = isOpeningConversationListening();
             setVoiceStatus(
-                interimTranscript ? "Transcribing your answer in real time..." : "Voice input is listening...",
+                interimTranscript
+                    ? isOpeningReply ? "Listening to your opening reply..." : "Transcribing your answer in real time..."
+                    : isOpeningReply ? "Mic is listening for your greeting." : "Mic is listening. Pause when your answer is complete.",
                 interimTranscript ? "processing" : "listening"
             );
+
+            if (finalTranscript || interimTranscript) {
+                scheduleVoiceAutoSubmit();
+            }
         };
 
         recognition.onerror = (event) => {
@@ -3211,15 +4639,21 @@ export function initPractice() {
 
         recognition.onend = () => {
             state.recognitionActive = false;
+            commitRecognitionInterimText();
             updateSessionActionButtons();
 
-            if (state.recognitionShouldRestart && state.selectedCategory && !state.savingSession) {
+            if (state.voiceConversationEnabled && !state.answerSubmitting && isVoiceAutoSubmitReady()) {
+                autoSubmitVoiceAnswer();
+                return;
+            }
+
+            if (state.recognitionShouldRestart && shouldResumeVoiceConversation()) {
                 cancelRecognitionRestart();
-                setVoiceStatus("Voice input paused. Reconnecting...", "processing");
+                setVoiceStatus("Mic paused. Reconnecting...", "processing");
                 state.restartVoiceTimeout = window.setTimeout(() => {
                     state.restartVoiceTimeout = null;
 
-                    if (!state.recognitionShouldRestart || !state.selectedCategory || state.recognitionActive) {
+                    if (!state.recognitionShouldRestart || !shouldResumeVoiceConversation() || state.recognitionActive) {
                         updateSessionActionButtons();
                         return;
                     }
@@ -3229,20 +4663,24 @@ export function initPractice() {
                     } catch (error) {
                         console.error(error);
                         state.recognitionShouldRestart = false;
-                        setVoiceStatus("Voice input could not restart.", "error");
+                        setVoiceStatus("Mic could not restart.", "error");
                         updateSessionActionButtons();
                     }
                 }, 250);
                 return;
             }
 
-            commitRecognitionInterimText();
-            setVoiceStatus("Voice input is idle.", "idle");
+            setVoiceStatus(
+                state.voiceConversationEnabled
+                    ? "Mic is waiting for the interviewer."
+                    : "Mic is idle.",
+                state.voiceConversationEnabled ? "processing" : "idle"
+            );
             updateSessionActionButtons();
         };
 
         state.speechRecognition = recognition;
-        setVoiceStatus("Voice input is ready when your session starts.", "idle");
+        setVoiceStatus("Mic is ready when your session is live.", "idle");
         updateSessionActionButtons();
     }
 
@@ -3289,13 +4727,13 @@ export function initPractice() {
         } else if (savedSetup.voiceMode === "voice") {
             setVoiceStatus(
                 state.speechRecognition
-                    ? "Voice First is selected. Click Start Voice Input when you are ready."
+                    ? "Voice First is selected. Use Mic On when you are ready."
                     : "Voice First is selected, but this browser does not support speech recognition.",
                 state.speechRecognition ? "idle" : "warning"
             );
             elements.startVoiceBtn.focus();
         } else if (savedSetup.voiceMode === "hybrid") {
-            setVoiceStatus("Hybrid mode is ready. Type or start voice input anytime.", "idle");
+            setVoiceStatus("Hybrid mode is ready. Type or use Mic On anytime.", "idle");
             elements.responseInput.focus();
         } else if (preferredCategory) {
             setVoiceStatus("Text First is selected. You can still use voice input anytime.", "idle");
@@ -3373,8 +4811,8 @@ export function initPractice() {
 
             elements.practiceModalCategoryName.textContent = "Choose a category first";
             elements.practiceModalSummaryText.textContent = learningContext
-                ? `${learningContext.activityLabel} ${learningContext.levelLabel} is ready. Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.`
-                : "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.";
+                ? `${learningContext.activityLabel} ${learningContext.levelLabel} is ready. Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill begins.`
+                : "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill begins.";
             elements.practiceModalStateTag.textContent = "Choose category";
             elements.practiceModalStateTag.className = "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300";
             elements.practiceModalActiveCategory.textContent = "None selected";
@@ -3382,8 +4820,8 @@ export function initPractice() {
             elements.selectedCategoryDescription.textContent = learningContext
                 ? `${learningContext.activityLabel} ${learningContext.levelLabel} is ready. Choose a category, then continue through the field builder.`
                 : "Choose a category, then continue through the field builder.";
-            elements.currentQuestionText.textContent = "Choose a category below to start this Learning Lab practice.";
-            elements.coachTipText.textContent = "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill starts.";
+            elements.currentQuestionText.textContent = "Choose a category below for this Learning Lab practice.";
+            elements.coachTipText.textContent = "Choose Job Interview, Scholarship Interview, College Admission, or IT / Programming before the drill begins.";
             updateSessionActionButtons();
             showMessage("info", messageParts.join(" "));
             openCategoryModal();
@@ -3518,7 +4956,7 @@ export function initPractice() {
     });
 
     elements.openPracticeCategoryModalBtn?.addEventListener("click", () => {
-        openCategoryModal();
+        handleStartPracticeClick();
     });
 
     const handleLearningActionClick = (event) => {
@@ -3592,6 +5030,10 @@ export function initPractice() {
         openPracticeModal({ focusResponse: Boolean(state.selectedCategory && getActiveQuestionCount() > 0) });
     });
 
+    elements.openPracticeQuestionAgentModalBtn?.addEventListener("click", () => {
+        openQuestionAgentModal({ focusInput: true });
+    });
+
     elements.editPracticeFieldBtn.addEventListener("click", () => {
         const category = state.pendingCategory || state.selectedCategory;
 
@@ -3604,8 +5046,12 @@ export function initPractice() {
         });
     });
 
-    elements.closePracticeModalBtn.addEventListener("click", () => {
+    elements.closePracticeModalBtn?.addEventListener("click", () => {
         closePracticeModal();
+    });
+
+    elements.closePracticeQuestionAgentModalBtn?.addEventListener("click", () => {
+        closeQuestionAgentModal();
     });
 
     elements.closePracticeCategoryModalBtn?.addEventListener("click", () => {
@@ -3616,12 +5062,21 @@ export function initPractice() {
         closeCategoryModal({ returnFocus: false });
     });
 
-    elements.practiceSessionModalBackdrop.addEventListener("click", () => {
+    elements.practiceSessionModalBackdrop?.addEventListener("click", () => {
         closePracticeModal({ returnFocus: false });
+    });
+
+    elements.practiceQuestionAgentModalBackdrop?.addEventListener("click", () => {
+        closeQuestionAgentModal({ returnFocus: false });
     });
 
     window.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
+            if (isQuestionAgentModalOpen()) {
+                closeQuestionAgentModal();
+                return;
+            }
+
             if (isFieldModalOpen()) {
                 closePracticeFieldModal();
                 return;
@@ -3631,13 +5086,14 @@ export function initPractice() {
                 closeCategoryModal();
                 return;
             }
-
-            closePracticeModal();
         }
     });
 
     elements.startVoiceBtn.addEventListener("click", startVoiceInput);
     elements.stopVoiceBtn.addEventListener("click", () => stopVoiceInput());
+    elements.startPracticeBtn?.addEventListener("click", () => {
+        beginPracticeRound({ speakQuestion: true, focusResponse: true });
+    });
 
     elements.submitAnswerBtn.addEventListener("click", submitAnswer);
     elements.nextQuestionBtn.addEventListener("click", nextQuestion);
@@ -3691,21 +5147,61 @@ export function initPractice() {
         const faceStateValue = document.getElementById("faceStateValue");
         const avatarVoiceValue = document.getElementById("avatarVoiceValue");
         const avatarSpeechStatus = document.getElementById("avatarSpeechStatus");
+        const avatarWordText = document.getElementById("avatarWordText");
         const avatarLineText = document.getElementById("avatarLineText");
         const avatarOrb = document.getElementById("avatarOrb");
+        const voiceWaveBars = Array.from(document.querySelectorAll("#voiceWaveBars [data-wave-bar]"));
         const currentQuestionText = document.getElementById("currentQuestionText");
         const faceLandmarkerModelPath = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+        const interviewerAudio = {
+            configured: Boolean(rawInterviewerAudioBootstrap?.configured),
+            provider: String(rawInterviewerAudioBootstrap?.provider || "browser"),
+            providerLabel: String(rawInterviewerAudioBootstrap?.providerLabel || "Hosted voice")
+        };
 
         let FaceLandmarker = null;
         let FilesetResolver = null;
         let faceLandmarker = null;
         let cameraStream = null;
         let animationFrameId = null;
+        let hostedAudio = null;
+        let hostedAudioUrl = "";
+        let hostedAudioAbortController = null;
         let lastVideoTime = -1;
         let lastSpokenQuestion = "";
+        let activeSpeechCompletion = null;
         let lastVisualRenderAt = 0;
         let lastLearningRefreshAt = 0;
         const faceCenterHistory = [];
+        const voiceWaveState = {
+            active: false,
+            intensity: 0.16,
+            targetIntensity: 0.16,
+            tokenEnergy: 0,
+            tokenStartedAt: 0,
+            pattern: buildWavePattern(null),
+            animationFrameId: null,
+            fallbackStartTimerId: null,
+            fallbackWordTimerIds: [],
+            boundaryDetected: false,
+            cycleId: 0,
+            currentWord: "",
+            seeds: voiceWaveBars.map((_, index) => ({
+                drift: 1.75 + ((index % 5) * 0.34),
+                shimmer: 0.85 + (((index * 7) % 9) * 0.09),
+                phase: (index + 1) * 0.73
+            }))
+        };
+
+        function settleActiveSpeech(cycleId, status = "ended") {
+            if (!activeSpeechCompletion || activeSpeechCompletion.cycleId !== cycleId) {
+                return;
+            }
+
+            const { onSettled } = activeSpeechCompletion;
+            activeSpeechCompletion = null;
+            onSettled?.({ status });
+        }
 
         function publishVisualSnapshot(snapshot, { force = false } = {}) {
             const now = performance.now();
@@ -3735,6 +5231,53 @@ export function initPractice() {
             publishVisualSnapshot(snapshot, { force });
         }
 
+        function bindInterviewerControls() {
+            interviewerControls.startCamera = startCamera;
+            interviewerControls.playOpeningIntroduction = ({ onSettled } = {}) => {
+                const introduction = buildInterviewerWelcomeLead();
+
+                if (!introduction) {
+                    onSettled?.({ status: "empty" });
+                    return false;
+                }
+
+                return speakText(introduction, { onSettled });
+            };
+            interviewerControls.speakOpeningAcknowledgement = ({ text = "", onSettled = null } = {}) => {
+                if (!text) {
+                    onSettled?.({ status: "empty" });
+                    return false;
+                }
+
+                return speakText(text, { onSettled });
+            };
+            interviewerControls.speakAssistantMessage = ({ text = "", onSettled = null } = {}) => {
+                if (!text) {
+                    onSettled?.({ status: "empty" });
+                    return false;
+                }
+
+                return speakText(text, { onSettled });
+            };
+            interviewerControls.askCurrentQuestion = ({ onSettled = null } = {}) => {
+                if (isOpeningIntroductionBlockingQuestion()) {
+                    queueFirstQuestionAfterOpening({ focusResponse: true });
+                    return false;
+                }
+
+                const question = getCurrentQuestion();
+                const spokenPrompt = question
+                    ? buildSpokenQuestionPrompt(question)
+                    : "Please choose a track to begin the interview.";
+
+                return speakText(spokenPrompt, { onSettled });
+            };
+            interviewerControls.stopCamera = stopCamera;
+            interviewerControls.stopSpeaking = stopSpeaking;
+        }
+
+        bindInterviewerControls();
+
         try {
             ({ FaceLandmarker, FilesetResolver } = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/vision_bundle.mjs"));
         } catch (error) {
@@ -3763,6 +5306,212 @@ export function initPractice() {
             };
 
             interviewerStatusTag.className = styles[mode] || styles.neutral;
+        }
+
+        function clampWave(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function setWaveWordLabel(text) {
+            voiceWaveState.currentWord = text;
+
+            if (avatarWordText) {
+                avatarWordText.textContent = text;
+            }
+        }
+
+        function clearWaveTimers() {
+            if (voiceWaveState.fallbackStartTimerId) {
+                clearTimeout(voiceWaveState.fallbackStartTimerId);
+                voiceWaveState.fallbackStartTimerId = null;
+            }
+
+            voiceWaveState.fallbackWordTimerIds.forEach((timerId) => clearTimeout(timerId));
+            voiceWaveState.fallbackWordTimerIds = [];
+        }
+
+        function estimateSyllables(word) {
+            const normalized = String(word || "")
+                .toLowerCase()
+                .replace(/[^a-z0-9']/g, "");
+
+            if (!normalized) return 1;
+
+            const vowelGroups = normalized.match(/[aeiouy]+/g) || [];
+            const silentEnding = normalized.endsWith("e") && vowelGroups.length > 1 ? 1 : 0;
+
+            return Math.max(1, vowelGroups.length - silentEnding);
+        }
+
+        function tokenizeSpeech(text) {
+            const source = String(text || "");
+            const regex = /[A-Za-z0-9]+(?:['-][A-Za-z0-9]+)*/g;
+            const tokens = [];
+            let match;
+
+            while ((match = regex.exec(source)) !== null) {
+                const word = match[0];
+                const start = match.index;
+                const end = start + word.length;
+                const trailingPunctuation = source.slice(end).match(/^[,.;:!?]+/)?.[0] || "";
+                const syllables = estimateSyllables(word);
+                const punctuationBoost = /[!?]/.test(trailingPunctuation) ? 0.16 : /[,.;:]/.test(trailingPunctuation) ? 0.08 : 0;
+                const energy = clampWave(
+                    0.34 + Math.min(0.18, word.length * 0.012) + Math.min(0.24, syllables * 0.05) + punctuationBoost,
+                    0.28,
+                    0.92
+                );
+
+                tokens.push({
+                    text: word,
+                    displayText: trailingPunctuation ? `${word}${trailingPunctuation}` : word,
+                    start,
+                    end,
+                    syllables,
+                    trailingPunctuation,
+                    energy
+                });
+            }
+
+            return tokens;
+        }
+
+        function buildWavePattern(token) {
+            if (!voiceWaveBars.length) return [];
+
+            const midpoint = (voiceWaveBars.length - 1) / 2;
+
+            if (!token) {
+                return voiceWaveBars.map((_, index) => clampWave(
+                    1 - (Math.abs(index - midpoint) / Math.max(midpoint + 0.5, 1)),
+                    0.18,
+                    1
+                ));
+            }
+
+            const normalized = token.text.toLowerCase();
+            const syllables = estimateSyllables(normalized);
+            const asciiSum = normalized.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+            const center = midpoint + (((asciiSum % 7) - 3) * 0.28);
+            const spread = 1.6 + (syllables * 0.5) + Math.min(1.8, normalized.length * 0.08);
+
+            return voiceWaveBars.map((_, index) => {
+                const distance = Math.abs(index - center);
+                const bell = clampWave(1 - (distance / spread), 0, 1);
+                const ripple = clampWave(
+                    1 - Math.abs(distance - (1.3 + (syllables * 0.35))) / (spread + 1.2),
+                    0,
+                    1
+                ) * 0.25;
+
+                return clampWave(0.18 + (bell * 0.72) + ripple, 0.18, 1);
+            });
+        }
+
+        function animateVoiceWave(timestamp) {
+            if (!voiceWaveBars.length) return;
+
+            const midpoint = (voiceWaveBars.length - 1) / 2;
+            const seconds = timestamp / 1000;
+            const tokenElapsed = voiceWaveState.tokenStartedAt ? (timestamp - voiceWaveState.tokenStartedAt) / 1000 : 99;
+            const tokenDecay = voiceWaveState.active ? Math.max(0, 1 - (tokenElapsed * 1.3)) : 0;
+
+            voiceWaveState.intensity += (voiceWaveState.targetIntensity - voiceWaveState.intensity) * (voiceWaveState.active ? 0.2 : 0.08);
+
+            voiceWaveBars.forEach((bar, index) => {
+                const seed = voiceWaveState.seeds[index];
+                const mirror = 1 - (Math.abs(index - midpoint) / Math.max(midpoint, 1));
+                const pattern = voiceWaveState.pattern[index] || mirror;
+                const motionA = (Math.sin((seconds * (2.6 + seed.drift)) + seed.phase) + 1) / 2;
+                const motionB = (Math.sin((seconds * (6.4 + seed.shimmer)) + (seed.phase * 1.8)) + 1) / 2;
+                const chatter = (motionA * 0.45) + (motionB * 0.55);
+                const speechLift = (
+                    (voiceWaveState.tokenEnergy * tokenDecay) +
+                    (voiceWaveState.intensity * (voiceWaveState.active ? 0.8 : 0.22))
+                ) * (0.25 + (pattern * 0.95)) * (0.38 + (chatter * 0.85));
+                const idleLift = 0.12 + (mirror * 0.08) + (motionA * 0.06);
+                const targetScale = clampWave(idleLift + speechLift, 0.12, 1);
+                const currentScale = Number(bar.dataset.scale || 0.16);
+                const nextScale = currentScale + ((targetScale - currentScale) * 0.34);
+
+                bar.dataset.scale = nextScale.toFixed(3);
+                bar.style.setProperty("--voice-wave-scale", nextScale.toFixed(3));
+                bar.style.opacity = String(clampWave(0.35 + (nextScale * 0.7), 0.35, 1));
+            });
+
+            if (avatarOrb) {
+                avatarOrb.style.setProperty(
+                    "--voice-wave-glow",
+                    String(clampWave(0.24 + (voiceWaveState.intensity * 0.95), 0.24, 1))
+                );
+            }
+
+            voiceWaveState.animationFrameId = requestAnimationFrame(animateVoiceWave);
+        }
+
+        function findTokenAtCharIndex(tokens, charIndex) {
+            if (!tokens.length) return null;
+
+            return (
+                tokens.find((token) => charIndex >= token.start && charIndex < token.end) ||
+                tokens.find((token) => token.start >= charIndex) ||
+                tokens[tokens.length - 1]
+            );
+        }
+
+        function estimateTokenDuration(token) {
+            const punctuationPause = /[!?]/.test(token.trailingPunctuation)
+                ? 130
+                : /[,.;:]/.test(token.trailingPunctuation)
+                    ? 90
+                    : 0;
+
+            return 130 + (token.syllables * 70) + (token.text.length * 9) + punctuationPause;
+        }
+
+        function applyWaveToken(token) {
+            if (!token) return;
+
+            voiceWaveState.active = true;
+            voiceWaveState.tokenEnergy = token.energy;
+            voiceWaveState.targetIntensity = clampWave(0.32 + (token.energy * 0.75), 0.32, 0.95);
+            voiceWaveState.tokenStartedAt = performance.now();
+            voiceWaveState.pattern = buildWavePattern(token);
+            setWaveWordLabel(`Speaking: ${token.displayText}`);
+        }
+
+        function settleVoiceWave(label = "Waiting for the next spoken question") {
+            voiceWaveState.active = false;
+            voiceWaveState.tokenEnergy = 0;
+            voiceWaveState.targetIntensity = 0.16;
+            voiceWaveState.pattern = buildWavePattern(null);
+            setWaveWordLabel(label);
+        }
+
+        function scheduleFallbackWave(tokens, cycleId) {
+            clearWaveTimers();
+
+            if (!tokens.length) return;
+
+            voiceWaveState.fallbackStartTimerId = setTimeout(() => {
+                if (voiceWaveState.cycleId !== cycleId || voiceWaveState.boundaryDetected) return;
+
+                let elapsed = estimateTokenDuration(tokens[0]);
+
+                tokens.slice(1).forEach((token) => {
+                    const timerId = setTimeout(() => {
+                        if (voiceWaveState.cycleId !== cycleId || voiceWaveState.boundaryDetected) return;
+                        applyWaveToken(token);
+                    }, elapsed);
+
+                    voiceWaveState.fallbackWordTimerIds.push(timerId);
+                    elapsed += estimateTokenDuration(token);
+                });
+            }, 220);
+        }
+
+        if (voiceWaveBars.length) {
+            voiceWaveState.animationFrameId = requestAnimationFrame(animateVoiceWave);
         }
 
         function buildLiveAlgorithm(name, score, high, medium, low) {
@@ -4000,22 +5749,57 @@ export function initPractice() {
 
         function setAvatarSpeaking(isSpeaking) {
             if (isSpeaking) {
-                avatarOrb.classList.add("animate-pulse", "ring-4", "ring-brand-500/20");
-                avatarVoiceValue.textContent = "Speaking";
-                avatarSpeechStatus.textContent = "Avatar speaking";
+                if (avatarOrb) {
+                    avatarOrb.dataset.speaking = "true";
+                }
+
+                avatarVoiceValue.textContent = "Live";
+                avatarSpeechStatus.textContent = "Voice wave active";
             } else {
-                avatarOrb.classList.remove("animate-pulse", "ring-4", "ring-brand-500/20");
+                if (avatarOrb) {
+                    avatarOrb.dataset.speaking = "false";
+                }
+
                 avatarVoiceValue.textContent = "Ready";
-                avatarSpeechStatus.textContent = "Avatar idle";
+                avatarSpeechStatus.textContent = "Waveform ready";
+                settleVoiceWave();
+            }
+        }
+
+        function clearHostedAudioPlayback() {
+            if (hostedAudioAbortController) {
+                hostedAudioAbortController.abort();
+                hostedAudioAbortController = null;
+            }
+
+            if (hostedAudio) {
+                hostedAudio.pause();
+                hostedAudio.src = "";
+                hostedAudio = null;
+            }
+
+            if (hostedAudioUrl) {
+                URL.revokeObjectURL(hostedAudioUrl);
+                hostedAudioUrl = "";
+            }
+        }
+
+        function clearSpeechPlaybackState() {
+            clearWaveTimers();
+            clearHostedAudioPlayback();
+
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.cancel();
             }
         }
 
         function stopSpeaking() {
-            if ("speechSynthesis" in window) {
-                window.speechSynthesis.cancel();
-            }
+            const stoppedCycleId = voiceWaveState.cycleId;
 
+            voiceWaveState.cycleId += 1;
+            clearSpeechPlaybackState();
             setAvatarSpeaking(false);
+            settleActiveSpeech(stoppedCycleId, "stopped");
         }
 
         function getCurrentQuestion() {
@@ -4040,23 +5824,45 @@ export function initPractice() {
             );
         }
 
-        function speakText(text) {
+        function startWavePlayback(text, speechCycleId, tokens, {
+            voiceValue = null,
+            speechStatus = null,
+            wordLabel = "Listening to cadence..."
+        } = {}) {
+            if (speechCycleId !== voiceWaveState.cycleId) return;
+
+            setAvatarSpeaking(true);
+            avatarLineText.textContent = text;
+
+            if (voiceValue) {
+                avatarVoiceValue.textContent = voiceValue;
+            }
+
+            if (speechStatus) {
+                avatarSpeechStatus.textContent = speechStatus;
+            }
+
+            setWaveWordLabel(wordLabel);
+
+            if (tokens[0]) {
+                applyWaveToken(tokens[0]);
+            }
+
+            scheduleFallbackWave(tokens, speechCycleId);
+        }
+
+        function speakWithBrowserSynthesis(text, speechCycleId, tokens) {
             if (!("speechSynthesis" in window)) {
+                settleVoiceWave("Speech playback unavailable");
                 avatarVoiceValue.textContent = "Unsupported";
+                avatarSpeechStatus.textContent = "Speech unavailable";
                 avatarLineText.textContent = "Speech synthesis is not supported in this browser.";
-                return;
+                return false;
             }
-
-            if (!text) {
-                avatarLineText.textContent = "No interview question is active yet. Choose a track first.";
-                return;
-            }
-
-            window.speechSynthesis.cancel();
 
             const utterance = new SpeechSynthesisUtterance(text);
             utterance.lang = document.documentElement.lang || "en-US";
-            utterance.rate = 1;
+            utterance.rate = state.interviewerSpeechRate;
             utterance.pitch = 1;
 
             const preferredVoice = getPreferredVoice();
@@ -4065,20 +5871,188 @@ export function initPractice() {
             }
 
             utterance.onstart = () => {
-                setAvatarSpeaking(true);
-                avatarLineText.textContent = text;
+                if (speechCycleId !== voiceWaveState.cycleId) return;
+
+                startWavePlayback(text, speechCycleId, tokens, {
+                    voiceValue: "Browser",
+                    speechStatus: "Browser voice live"
+                });
+            };
+
+            utterance.onboundary = (event) => {
+                if (speechCycleId !== voiceWaveState.cycleId) return;
+
+                if (event.name && event.name !== "word" && event.name !== "sentence") {
+                    return;
+                }
+
+                voiceWaveState.boundaryDetected = true;
+                clearWaveTimers();
+
+                const token = findTokenAtCharIndex(tokens, event.charIndex);
+                applyWaveToken(token);
             };
 
             utterance.onend = () => {
+                if (speechCycleId !== voiceWaveState.cycleId) return;
+
+                clearWaveTimers();
                 setAvatarSpeaking(false);
+                settleVoiceWave("Prompt finished. Ready for the next question");
+                settleActiveSpeech(speechCycleId, "ended");
             };
 
             utterance.onerror = () => {
+                if (speechCycleId !== voiceWaveState.cycleId) return;
+
+                clearWaveTimers();
                 setAvatarSpeaking(false);
                 avatarVoiceValue.textContent = "Error";
+                avatarSpeechStatus.textContent = "Playback error";
+                setWaveWordLabel("Speech playback failed");
+                settleActiveSpeech(speechCycleId, "error");
             };
 
             window.speechSynthesis.speak(utterance);
+            return true;
+        }
+
+        async function speakWithCartesia(text, speechCycleId, tokens) {
+            if (!interviewerAudio.configured) {
+                return false;
+            }
+
+            const abortController = new AbortController();
+            hostedAudioAbortController = abortController;
+            avatarVoiceValue.textContent = "Cartesia";
+            avatarSpeechStatus.textContent = "Generating voice";
+            avatarLineText.textContent = text;
+            setWaveWordLabel("Generating AI voice...");
+
+            try {
+                const { blob, contentType } = await requestWorkspaceBlob("interviewerSpeak", {
+                    method: "POST",
+                    body: { text },
+                    signal: abortController.signal
+                });
+
+                if (abortController.signal.aborted || speechCycleId !== voiceWaveState.cycleId) {
+                    return true;
+                }
+
+                const playableBlob = contentType && blob.type !== contentType
+                    ? new Blob([blob], { type: contentType })
+                    : blob;
+                const objectUrl = URL.createObjectURL(playableBlob);
+                const audio = new Audio(objectUrl);
+                const releaseHostedAudio = () => {
+                    if (hostedAudio === audio) {
+                        hostedAudio = null;
+                    }
+
+                    if (hostedAudioUrl === objectUrl) {
+                        URL.revokeObjectURL(objectUrl);
+                        hostedAudioUrl = "";
+                    }
+
+                    if (hostedAudioAbortController === abortController) {
+                        hostedAudioAbortController = null;
+                    }
+                };
+
+                hostedAudio = audio;
+                hostedAudioUrl = objectUrl;
+                audio.preload = "auto";
+
+                audio.onplay = () => {
+                    if (speechCycleId !== voiceWaveState.cycleId) {
+                        releaseHostedAudio();
+                        return;
+                    }
+
+                    startWavePlayback(text, speechCycleId, tokens, {
+                        voiceValue: "Cartesia",
+                        speechStatus: `${interviewerAudio.providerLabel} live`
+                    });
+                };
+
+                audio.onended = () => {
+                    if (speechCycleId !== voiceWaveState.cycleId) {
+                        releaseHostedAudio();
+                        return;
+                    }
+
+                    clearWaveTimers();
+                    setAvatarSpeaking(false);
+                    settleVoiceWave("Prompt finished. Ready for the next question");
+                    settleActiveSpeech(speechCycleId, "ended");
+                    releaseHostedAudio();
+                };
+
+                audio.onerror = () => {
+                    if (speechCycleId !== voiceWaveState.cycleId) {
+                        releaseHostedAudio();
+                        return;
+                    }
+
+                    clearWaveTimers();
+                    setAvatarSpeaking(false);
+                    avatarVoiceValue.textContent = "Error";
+                    avatarSpeechStatus.textContent = "Playback error";
+                    setWaveWordLabel("Speech playback failed");
+                    settleActiveSpeech(speechCycleId, "error");
+                    releaseHostedAudio();
+                };
+
+                await audio.play();
+
+                return true;
+            } catch (error) {
+                if (abortController.signal.aborted || error?.name === "AbortError") {
+                    return true;
+                }
+
+                clearHostedAudioPlayback();
+                setAvatarSpeaking(false);
+                console.error("Hosted interviewer voice failed", error);
+
+                return false;
+            }
+        }
+
+        async function speakText(text, { onSettled = null } = {}) {
+            if (!text) {
+                settleVoiceWave("Waiting for an interview question");
+                avatarLineText.textContent = "No interview question is active yet. Choose a track first.";
+                onSettled?.({ status: "empty" });
+                return false;
+            }
+
+            const previousSpeechCycleId = voiceWaveState.cycleId;
+            const speechCycleId = previousSpeechCycleId + 1;
+            const tokens = tokenizeSpeech(text);
+
+            settleActiveSpeech(previousSpeechCycleId, "superseded");
+            clearSpeechPlaybackState();
+            voiceWaveState.cycleId = speechCycleId;
+            voiceWaveState.boundaryDetected = false;
+            activeSpeechCompletion = typeof onSettled === "function"
+                ? { cycleId: speechCycleId, onSettled }
+                : null;
+
+            const hostedPlaybackStarted = await speakWithCartesia(text, speechCycleId, tokens);
+
+            if (speechCycleId !== voiceWaveState.cycleId || hostedPlaybackStarted) {
+                return hostedPlaybackStarted;
+            }
+
+            const browserPlaybackStarted = speakWithBrowserSynthesis(text, speechCycleId, tokens);
+
+            if (!browserPlaybackStarted) {
+                settleActiveSpeech(speechCycleId, "unavailable");
+            }
+
+            return browserPlaybackStarted;
         }
 
         async function initFaceLandmarker() {
@@ -4171,8 +6145,15 @@ export function initPractice() {
                     return;
                 }
 
+                // Check if we're on a mobile device
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
                 cameraStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
+                    video: { 
+                        facingMode: "user",
+                        width: { ideal: isMobile ? 640 : 1280 },
+                        height: { ideal: isMobile ? 480 : 720 }
+                    },
                     audio: false
                 });
 
@@ -4183,7 +6164,7 @@ export function initPractice() {
                 setStatusTag("Camera live", "success");
                 avatarLineText.textContent = "Camera is live. I will monitor selected non-verbal cues while you practice.";
                 showWaitingVisualSnapshot(
-                    "Camera is live. Center your face in the frame to start selected non-verbal coaching.",
+                    "Camera is live. Center your face in the frame to unlock selected non-verbal coaching.",
                     {
                         headline: "Camera ready for coaching",
                         tag: "Checking",
@@ -4215,12 +6196,29 @@ export function initPractice() {
                 }
             } catch (error) {
                 console.error(error);
+                let errorMessage = "Camera access failed.";
+                let snapshotMessage = "Camera access was blocked.";
+                
+                if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+                    errorMessage = "Camera permission denied. Please allow camera access and try again.";
+                    snapshotMessage = "Camera permission was denied. Allow camera permissions in your browser settings to unlock selected non-verbal coaching.";
+                } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+                    errorMessage = "No camera found. Please connect a camera and try again.";
+                    snapshotMessage = "No camera device was found. Connect a camera to unlock selected non-verbal coaching.";
+                } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+                    errorMessage = "Camera is already in use by another application.";
+                    snapshotMessage = "Camera is in use by another app. Close other camera-using apps to unlock selected non-verbal coaching.";
+                } else {
+                    errorMessage = "Camera access failed. Use localhost or HTTPS. For mobile devices, access via your computer's LAN IP address.";
+                    snapshotMessage = "Camera access failed. Ensure you're using localhost or HTTPS, and for mobile devices, access via LAN IP.";
+                }
+                
                 setStatusTag("Camera blocked", "error");
                 cameraStateValue.textContent = "Blocked";
                 faceStateValue.textContent = "Unavailable";
-                avatarLineText.textContent = "Camera access or the face model failed. Use localhost or HTTPS and ensure the model file exists.";
+                avatarLineText.textContent = errorMessage;
                 showWaitingVisualSnapshot(
-                    "Camera access was blocked. Allow camera permissions to unlock selected non-verbal coaching.",
+                    snapshotMessage,
                     {
                         headline: "Camera blocked",
                         tag: "Blocked",
@@ -4248,7 +6246,7 @@ export function initPractice() {
             setStatusTag("Camera Off", "neutral");
             faceCenterHistory.length = 0;
             showWaitingVisualSnapshot(
-                "Start the camera to unlock selected non-verbal coaching.",
+                "Turn on the camera to unlock selected non-verbal coaching.",
                 {
                     headline: "Camera coaching is waiting",
                     tag: "Standby",
@@ -4258,18 +6256,12 @@ export function initPractice() {
             );
         }
 
-        interviewerControls.startCamera = startCamera;
-        interviewerControls.askCurrentQuestion = () => {
-            const question = getCurrentQuestion();
-            speakText(question || "Please choose a track to begin the interview.");
-        };
-        interviewerControls.stopCamera = stopCamera;
-        interviewerControls.stopSpeaking = stopSpeaking;
+        bindInterviewerControls();
 
         startCameraBtn?.addEventListener("click", startCamera);
         stopCameraBtn?.addEventListener("click", stopCamera);
         askQuestionAloudBtn?.addEventListener("click", () => {
-            interviewerControls.askCurrentQuestion();
+            askQuestionLikeConversation();
         });
 
         if ("speechSynthesis" in window) {
@@ -4283,14 +6275,16 @@ export function initPractice() {
                 const question = getCurrentQuestion();
                 if (!question) {
                     lastSpokenQuestion = "";
+                    settleVoiceWave("Waiting for spoken question");
                     return;
                 }
 
                 if (question === lastSpokenQuestion) return;
 
                 lastSpokenQuestion = question;
+                stopSpeaking();
                 avatarLineText.textContent = question;
-                speakText(question);
+                settleVoiceWave("Interviewer will ask automatically");
             });
 
             observer.observe(currentQuestionText, {
@@ -4303,12 +6297,18 @@ export function initPractice() {
         window.addEventListener("beforeunload", () => {
             stopCamera();
             stopSpeaking();
+
+            if (voiceWaveState.animationFrameId) {
+                cancelAnimationFrame(voiceWaveState.animationFrameId);
+                voiceWaveState.animationFrameId = null;
+            }
         });
     }
 
     initInterviewer();
 
     window.addEventListener("beforeunload", () => {
+        cancelPendingQuestionSpeech();
         stopVoiceInput({ commitTranscript: false });
     });
 }

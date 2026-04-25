@@ -67,6 +67,17 @@ return [
         'model' => env('COHERE_MODEL', 'command-r7b-12-2024'),
     ],
 
+    'cartesia' => [
+        'api_key' => env('CARTESIA_API_KEY'),
+        'version' => env('CARTESIA_VERSION', '2026-03-01'),
+        'tts_model_id' => env('CARTESIA_TTS_MODEL_ID', 'sonic-3'),
+        'tts_voice_id' => env('CARTESIA_TTS_VOICE_ID', 'f786b574-daa5-4673-aa0c-cbe3e8534c02'),
+        'tts_language' => env('CARTESIA_TTS_LANGUAGE', 'en'),
+        'tts_speed' => (float) env('CARTESIA_TTS_SPEED', 1.0),
+        'tts_emotion' => env('CARTESIA_TTS_EMOTION', 'neutral'),
+        'tts_sample_rate' => (int) env('CARTESIA_TTS_SAMPLE_RATE', 44100),
+    ],
+
     'interview_chatbot' => [
         'default_provider' => env('INTERVIEW_CHATBOT_DEFAULT_PROVIDER', 'auto'),
         'provider_priority' => env('INTERVIEW_CHATBOT_PROVIDER_PRIORITY', 'gemini,groq,openrouter,claude,wisdomgate,cohere'),

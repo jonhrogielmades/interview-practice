@@ -1223,6 +1223,45 @@ class FeaturePageController extends Controller
             ],
             'secondarySections' => [
                 [
+                    'title' => 'Mobile Device Setup',
+                    'description' => 'Additional steps needed when accessing the app from phones or tablets.',
+                    'items' => [
+                        [
+                            'title' => 'Use LAN IP address',
+                            'value' => 'Required for mobile',
+                            'body' => 'Change APP_URL in .env to your computer\'s LAN IP (e.g., 192.168.1.100) instead of localhost.',
+                            'list' => [
+                                'Find your LAN IP using ipconfig (Windows) or ifconfig (Mac/Linux)',
+                                'Use HTTP (not HTTPS) for LAN access as mobile browsers may block camera on self-signed HTTPS',
+                                'Restart the Laravel server after changing APP_URL',
+                            ],
+                            'tone' => 'brand',
+                        ],
+                        [
+                            'title' => 'Grant permissions',
+                            'value' => 'When prompted',
+                            'body' => 'Mobile browsers require explicit permission grants for camera and microphone access.',
+                            'list' => [
+                                'Allow camera permission when Practice requests it',
+                                'Allow microphone permission for voice input features',
+                                'Permissions are remembered per browser, not per site',
+                            ],
+                            'tone' => 'blue',
+                        ],
+                        [
+                            'title' => 'Use supported browsers',
+                            'value' => 'Chrome or Edge recommended',
+                            'body' => 'Safari on iOS has limited speech recognition support compared to Chrome/Edge.',
+                            'list' => [
+                                'Chrome or Edge provide the best camera and voice experience',
+                                'Firefox works but has fewer voice features',
+                                'Avoid Internet Explorer or older browsers',
+                            ],
+                            'tone' => 'success',
+                        ],
+                    ],
+                ],
+                [
                     'title' => 'Current Launch Context',
                     'description' => 'These saved defaults shape the next camera-assisted session.',
                     'items' => [

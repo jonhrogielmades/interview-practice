@@ -113,6 +113,7 @@ Route::middleware('auth')->group(function () {
             Route::delete('/sessions', [WorkspaceController::class, 'destroySessions'])->name('sessions.destroy');
             Route::post('/chatbot', [WorkspaceController::class, 'chatbot'])->name('chatbot');
             Route::post('/chatbot/providers/status', [WorkspaceController::class, 'chatbotProvidersStatus'])->name('chatbot.providers.status');
+            Route::post('/interviewer/speak', [WorkspaceController::class, 'interviewerSpeak'])->name('interviewer.speak');
         });
     });
 

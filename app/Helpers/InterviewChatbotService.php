@@ -3,6 +3,8 @@
 namespace App\Helpers;
 
 use App\Support\InterviewPracticeCatalog;
+use GuzzleHttp\Exception\ConnectException;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Throwable;
@@ -1923,11 +1925,36 @@ class InterviewChatbotService
 
     protected function safeReport(Throwable $error): void
     {
+        if ($this->isTransientProviderConnectionError($error)) {
+            return;
+        }
+
         try {
             report($error);
         } catch (Throwable) {
             // Ignore logging failures so chatbot fallback behavior still works.
         }
+    }
+
+    protected function isTransientProviderConnectionError(Throwable $error): bool
+    {
+        if ($error instanceof ConnectionException || $error instanceof ConnectException) {
+            return true;
+        }
+
+        $message = Str::lower($error->getMessage());
+
+        return Str::contains($message, [
+            'connection refused',
+            'could not resolve',
+            'curl error 6',
+            'curl error 7',
+            'curl error 28',
+            'dns',
+            'operation timed out',
+            'timed out',
+            'timeout',
+        ]);
     }
 
     protected function sanitizeText(mixed $value, int $limit = 255): ?string
