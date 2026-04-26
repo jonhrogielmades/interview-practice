@@ -42,6 +42,7 @@ The prototype still uses the current Laravel + Blade + browser-capability implem
 ```bash
 composer install
 npm install
+npm run build
 cp .env.example .env
 php artisan key:generate
 php artisan migrate
