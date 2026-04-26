@@ -18,7 +18,7 @@
         ? (auth()->user()?->isAdmin() ? route('dashboard') : route('practice'))
         : null;
     $authPrimaryLabel = auth()->check()
-        ? (auth()->user()?->isAdmin() ? 'Open Admin' : 'Start Practice')
+        ? (auth()->user()?->isAdmin() ? 'Open Admin' : 'Continue Practice')
         : 'Get Started';
     $heroMetrics = [
         ['value' => count($practiceTracks), 'label' => 'Interview tracks', 'icon' => 'tracks'],
@@ -44,7 +44,7 @@
         'it' => [
             'badge' => 'Tech',
             'badgeClass' => 'border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200',
-            'image' => asset('images/grid-image/image-01.png'),
+            'image' => asset('images/cards/card-04.png'),
         ],
     ];
     $mentorCards = [
@@ -55,6 +55,7 @@
             'learners' => '2.8k',
             'sessions' => '180+',
             'bio' => 'Former recruitment lead helping fresh graduates answer with stronger structure and confidence.',
+            'avatar' => asset('images/user/user-01.jpg'),
         ],
         [
             'name' => 'Marco Villanueva',
@@ -63,6 +64,7 @@
             'learners' => '3.1k',
             'sessions' => '220+',
             'bio' => 'Guides entry-level applicants through follow-up questions, delivery, and local interview expectations.',
+            'avatar' => asset('images/user/user-01.jpg'),
         ],
         [
             'name' => 'Alyssa Cruz',
@@ -71,6 +73,7 @@
             'learners' => '1.9k',
             'sessions' => '140+',
             'bio' => 'Works on scholarship and college interview answers that sound clear, grounded, and sincere.',
+            'avatar' => asset('images/user/user-01.jpg'),
         ],
         [
             'name' => 'Neil Ramos',
@@ -79,40 +82,29 @@
             'learners' => '2.4k',
             'sessions' => '160+',
             'bio' => 'Focuses on capstone storytelling, debugging answers, and technical communication for junior IT roles.',
+            'avatar' => asset('images/user/user-01.jpg'),
         ],
     ];
-    $testimonials = [
-        [
-            'quote' => 'The mock interview flow helped me stop rambling and answer with a much stronger structure.',
-            'name' => 'Aira Lopez',
-            'role' => 'BSIT Student',
-        ],
-        [
-            'quote' => 'The follow-up prompts felt realistic, and the feedback center made my weak spots obvious fast.',
-            'name' => 'Kevin Reyes',
-            'role' => 'Fresh Graduate',
-        ],
-        [
-            'quote' => 'I used the scholarship track before my panel interview and sounded much less rehearsed.',
-            'name' => 'Trisha Mendoza',
-            'role' => 'Scholarship Applicant',
-        ],
-        [
-            'quote' => 'Voice rehearsal plus the pacing modes gave me a cleaner answer style after only a few sessions.',
-            'name' => 'Mark Santos',
-            'role' => 'Job Seeker',
-        ],
-        [
-            'quote' => 'The IT track pushed me to explain my capstone clearly instead of listing tools without context.',
-            'name' => 'Janna Flores',
-            'role' => 'Junior Developer Applicant',
-        ],
-        [
-            'quote' => 'It feels closer to a real interview than reading questions from a document or random notes.',
-            'name' => 'Paolo Garcia',
-            'role' => 'Career Shifter',
-        ],
-    ];
+    $developers = [
+    [
+        'quote' => 'The IT track pushed me to explain my capstone clearly instead of listing tools without context.',
+        'name' => 'Jonh Rogiel M. Tumanda',
+        'role' => 'Lead Programmer',
+        'avatar' => asset('images/user/user-01.jpg'),   // You can change the filename
+    ],
+    [
+        'quote' => 'Voice rehearsal plus the pacing modes gave me a cleaner answer style after only a few sessions.',
+        'name' => 'Karyl G. Gesto',
+        'role' => 'Manuscript Editor',
+        'avatar' => asset('images/user/user-02.png'),
+    ],
+    [
+        'quote' => 'It feels closer to a real interview than reading questions from a document or random notes.',
+        'name' => 'Eva Mae C. Cabilic',
+        'role' => 'QA Tester',
+        'avatar' => asset('images/user/user-03.png'),
+    ],
+];
     $pricingPlans = [
         [
             'name' => 'Starter',
@@ -274,9 +266,9 @@
                 <nav class="hidden items-center gap-7 text-sm font-medium text-gray-600 lg:flex dark:text-gray-300">
                     <a href="#home" class="transition hover:text-brand-600 dark:hover:text-brand-300">Home</a>
                     <a href="#courses" class="transition hover:text-brand-600 dark:hover:text-brand-300">Courses</a>
-                    <a href="#mentors" class="transition hover:text-brand-600 dark:hover:text-brand-300">Mentor</a>
+                    <a href="#mentors" class="transition hover:text-brand-600 dark:hover:text-brand-300">Mentors</a>
                     <a href="#features" class="transition hover:text-brand-600 dark:hover:text-brand-300">Features</a>
-                    <a href="#testimonials" class="transition hover:text-brand-600 dark:hover:text-brand-300">Testimonials</a>
+                    <a href="#developers" class="transition hover:text-brand-600 dark:hover:text-brand-300">Developers</a>
                     <a href="#pricing" class="transition hover:text-brand-600 dark:hover:text-brand-300">Pricing</a>
                 </nav>
 
@@ -316,14 +308,14 @@
                             @click.prevent="openAuthModal('signin')"
                             class="inline-flex h-11 items-center justify-center rounded-full px-4 text-sm font-semibold text-gray-700 transition hover:text-brand-600 dark:text-gray-200 dark:hover:text-brand-300"
                         >
-                            Login
+                            Sign In
                         </a>
                         <a
                             href="{{ route('signup') }}"
                             @click.prevent="openAuthModal('signup')"
                             class="inline-flex h-11 items-center justify-center rounded-full bg-brand-500 px-5 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600"
                         >
-                            Get Started
+                            Create Free Account
                         </a>
                     @endauth
                 </div>
@@ -344,9 +336,9 @@
                 <div class="mx-auto flex max-w-7xl flex-col gap-2">
                     <a href="#home" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Home</a>
                     <a href="#courses" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Courses</a>
-                    <a href="#mentors" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Mentor</a>
+                    <a href="#mentors" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Mentors</a>
                     <a href="#features" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Features</a>
-                    <a href="#testimonials" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Testimonials</a>
+                    <a href="#developers" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Developers</a>
                     <a href="#pricing" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Pricing</a>
 
                     <button
@@ -376,10 +368,10 @@
                             </a>
                         @else
                             <a href="{{ route('signin') }}" @click.prevent="openAuthModal('signin')" class="inline-flex h-11 items-center justify-center rounded-full border border-brand-200 bg-white px-4 text-sm font-semibold text-gray-700 shadow-theme-xs dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200">
-                                Login
+                                Sign In
                             </a>
                             <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="inline-flex h-11 items-center justify-center rounded-full bg-brand-500 px-4 text-sm font-semibold text-white shadow-theme-xs">
-                                Get Started
+                                Create Free Account
                             </a>
                         @endauth
                     </div>
@@ -397,14 +389,13 @@
                                 New AI Interview Labs Available
                             </span>
 
-                            <h1 class="mt-6 text-5xl font-semibold leading-[1.05] text-gray-900 sm:text-6xl xl:text-7xl dark:text-white">
+                            <h1 class="mt-6 text-4xl font-semibold leading-tight text-gray-900 sm:text-4xl xl:text-5xl dark:text-white">
                                 Master Interview Skills
-                                <span class="block text-brand-500">Online Anytime,</span>
-                                Anywhere
+                                <span class="block text-brand-500">Anytime, Anywhere</span>
                             </h1>
 
-                            <p class="mt-6 max-w-2xl text-lg leading-8 text-gray-600 sm:text-xl sm:leading-9 lg:text-2xl lg:leading-10 dark:text-gray-300">
-                                Provide an accessible web-based platform for repeated interview simulation, automated feedback, guided learning, and progress monitoring.
+                            <p class="mt-6 max-w-xl text-base leading-7 text-gray-600 sm:text-lg sm:leading-8 lg:text-xl lg:leading-9 dark:text-gray-300">
+                                Practice online with interview simulations, automated feedback, guided learning, and progress tracking.
                             </p>
 
                             <div class="mt-8 flex flex-col gap-4 sm:flex-row">
@@ -427,14 +418,14 @@
                                         @click.prevent="openAuthModal('signup')"
                                         class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600"
                                     >
-                                        Start Learning
+                                        Create Free Account
                                     </a>
                                     <a
                                         href="{{ route('signin') }}"
                                         @click.prevent="openAuthModal('signin')"
                                         class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
                                     >
-                                        Login
+                                        Sign In
                                     </a>
                                 @endauth
                             </div>
@@ -502,9 +493,9 @@
 
                                 <div class="absolute -right-4 top-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
                                     <div class="flex items-center">
-                                        <img src="{{ asset('images/user/user-02.jpg') }}" alt="" class="h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
-                                        <img src="{{ asset('images/user/user-06.jpg') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
-                                        <img src="{{ asset('images/user/user-09.jpg') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
+                                        <img src="{{ asset('images/user/user-01.jpg') }}" alt="" class="h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
+                                        <img src="{{ asset('images/user/user-02.png') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
+                                        <img src="{{ asset('images/user/user-03.png') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
                                     </div>
                                     <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">{{ count($focusModes) }} coach modes</p>
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Built for repeated practice</p>
@@ -623,12 +614,7 @@
                         @foreach ($mentorCards as $mentor)
                             <article class="rounded-[30px] border border-gray-200 bg-white px-6 py-8 text-center shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-gray-800 dark:bg-gray-900">
                                 <div class="relative mx-auto w-fit">
-                                    <div class="inline-flex h-20 w-20 items-center justify-center rounded-full border-4 border-warning-300 bg-warning-50 text-warning-500 dark:bg-warning-500/10 dark:text-warning-300">
-                                        <svg class="h-9 w-9" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
+                                    <img src="{{ $mentor['avatar'] }}" alt="{{ $mentor['name'] }}" class="h-20 w-20 rounded-full border-4 border-warning-300 object-cover" />
                                     <span class="absolute -bottom-2 left-1/2 inline-flex -translate-x-1/2 rounded-full bg-warning-500 px-3 py-1 text-[11px] font-semibold text-white shadow-theme-xs">
                                         {{ $mentor['rating'] }}
                                     </span>
@@ -654,7 +640,7 @@
                         <div class="mx-auto max-w-3xl text-center">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Features</p>
                             <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
-                                Explore the Core <span class="text-brand-500">System Features</span>
+                                Platform <span class="text-brand-500">features</span>
                             </h2>
                             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
                                 Discover the tools that power InterviewPilot, from guided interview sessions and automated feedback to progress tracking and focused practice support.
@@ -683,9 +669,14 @@
 
                         <div class="mt-8 text-center">
                             @auth
-                                <a href="{{ $authPrimaryUrl }}" class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
-                                    Explore Features
-                                </a>
+                                <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
+                                    <a href="{{ $authPrimaryUrl }}" class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
+                                        Explore Features
+                                    </a>
+                                    <a href="{{ route('session-setup') }}" class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
+                                        Session Setup
+                                    </a>
+                                </div>
                             @else
                                 <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
                                     Explore Features
@@ -696,48 +687,47 @@
                 </div>
             </section>
 
-            <section id="testimonials" class="scroll-mt-28 py-24">
-                <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="mx-auto max-w-2xl text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Testimonials</p>
-                        <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
-                            What Our Students <span class="text-brand-500">Say</span>
-                        </h2>
-                        <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
-                            Learners use InterviewPilot to practice answers, reduce anxiety, and improve delivery before real interviews.
-                        </p>
+            <section id="developers" class="scroll-mt-28 py-24">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div class="mx-auto max-w-2xl text-center">
+            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Developers</p>
+            <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+                What Developers <span class="text-brand-500">Are Saying</span>
+            </h2>
+            <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
+                Real stories from developers and tech job seekers who improved their interview performance with InterviewPilot.
+            </p>
+        </div>
+
+        <div class="mt-14 grid gap-6 lg:grid-cols-3">
+            @foreach ($developers as $developer)
+                <article class="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                    <div class="flex items-center gap-1 text-warning-400">
+                        @for ($i = 0; $i < 5; $i++)
+                            <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path d="m10 1.5 2.63 5.33 5.88.85-4.25 4.14 1 5.85L10 14.9l-5.26 2.77 1-5.85L1.5 7.68l5.88-.85L10 1.5Z" />
+                            </svg>
+                        @endfor
                     </div>
 
-                    <div class="mt-14 grid gap-6 lg:grid-cols-3">
-                        @foreach ($testimonials as $testimonial)
-                            <article class="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-                                <div class="flex items-center gap-1 text-warning-400">
-                                    @for ($i = 0; $i < 5; $i++)
-                                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                            <path d="m10 1.5 2.63 5.33 5.88.85-4.25 4.14 1 5.85L10 14.9l-5.26 2.77 1-5.85L1.5 7.68l5.88-.85L10 1.5Z" />
-                                        </svg>
-                                    @endfor
-                                </div>
+                    <p class="mt-5 text-base leading-7 text-gray-600 dark:text-gray-300">"{{ $developer['quote'] }}"</p>
 
-                                <p class="mt-5 text-base leading-7 text-gray-600 dark:text-gray-300">"{{ $testimonial['quote'] }}"</p>
-
-                                <div class="mt-6 flex items-center gap-4">
-                                    <div class="inline-flex h-12 w-12 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
-                                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                                            <path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                            <path d="M5 20a7 7 0 0 1 14 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </div>
-                                    <div>
-                                        <p class="font-semibold text-gray-900 dark:text-white">{{ $testimonial['name'] }}</p>
-                                        <p class="text-sm text-gray-500 dark:text-gray-400">{{ $testimonial['role'] }}</p>
-                                    </div>
-                                </div>
-                            </article>
-                        @endforeach
+                    <div class="mt-6 flex items-center gap-4">
+                        <img 
+                            src="{{ $developer['avatar'] }}" 
+                            alt="{{ $developer['name'] }}" 
+                            class="h-12 w-12 rounded-full border-2 border-white object-cover shadow-sm dark:border-gray-700"
+                        >
+                        <div>
+                            <p class="font-semibold text-gray-900 dark:text-white">{{ $developer['name'] }}</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">{{ $developer['role'] }}</p>
+                        </div>
                     </div>
-                </div>
-            </section>
+                </article>
+            @endforeach
+        </div>
+    </div>
+</section>
 
             <section id="pricing" class="scroll-mt-28 py-24">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -832,7 +822,7 @@
                     <p class="text-sm font-semibold text-gray-900 dark:text-white">Company</p>
                     <div class="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-300">
                         <a href="#mentors" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Mentors</a>
-                        <a href="#testimonials" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Testimonials</a>
+                        <a href="#developers" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Developers</a>
                         <a href="#home" class="block transition hover:text-brand-600 dark:hover:text-brand-300">About</a>
                     </div>
                 </div>
@@ -844,8 +834,8 @@
                             <a href="{{ route('dashboard') }}" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Dashboard</a>
                             <a href="{{ $authPrimaryUrl }}" class="block transition hover:text-brand-600 dark:hover:text-brand-300">{{ $authPrimaryLabel }}</a>
                         @else
-                            <a href="{{ route('signin') }}" @click.prevent="openAuthModal('signin')" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Login</a>
-                            <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Get Started</a>
+                            <a href="{{ route('signin') }}" @click.prevent="openAuthModal('signin')" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Sign In</a>
+                            <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="block transition hover:text-brand-600 dark:hover:text-brand-300">Create Free Account</a>
                         @endauth
                     </div>
                 </div>
