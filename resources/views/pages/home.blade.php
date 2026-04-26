@@ -478,12 +478,6 @@
                                             alt="Interview practice preview"
                                             class="block h-auto w-full"
                                         />
-                                        <div class="absolute inset-0 bg-gradient-to-t from-gray-950/60 via-gray-950/10 to-transparent"></div>
-                                        <div class="absolute left-5 top-5 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-white/90 backdrop-blur-md">
-                                            <span class="h-2 w-2 rounded-full bg-emerald-300"></span>
-                                            Interview preview
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div class="absolute -left-4 bottom-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
