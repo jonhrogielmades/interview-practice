@@ -123,6 +123,20 @@ interviewpilot/
 `- tests/
 ```
 
+## Project Changes History
+
+This project has evolved from a static template into a dynamic, Laravel-based AI Interview Practice application. The key development milestones and changes include:
+
+- **Framework Migration:** Converted the initial static HTML project into a robust Laravel framework application, integrating Blade templating, Alpine.js, and Vite.
+- **Landing Page Implementation:** Ported the interactive "InterviewPilot" landing page into the Laravel ecosystem, enabling dynamic navigation, animated transitions, and modals using Tailwind CSS.
+- **UI/UX & Responsiveness Overhaul:** Completely redesigned the system for a premium, user-friendly, and fully responsive experience on both mobile and desktop devices. Added smooth animations and modern aesthetics.
+- **AI Interview Core Features:** Rebranded the platform to focus on interview preparation. Developed an AI-guided practice flow with category selection (job, scholarship, admission, IT), real-time chatbot interaction, and interviewer voice playback.
+- **Advanced Practice Modes:** Introduced text, voice, and hybrid response capabilities utilizing browser-based speech-to-text functionality.
+- **Evaluation & Feedback:** Integrated a comprehensive evaluation system aligned with a capstone manuscript's weighted 1-to-5 rubric, scoring clarity, relevance, grammar, and non-verbal cues.
+- **Authentication Improvements:** Enhanced the user journey with animated transitions between Sign In and Sign Up flows.
+- **"A Developers" Section:** Rebranded the former "Testimonials" area to "A Developers", restricting display to three core cards to better align with the product's focus.
+- **Admin & Learning Workflows:** Implemented an admin dashboard for user and API management, along with learning blueprints, session history, and report exports (JSON/CSV) for users.
+
 ## License
 
 See [LICENSE](./LICENSE).
