@@ -5,7 +5,7 @@ InterviewPilot is an AI-based interview practice system built with Laravel 12, T
 ## Features
 
 - Category-based interview simulation for job, scholarship, admission, and Information Technology scenarios
-- AI avatar interviewer support with spoken-question playback and category-backed question generation
+- AI visualizer support with spoken-question playback and category-backed question generation
 - Text, voice, and hybrid response modes with browser speech-to-text support
 - Verbal evaluation across clarity, relevance, grammar, and professionalism
 - Selected non-verbal coaching for eye contact orientation, posture, head movement, and facial composure
