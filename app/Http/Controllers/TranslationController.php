@@ -51,13 +51,22 @@ class TranslationController extends Controller
         if (!empty($textsNeedingApi)) {
             $apiResults = $translationService->translateBatch($textsNeedingApi, $targetLanguage);
 
-            foreach ($apiResults as $i => $translatedText) {
-                $originalIndex = $indicesNeedingApi[$i];
-                $translatedTexts[$originalIndex] = $translatedText;
-                
-                // Cache the new translation forever
-                $cacheKey = 'translation_' . md5($targetLanguage . '_' . $textsNeedingApi[$i]);
-                Cache::forever($cacheKey, $translatedText);
+            if (!empty($apiResults)) {
+                foreach ($apiResults as $i => $translatedText) {
+                    $originalIndex = $indicesNeedingApi[$i];
+                    $translatedTexts[$originalIndex] = $translatedText;
+                    
+                    // Cache the new translation forever
+                    $cacheKey = 'translation_' . md5($targetLanguage . '_' . $textsNeedingApi[$i]);
+                    Cache::forever($cacheKey, $translatedText);
+                }
+            } else {
+                // If API failed entirely, populate with original texts so the frontend doesn't crash
+                // but DO NOT cache these so we can try again later
+                foreach ($textsNeedingApi as $i => $text) {
+                    $originalIndex = $indicesNeedingApi[$i];
+                    $translatedTexts[$originalIndex] = $text;
+                }
             }
         }
 

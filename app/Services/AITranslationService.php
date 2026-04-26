@@ -42,8 +42,8 @@ class AITranslationService
                 
                 if ($resultContent) {
                     // Clean up any potential markdown code blocks returned by AI
-                    $resultContent = preg_replace('/^```json\s*/i', '', trim($resultContent));
-                    $resultContent = preg_replace('/```$/', '', $resultContent);
+                    $resultContent = preg_replace('/^```(?:json)?\s*/i', '', trim($resultContent));
+                    $resultContent = preg_replace('/\s*```$/', '', $resultContent);
                     
                     $translatedArray = json_decode($resultContent, true);
 
@@ -62,8 +62,8 @@ class AITranslationService
             }
         }
 
-        // Fallback to original if all providers fail
-        return $texts;
+        // Return empty array if all providers fail to avoid caching English as translation
+        return [];
     }
 
     protected function attemptTranslation(string $provider, array $texts, string $systemPrompt): ?string
@@ -87,7 +87,7 @@ class AITranslationService
         $model = config('services.gemini.model', 'gemini-2.5-flash');
         $url = sprintf('https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent', $model);
 
-        $response = Http::timeout(5)
+        $response = Http::timeout(20)
             ->acceptJson()
             ->withHeaders(['x-goog-api-key' => $apiKey])
             ->post($url, [
@@ -153,7 +153,7 @@ class AITranslationService
 
         $model = config('services.claude.model', 'claude-haiku-4-5-20251001');
 
-        $response = Http::timeout(5)
+        $response = Http::timeout(20)
             ->withHeaders([
                 'x-api-key' => $apiKey,
                 'anthropic-version' => config('services.claude.version', '2023-06-01'),
@@ -183,7 +183,7 @@ class AITranslationService
 
         $model = config('services.cohere.model', 'command-r7b-12-2024');
 
-        $response = Http::timeout(5)
+        $response = Http::timeout(20)
             ->withToken($apiKey)
             ->post('https://api.cohere.ai/v1/chat', [
                 'model' => $model,
@@ -201,7 +201,7 @@ class AITranslationService
 
     protected function requestOpenAiCompatible(string $url, string $apiKey, string $model, array $texts, string $systemPrompt): ?string
     {
-        $response = Http::timeout(5)
+        $response = Http::timeout(20)
             ->withToken($apiKey)
             ->post($url, [
                 'model' => $model,
