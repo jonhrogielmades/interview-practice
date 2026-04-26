@@ -22,7 +22,7 @@
 @endphp
 
 <aside id="sidebar"
-    class="fixed top-0 left-0 z-[100001] mt-0 flex h-[100dvh] flex-col overflow-hidden border-r border-gray-200 bg-white px-4 text-gray-900 shadow-2xl transition-all duration-300 ease-in-out dark:border-gray-800 dark:bg-gray-900 sm:px-5 xl:shadow-none"
+    class="fixed top-0 left-0 z-[100001] mt-0 flex h-[100dvh] flex-col overflow-hidden border-r border-gray-200/50 bg-white/80 px-4 text-gray-900 shadow-2xl backdrop-blur-2xl transition-all duration-300 ease-in-out dark:border-white/5 dark:bg-gray-900/80 sm:px-5 xl:shadow-none"
     x-data="{
         openSubmenus: {},
         init() {
@@ -101,7 +101,7 @@
                     class="h-full w-full object-cover object-top" />
             </span>
             <span x-show="$store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen"
-                class="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
+                class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold tracking-tight text-transparent dark:from-white dark:to-gray-400">
                 InterviewPilot
             </span>
         </a>

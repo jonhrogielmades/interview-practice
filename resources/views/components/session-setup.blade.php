@@ -1,14 +1,14 @@
 <section
-    class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    class="mb-6 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/80 backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80">
     <div
-        class="border-b border-gray-200 bg-gradient-to-r from-brand-500/10 via-white to-cyan-500/10 p-6 dark:border-gray-800 dark:from-brand-500/5 dark:via-gray-900 dark:to-cyan-500/5">
+        class="border-b border-gray-200/50 bg-gradient-to-r from-brand-500/10 via-white to-cyan-500/10 p-6 dark:border-white/5 dark:from-brand-500/5 dark:via-gray-900 dark:to-cyan-500/5">
         <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div class="max-w-3xl">
                 <span
                     class="mb-3 inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
                     AI-Based Interview Practice System
                 </span>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
+                <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-2xl font-bold text-transparent dark:from-white dark:to-gray-400 md:text-3xl">
                     Session Setup
                 </h1>
                 <p class="mt-3 max-w-2xl text-left text-sm leading-6 text-gray-600 dark:text-gray-400 md:text-justify">
@@ -19,17 +19,17 @@
 
             <div class="grid gap-3 sm:grid-cols-3">
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Saved Defaults</p>
                     <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Reusable</p>
                 </div>
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Modes</p>
                     <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Coach + Pace</p>
                 </div>
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Launch</p>
                     <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">Practice Ready</p>
                 </div>
@@ -40,7 +40,7 @@
 
 <div id="sessionSetupApp" class="grid items-start gap-6 xl:grid-cols-12">
     <section class="flex flex-col gap-6 xl:col-span-8">
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Core Defaults
@@ -86,7 +86,7 @@
             </div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Session Preferences
@@ -139,7 +139,7 @@
         </article>
 
         <article
-            class="rounded-2xl border border-brand-100 bg-brand-50/60 p-5 dark:border-brand-500/20 dark:bg-brand-500/5">
+            class="rounded-2xl border border-brand-100 bg-brand-50/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-brand-500/20 dark:bg-brand-500/10">
             <div class="mb-4">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Setup Guidance
@@ -181,7 +181,7 @@
             </div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-4">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Category Preview
@@ -217,7 +217,7 @@
     </section>
 
     <section class="flex flex-col gap-6 xl:col-span-4">
-        <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Saved Summary
@@ -285,7 +285,7 @@
             </div>
         </article>
 
-        <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-4">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Notes Preview
@@ -302,7 +302,7 @@
             </p>
         </article>
 
-        <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
                     Actions

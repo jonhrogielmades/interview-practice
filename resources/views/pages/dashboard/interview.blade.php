@@ -449,7 +449,7 @@
         </div>
 
         <section data-dashboard-tour-target="dashboard-home"
-            class="shadow-theme-sm overflow-hidden rounded-[28px] border border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900"
+            class="shadow-theme-lg overflow-hidden rounded-[28px] border border-gray-200/50 bg-white/80 backdrop-blur-2xl dark:border-white/5 dark:bg-gray-900/80"
             :class="$store.dashboardOnboarding.targetClass('dashboard-home')">
             <div class="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
                 <div class="flex flex-col justify-center">
@@ -457,7 +457,7 @@
                         Capstone Project Dashboard
                     </span>
 
-                    <h1 class="text-title-sm mb-4 font-bold text-gray-900 dark:text-white">
+                    <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-title-sm mb-4 font-bold text-transparent dark:from-white dark:to-gray-400">
                         AI-Based Interview Practice System
                     </h1>
 
@@ -469,7 +469,7 @@
 
                     <div class="flex flex-wrap gap-3">
                         <a href="{{ route('practice') }}"
-                            class="bg-brand-500 text-theme-sm shadow-theme-sm hover:bg-brand-600 inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium text-white transition">
+                            class="bg-brand-500 text-theme-sm hover:scale-105 hover:bg-brand-600 inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300">
                             Start Practice
                         </a>
 
@@ -479,7 +479,7 @@
                         </a>
 
                         <a href="{{ route('profile') }}"
-                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
                             Profile
                         </a>
 
@@ -517,7 +517,7 @@
                 <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     @foreach ($featureCards as $card)
                         <a href="{{ $card['href'] }}"
-                            class="shadow-theme-sm hover:shadow-theme-md rounded-2xl border border-gray-200 bg-white p-5 transition hover:-translate-y-1 dark:border-gray-800 dark:bg-gray-900">
+                            class="shadow-theme-sm hover:shadow-theme-xl hover:-translate-y-1.5 rounded-2xl border border-gray-200/50 bg-white/80 p-5 backdrop-blur-xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80">
                             <h3 class="mb-2 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
                                 @if ($card['icon'] === 'lock')
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -553,10 +553,10 @@
                 </section>
 
                 <section id="practice-categories"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
                     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
                                 Interview Categories
                             </h2>
                             <p class="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -572,7 +572,7 @@
 
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($categories as $category)
-                            <div class="rounded-xl border border-gray-200 p-4 transition hover:border-brand-300 dark:border-gray-800 dark:hover:border-brand-700">
+                            <div class="rounded-xl border border-gray-200 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:hover:border-brand-700">
                                 <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">
                                     {{ $category['title'] }}
                                 </h3>
@@ -585,9 +585,9 @@
                 </section>
 
                 <section id="workflow"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
                     <div class="mb-6">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
                             Practice Workflow
                         </h2>
                         <p class="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -615,9 +615,9 @@
 
             <div class="col-span-12 space-y-6 xl:col-span-4">
                 <section id="progress-overview"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200 bg-white p-6 dark:border-gray-800 dark:bg-gray-900">
+                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
                     <div class="mb-5">
-                        <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
                             Sample Evaluation
                         </h2>
                         <p class="text-theme-sm text-gray-500 dark:text-gray-400">

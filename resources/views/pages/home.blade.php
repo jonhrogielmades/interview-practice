@@ -389,7 +389,7 @@
                                 New AI Interview Labs Available
                             </span>
 
-                            <h1 class="mt-6 text-4xl font-semibold leading-tight text-gray-900 sm:text-4xl xl:text-5xl dark:text-white">
+                            <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-4xl font-bold leading-tight text-transparent sm:text-4xl xl:text-5xl dark:from-white dark:to-gray-400">
                                 Master Interview Skills
                                 <span class="block text-brand-500">Anytime, Anywhere</span>
                             </h1>
@@ -402,13 +402,13 @@
                                 @auth
                                     <a
                                         href="{{ $authPrimaryUrl }}"
-                                        class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600"
+                                        class="bg-brand-500 inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300 hover:scale-105 hover:bg-brand-600"
                                     >
                                         {{ $authPrimaryLabel }}
                                     </a>
                                     <a
                                         href="{{ route('dashboard') }}"
-                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
+                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
                                     >
                                         View Dashboard
                                     </a>
@@ -416,14 +416,14 @@
                                     <a
                                         href="{{ route('signup') }}"
                                         @click.prevent="openAuthModal('signup')"
-                                        class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600"
+                                        class="bg-brand-500 inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300 hover:scale-105 hover:bg-brand-600"
                                     >
                                         Create Free Account
                                     </a>
                                     <a
                                         href="{{ route('signin') }}"
                                         @click.prevent="openAuthModal('signin')"
-                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
+                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
                                     >
                                         Sign In
                                     </a>
@@ -509,7 +509,7 @@
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-2xl text-center">
                         <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Courses</p>
-                        <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
                             Explore Our Popular <span class="text-brand-500">Courses</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -526,7 +526,7 @@
                                     'image' => asset('images/grid-image/image-02.png'),
                                 ];
                             @endphp
-                            <article class="group rounded-[30px] border border-gray-200 bg-white p-4 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-34px_rgba(15,23,42,0.4)] dark:border-gray-800 dark:bg-gray-900">
+                            <article class="group rounded-[30px] border border-gray-200/50 bg-white/80 p-4 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-34px_rgba(15,23,42,0.5)] dark:border-white/5 dark:bg-gray-900/80">
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold {{ $course['badgeClass'] }}">
                                         {{ $course['badge'] }}
@@ -596,7 +596,7 @@
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-2xl text-center">
                         <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Mentors</p>
-                        <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
                             Learn From Industry <span class="text-brand-500">Experts</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -606,7 +606,7 @@
 
                     <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                         @foreach ($mentorCards as $mentor)
-                            <article class="rounded-[30px] border border-gray-200 bg-white px-6 py-8 text-center shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-gray-800 dark:bg-gray-900">
+                            <article class="rounded-[30px] border border-gray-200/50 bg-white/80 px-6 py-8 text-center shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-34px_rgba(15,23,42,0.5)] dark:border-white/5 dark:bg-gray-900/80">
                                 <div class="relative mx-auto w-fit">
                                     <img src="{{ $mentor['avatar'] }}" alt="{{ $mentor['name'] }}" class="h-20 w-20 rounded-full border-4 border-warning-300 object-cover" />
                                     <span class="absolute -bottom-2 left-1/2 inline-flex -translate-x-1/2 rounded-full bg-warning-500 px-3 py-1 text-[11px] font-semibold text-white shadow-theme-xs">
@@ -633,7 +633,7 @@
                     <div class="mx-auto max-w-6xl">
                         <div class="mx-auto max-w-3xl text-center">
                             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Features</p>
-                            <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+                            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
                                 Platform <span class="text-brand-500">features</span>
                             </h2>
                             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -643,7 +643,7 @@
 
                         <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             @foreach (collect($platformFeatures)->take(6) as $feature)
-                                <div class="rounded-[24px] border border-gray-200 bg-white/85 p-5 shadow-theme-xs backdrop-blur dark:border-gray-800 dark:bg-gray-900/75">
+                                <div class="rounded-[24px] border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                                     <div class="flex items-start gap-3">
                                         <span class="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -685,7 +685,7 @@
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div class="mx-auto max-w-2xl text-center">
             <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Developers</p>
-            <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
                 What Developers <span class="text-brand-500">Are Saying</span>
             </h2>
             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -695,7 +695,7 @@
 
         <div class="mt-14 grid gap-6 lg:grid-cols-3">
             @foreach ($developers as $developer)
-                <article class="rounded-[28px] border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                <article class="rounded-[28px] border border-gray-200/50 bg-white/80 p-6 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <div class="flex items-center gap-1 text-warning-400">
                         @for ($i = 0; $i < 5; $i++)
                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -727,7 +727,7 @@
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-2xl text-center">
                         <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Pricing</p>
-                        <h2 class="mt-5 text-4xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
                             Simple, Transparent <span class="text-brand-500">Pricing</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -737,7 +737,7 @@
 
                     <div class="mx-auto mt-14 grid max-w-6xl gap-6 lg:grid-cols-3">
                         @foreach ($pricingPlans as $plan)
-                            <article class="relative rounded-[30px] border {{ $plan['featured'] ? 'border-brand-300 bg-brand-50/60 shadow-[0_30px_70px_-38px_rgba(70,95,255,0.35)] dark:border-brand-500/40 dark:bg-brand-500/10' : 'border-gray-200 bg-white shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-gray-800 dark:bg-gray-900' }} p-8">
+                            <article class="relative rounded-[30px] border {{ $plan['featured'] ? 'border-brand-300 bg-brand-50/80 shadow-[0_30px_70px_-38px_rgba(70,95,255,0.45)] dark:border-brand-500/40 dark:bg-brand-500/20' : 'border-gray-200/50 bg-white/80 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-white/5 dark:bg-gray-900/80' }} p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-xl">
                                 @if ($plan['featured'])
                                     <span class="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500 px-4 py-1.5 text-xs font-semibold text-white shadow-theme-xs">
                                         Most Popular
@@ -869,34 +869,52 @@
                     </button>
 
                     <div class="grid lg:grid-cols-[0.92fr_1.08fr] lg:items-stretch">
-                        <aside class="relative hidden border-r border-gray-200 bg-gray-900 px-8 py-10 text-white dark:border-gray-800 lg:flex lg:flex-col lg:justify-center lg:gap-12">
-                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(70,95,255,0.25),_transparent_35%)]"></div>
+                        <aside class="relative hidden overflow-hidden border-r border-gray-200 bg-gray-950 px-8 py-12 text-white dark:border-gray-800 lg:flex lg:flex-col lg:justify-center lg:gap-12">
+                            <!-- Animated Orbs for AI aesthetic -->
+                            <div class="absolute -left-10 top-10 h-64 w-64 animate-pulse rounded-full bg-brand-500/20 blur-3xl filter"></div>
+                            <div class="absolute -right-10 bottom-10 h-64 w-64 animate-pulse rounded-full bg-blue-500/20 blur-3xl filter [animation-delay:2s]"></div>
+                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(70,95,255,0.15),_transparent_45%)]"></div>
+                            <div class="absolute inset-0 bg-gray-950/40 backdrop-blur-[2px]"></div>
 
-                            <div class="relative mx-auto w-full max-w-md">
-                                <span class="inline-flex rounded-full bg-brand-400/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-brand-200">
-                                    Landing Page Access
+                            <div class="relative z-10 mx-auto w-full max-w-md">
+                                <span class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand-300 shadow-theme-xs backdrop-blur-md">
+                                    <span class="relative flex h-2 w-2">
+                                      <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-brand-400 opacity-75"></span>
+                                      <span class="relative inline-flex h-2 w-2 rounded-full bg-brand-500"></span>
+                                    </span>
+                                    AI INTERVIEW LAB
                                 </span>
-                                <h2 class="mt-5 max-w-sm text-4xl font-semibold leading-tight text-white">
-                                    Sign in or create your account without leaving the homepage.
+                                <h2 class="mt-6 max-w-sm text-4xl font-bold leading-[1.15] text-white">
+                                    Meet your personal <span class="bg-gradient-to-r from-brand-400 to-blue-400 bg-clip-text text-transparent">AI Interviewer</span>
                                 </h2>
-                                <p class="mt-4 max-w-md text-sm leading-7 text-white/75">
-                                    Use Google or email access, then continue straight into the interview practice workspace from this landing page.
+                                <p class="mt-4 max-w-md text-base leading-7 text-gray-300">
+                                    Sign in to resume your mock interviews, access personalized AI feedback, and refine your answers in real-time.
                                 </p>
                             </div>
 
-                            <div class="relative mx-auto w-full max-w-md space-y-4">
-                                <div class="rounded-[28px] border border-white/10 bg-white/5 p-5">
-                                    <p class="text-sm font-semibold text-white">Supported methods</p>
-                                    <p class="mt-2 text-sm leading-6 text-white/70">
-                                        Google for fast sign-in, or email and password for your regular account flow.
-                                    </p>
+                            <div class="relative z-10 mx-auto w-full max-w-md space-y-4">
+                                <div class="group flex items-start gap-4 rounded-[24px] border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all hover:bg-white/[0.04]">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-brand-300 transition-transform group-hover:scale-110">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">Instant AI Feedback</p>
+                                        <p class="mt-1 text-sm leading-6 text-gray-400">Get detailed analytics on your tone, pacing, and content quality.</p>
+                                    </div>
                                 </div>
 
-                                <div class="rounded-[28px] border border-brand-400/20 bg-brand-400/10 p-5">
-                                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-brand-200">InterviewPilot</p>
-                                    <p class="mt-2 text-sm leading-6 text-brand-50">
-                                        Open the modal, choose your method, and jump directly into guided interview practice.
-                                    </p>
+                                <div class="group flex items-start gap-4 rounded-[24px] border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all hover:bg-white/[0.04]">
+                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-300 transition-transform group-hover:scale-110">
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold text-white">Realistic Mock Sessions</p>
+                                        <p class="mt-1 text-sm leading-6 text-gray-400">Voice-to-voice interviews tailored to your specific role and industry.</p>
+                                    </div>
                                 </div>
                             </div>
                         </aside>
@@ -987,7 +1005,7 @@
                                             @endif
 
                                             <div class="mt-6">
-                                                <a href="{{ route('google.redirect') }}" class="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 shadow-theme-xs transition hover:border-brand-200 hover:bg-brand-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10">
+                                                <a href="{{ route('google.redirect') }}" class="inline-flex h-10 w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-gray-800">
                                                     <svg class="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
                                                         <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.201 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.844 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.277 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917Z"/>
                                                         <path fill="#FF3D00" d="M6.306 14.691 12.88 19.51C14.655 15.108 18.961 12 24 12c3.059 0 5.844 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.277 4 24 4c-7.682 0-14.318 4.337-17.694 10.691Z"/>
@@ -1018,7 +1036,7 @@
                                                         value="{{ old('auth_form') === 'signin' ? old('email') : '' }}"
                                                         required
                                                         autocomplete="email"
-                                                        class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500"
+                                                        class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500 dark:focus:bg-gray-900"
                                                         placeholder="you@example.com"
                                                     >
                                                 </div>
@@ -1032,7 +1050,7 @@
                                                             x-bind:type="showPassword ? 'text' : 'password'"
                                                             required
                                                             autocomplete="current-password"
-                                                            class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500"
+                                                            class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-5 pr-14 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500 dark:focus:bg-gray-900"
                                                             placeholder="Enter your password"
                                                         >
                                                         <button
@@ -1071,7 +1089,7 @@
 
                                                 <button
                                                     type="submit"
-                                                    class="inline-flex w-full items-center justify-center rounded-2xl bg-gray-900 px-4 py-3.5 text-sm font-semibold text-white shadow-theme-xs transition hover:bg-brand-600 dark:bg-brand-500 dark:hover:bg-brand-400"
+                                                    class="inline-flex h-10 w-full items-center justify-center rounded-lg bg-gray-900 px-4 text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-gray-800 hover:shadow-md dark:bg-brand-500 dark:hover:bg-brand-400"
                                                 >
                                                     Sign In With Email
                                                 </button>
@@ -1121,7 +1139,7 @@
                                             @endif
 
                                             <div class="mt-6">
-                                                <a href="{{ route('google.redirect') }}" class="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-sm font-semibold text-gray-800 shadow-theme-xs transition hover:border-brand-200 hover:bg-brand-50 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:hover:border-brand-500/30 dark:hover:bg-brand-500/10">
+                                                <a href="{{ route('google.redirect') }}" class="inline-flex h-10 w-full items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-sm transition-all hover:-translate-y-0.5 hover:border-gray-300 hover:bg-gray-50 hover:shadow-md dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-gray-800">
                                                     <svg class="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
                                                         <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303C33.654 32.657 29.201 36 24 36c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.844 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.277 4 24 4 12.955 4 4 12.955 4 24s8.955 20 20 20 20-8.955 20-20c0-1.341-.138-2.65-.389-3.917Z"/>
                                                         <path fill="#FF3D00" d="M6.306 14.691 12.88 19.51C14.655 15.108 18.961 12 24 12c3.059 0 5.844 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.277 4 24 4c-7.682 0-14.318 4.337-17.694 10.691Z"/>
@@ -1152,7 +1170,7 @@
                                                         value="{{ old('auth_form') === 'signup' ? old('email') : '' }}"
                                                         required
                                                         autocomplete="email"
-                                                        class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500"
+                                                        class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-5 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500 dark:focus:bg-gray-900"
                                                         placeholder="you@example.com"
                                                     >
                                                 </div>
@@ -1167,7 +1185,7 @@
                                                                 x-bind:type="showPassword ? 'text' : 'password'"
                                                                 required
                                                                 autocomplete="new-password"
-                                                                class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500"
+                                                                class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-5 pr-14 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500 dark:focus:bg-gray-900"
                                                                 placeholder="At least 8 characters"
                                                             >
                                                             <button
@@ -1197,7 +1215,7 @@
                                                                 x-bind:type="showPassword ? 'text' : 'password'"
                                                                 required
                                                                 autocomplete="new-password"
-                                                                class="h-12 w-full rounded-2xl border border-gray-200 bg-white px-4 pr-14 text-sm text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-brand-400 focus:ring-4 focus:ring-brand-100 dark:border-gray-700 dark:bg-gray-900 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500"
+                                                                class="h-10 w-full rounded-lg border border-gray-200 bg-gray-50/50 px-5 pr-14 text-sm text-gray-900 outline-none transition-all placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10 dark:border-gray-800 dark:bg-gray-900/50 dark:text-white dark:placeholder:text-gray-500 dark:focus:border-brand-500 dark:focus:bg-gray-900"
                                                                 placeholder="Repeat your password"
                                                             >
                                                             <button
@@ -1227,7 +1245,7 @@
 
                                                 <button
                                                     type="submit"
-                                                    class="inline-flex w-full items-center justify-center rounded-2xl bg-brand-500 px-4 py-3.5 text-sm font-semibold text-white shadow-theme-xs transition hover:bg-brand-600"
+                                                    class="inline-flex h-10 w-full items-center justify-center rounded-lg bg-brand-500 px-4 text-sm font-bold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-brand-600 hover:shadow-md"
                                                 >
                                                     Create Account With Email
                                                 </button>

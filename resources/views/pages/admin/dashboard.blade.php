@@ -16,14 +16,14 @@
             </div>
         @endif
 
-        <section class="overflow-hidden rounded-[28px] border border-gray-200 bg-white shadow-theme-sm dark:border-gray-800 dark:bg-gray-900">
+        <section class="overflow-hidden rounded-[28px] border border-gray-200/50 bg-white/80 shadow-theme-lg backdrop-blur-2xl dark:border-white/5 dark:bg-gray-900/80">
             <div class="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
                 <div class="flex flex-col justify-center">
                     <span class="mb-4 inline-flex w-fit rounded-full bg-warning-50 px-3 py-1 text-xs font-medium uppercase tracking-[0.2em] text-warning-700 dark:bg-warning-500/15 dark:text-warning-300">
                         Admin Control Center
                     </span>
 
-                    <h1 class="mb-4 text-title-sm font-bold text-gray-900 dark:text-white">
+                    <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-title-sm mb-4 font-bold text-transparent dark:from-white dark:to-gray-400">
                         Monitor the system and route admins to the manuscript-aligned control pages.
                     </h1>
 
@@ -65,9 +65,9 @@
 
         <div class="grid grid-cols-12 gap-4 md:gap-6">
             <div class="col-span-12 space-y-6 xl:col-span-8">
-                <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 lg:p-6">
+                <section class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-sm backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
                     <div class="mb-5">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Admin Workflows</h2>
+                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold text-transparent dark:from-white dark:to-gray-400">Admin Workflows</h2>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
                             Use dedicated admin pages instead of mixing manuscript-level management controls into the user workspace.
                         </p>
@@ -76,7 +76,7 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         @foreach ($quickLinks as $link)
                             <a href="{{ $link['href'] }}"
-                                class="rounded-2xl border border-gray-200 bg-gray-50 p-5 transition hover:-translate-y-0.5 hover:shadow-theme-sm dark:border-gray-800 dark:bg-white/5">
+                                class="rounded-2xl border border-gray-200/50 bg-white/50 p-5 transition-all duration-300 hover:-translate-y-1.5 hover:bg-white/80 hover:shadow-theme-md dark:border-white/5 dark:bg-white/5 dark:hover:bg-white/10">
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ $link['title'] }}</h3>
                                 <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">{{ $link['body'] }}</p>
                                 <span @class([
@@ -91,8 +91,8 @@
                     </div>
                 </section>
 
-                <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 lg:p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Top Practice Categories</h2>
+                <section class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-sm backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
+                    <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold text-transparent dark:from-white dark:to-gray-400">Top Practice Categories</h2>
                     <div class="mt-4 space-y-3">
                         @forelse ($topCategories as $category)
                             <div class="rounded-2xl border border-gray-200 px-4 py-3 dark:border-gray-800">
@@ -113,8 +113,8 @@
             </div>
 
             <div class="col-span-12 space-y-6 xl:col-span-4">
-                <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 lg:p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">System Signals</h2>
+                <section class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-sm backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
+                    <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold text-transparent dark:from-white dark:to-gray-400">System Signals</h2>
                     <div class="mt-4 space-y-3">
                         @foreach ($systemSignals as $signal)
                             <div class="flex items-center justify-between rounded-2xl border border-gray-200 px-4 py-3 dark:border-gray-800">
@@ -125,8 +125,8 @@
                     </div>
                 </section>
 
-                <section class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 lg:p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Recent Signups</h2>
+                <section class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-sm backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
+                    <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold text-transparent dark:from-white dark:to-gray-400">Recent Signups</h2>
                     <div class="mt-4 space-y-4">
                         @foreach ($recentUsers as $user)
                             <div class="rounded-2xl border border-gray-200 px-4 py-3 dark:border-gray-800">

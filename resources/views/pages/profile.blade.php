@@ -13,9 +13,9 @@
     <div
         x-data="profilePage(@js($profile), @js($address), @js($socials), @js($profileRoutes), @js(csrf_token()))"
         x-effect="document.body.style.overflow = (isProfileInfoModal || isProfileAddressModal) ? 'hidden' : 'unset'"
-        class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6"
+        class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80 lg:p-6"
     >
-        <h3 class="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">Profile</h3>
+        <h3 class="mb-5 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-lg font-bold text-transparent dark:from-white dark:to-gray-400 lg:mb-7">Profile</h3>
 
         @if (session('status'))
             <div class="mb-5 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300">
@@ -37,7 +37,7 @@
             <span x-text="message.text"></span>
         </div>
 
-        <div class="mb-6 rounded-2xl border border-gray-200 p-5 dark:border-gray-800 lg:p-6">
+        <div class="mb-6 rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
             <div class="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
                 <div class="flex w-full flex-col items-center gap-6 xl:flex-row">
                     <div class="flex flex-col items-center gap-3">
@@ -116,7 +116,7 @@
             </div>
         </div>
 
-        <div class="mb-6 rounded-2xl border border-gray-200 p-5 dark:border-gray-800 lg:p-6">
+        <div class="mb-6 rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">Personal Information</h4>
@@ -158,7 +158,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-gray-200 p-5 dark:border-gray-800 lg:p-6">
+        <div class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 lg:p-6">
             <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
                 <div>
                     <h4 class="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">Address</h4>

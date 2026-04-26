@@ -1,14 +1,14 @@
 <section
-    class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
+    class="mb-6 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/80 backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80">
     <div
-        class="border-b border-gray-200 bg-gradient-to-r from-brand-500/10 via-white to-sky-500/10 p-6 dark:border-gray-800 dark:from-brand-500/5 dark:via-gray-900 dark:to-sky-500/5">
+        class="border-b border-gray-200/50 bg-gradient-to-r from-brand-500/10 via-white to-sky-500/10 p-6 dark:border-white/5 dark:from-brand-500/5 dark:via-gray-900 dark:to-sky-500/5">
         <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
             <div class="max-w-3xl">
                 <span
                     class="mb-3 inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
                     AI-Based Interview Practice System
                 </span>
-                <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
+                <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-2xl font-bold text-transparent dark:from-white dark:to-gray-400 md:text-3xl">
                     Performance Tracking
                 </h1>
                 <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -18,21 +18,21 @@
 
             <div class="grid gap-3 sm:grid-cols-4">
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Overall Sessions</p>
                     <p id="progressTotalSessions" class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">0</p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Saved interview practices</p>
                 </div>
 
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Overall Average</p>
                     <p id="progressAverageScore" class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">0.0</p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Average interview score</p>
                 </div>
 
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Weekly Goal</p>
                     <p id="progressWeeklyGoal" class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">0/3</p>
                     <p id="progressWeeklyGoalSubtext" class="mt-1 text-xs text-gray-500 dark:text-gray-400">
@@ -41,7 +41,7 @@
                 </div>
 
                 <div
-                    class="rounded-2xl border border-gray-200 bg-white/80 px-4 py-3 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                    class="rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-3 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Practice Streak</p>
                     <p id="progressStreakDays" class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">0</p>
                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Consecutive active days</p>
@@ -54,7 +54,7 @@
 <div id="progressApp" class="grid gap-6 xl:grid-cols-12">
     <section class="space-y-6 xl:col-span-8">
         <article id="sessionReviewSection"
-            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Average Score Trend</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -69,7 +69,7 @@
         </article>
 
         <article id="categoryBreakdownSection"
-            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Session History</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -80,7 +80,7 @@
         </article>
 
         <article id="exportSection"
-            class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Detailed Session Review</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -90,7 +90,7 @@
             <div id="sessionReviewContainer" class="space-y-4"></div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Achievements</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -102,7 +102,7 @@
     </section>
 
     <section class="space-y-6 xl:col-span-4">
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Category Breakdown</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -119,7 +119,7 @@
                 </p>
             </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Capstone Rubric</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -129,7 +129,7 @@
             <div id="progressCapstoneRubricGrid" class="grid gap-3 sm:grid-cols-2"></div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Criteria Analytics</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -139,7 +139,7 @@
             <div id="criteriaAnalyticsGrid" class="grid gap-3 sm:grid-cols-2"></div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Recent Performance Cards</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -149,7 +149,7 @@
             <div id="recentPerformanceCards" class="space-y-3"></div>
         </article>
 
-        <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Export Data</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">

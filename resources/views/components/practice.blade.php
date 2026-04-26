@@ -1,7 +1,7 @@
 <div id="practiceApp">
     <section class="xl:col-span-8">
         <div class="flex h-full flex-col gap-6">
-            <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                 <div
                     class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
                     <div class="max-w-2xl">
@@ -153,7 +153,7 @@
     <div id="practiceCategoryModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
 
     <div
-        class="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        class="relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/90 sm:rounded-3xl">
         <div
             class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
             <div class="max-w-2xl">
@@ -244,7 +244,7 @@
     <div id="practiceFieldModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
 
     <div
-        class="relative z-10 flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        class="relative z-10 flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/90 sm:rounded-3xl">
         <div
             class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
             <div class="max-w-2xl">
@@ -320,7 +320,7 @@
                         </div>
                     </article>
 
-                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Session Setup</h3>
@@ -372,7 +372,7 @@
                         </div>
                     </article>
 
-                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Quick Picks</h3>
@@ -385,7 +385,7 @@
                         <div id="practiceFieldSuggestionChips" class="mt-4 flex flex-wrap gap-2"></div>
                     </article>
 
-                    <article class="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                         <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Current Field Plan</h3>
                         <strong
                             id="practiceFieldPreviewTitle"
@@ -401,7 +401,7 @@
                 </section>
 
                 <section class="xl:col-span-7">
-                    <article class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
                         <div class="border-b border-gray-200 pb-4 dark:border-gray-800">
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Field Chatbot</h3>
                             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -481,7 +481,7 @@
     aria-labelledby="practiceModalTitle">
     <div id="practiceSessionModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm hidden"></div>
     <div
-        class="flex w-full flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 min-h-[80vh] sm:min-h-0">
+        class="flex w-full min-h-[80vh] flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 sm:min-h-0 dark:border-white/5 dark:bg-gray-900/90">
         <div
             class="flex flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between sm:px-5 lg:px-6">
             <div>
@@ -507,7 +507,7 @@
         <div class="p-3 sm:p-5 lg:p-6">
             <div class="grid items-start gap-4 lg:gap-6 xl:grid-cols-12">
                 <section class="min-w-0 xl:col-span-7">
-                    <article class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
                         <div
                             class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 md:flex-row md:items-start md:justify-between">
                             <div>
@@ -713,7 +713,7 @@
                 <section class="space-y-6 xl:col-span-5 xl:self-start">
                     <article
                         id="aiInterviewerSection"
-                        class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        class="rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
                         <div
                             class="flex flex-col gap-4 border-b border-gray-200 pb-5 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
                             <div>
@@ -900,7 +900,7 @@
 
                     <article
                         id="practiceQuestionAgentSection"
-                        class="rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                        class="rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
                         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                             <div>
                                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">AI Question Chatbot</h3>
@@ -978,7 +978,7 @@
     <div id="practiceQuestionAgentModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
 
     <div
-        class="relative z-10 flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-800 dark:bg-gray-950 sm:rounded-3xl">
+        class="relative z-10 flex h-full w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/90 sm:rounded-3xl">
         <div
             class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-10">
             <div class="max-w-2xl">
@@ -1009,7 +1009,7 @@
         </div>
 
         <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
-            <article class="flex h-full flex-col rounded-2xl border border-gray-200 bg-white p-4 sm:p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+            <article class="flex h-full flex-col rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
                 <div
                     class="flex flex-col gap-4 border-b border-gray-200 pb-4 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between">
                     <div>

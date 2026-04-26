@@ -7,14 +7,14 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="Interview Chatbot" />
 
-    <section class="mb-6 overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
-        <div class="border-b border-gray-200 bg-gradient-to-r from-brand-500/10 via-white to-blue-light-500/10 p-4 dark:border-gray-800 dark:from-brand-500/5 dark:via-gray-900 dark:to-blue-light-500/5 sm:p-6">
+    <section class="mb-6 overflow-hidden rounded-2xl border border-gray-200/50 bg-white/80 backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80">
+        <div class="border-b border-gray-200/50 bg-gradient-to-r from-brand-500/10 via-white to-blue-light-500/10 p-4 dark:border-white/5 dark:from-brand-500/5 dark:via-gray-900 dark:to-blue-light-500/5 sm:p-6">
             <div class="grid items-stretch gap-6 xl:grid-cols-[1.15fr_0.85fr]">
                 <div class="max-w-3xl">
                     <span class="mb-3 inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
                         Philippines-only interview guidance
                     </span>
-                    <h1 class="text-2xl font-semibold text-gray-900 dark:text-white/90 md:text-3xl">
+                    <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-2xl font-bold text-transparent dark:from-white dark:to-gray-400 md:text-3xl">
                         Interview Chatbot
                     </h1>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -35,7 +35,7 @@
                     </div>
                 </div>
 
-                <div class="flex h-full flex-col justify-center rounded-2xl border border-gray-200 bg-white/80 px-4 py-4 backdrop-blur dark:border-gray-800 dark:bg-gray-900/80">
+                <div class="flex h-full flex-col justify-center rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Fallback Behavior</p>
                     <p class="mt-2 text-lg font-semibold text-gray-900 dark:text-white/90">PH coach backup</p>
                     <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">
@@ -69,7 +69,7 @@
 
                 <article
                     data-provider-card="{{ $provider['id'] }}"
-                    class="chatbot-provider-card flex h-full min-w-0 flex-col rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    class="chatbot-provider-card flex h-full min-w-0 flex-col rounded-2xl border border-gray-200/50 bg-white/80 px-4 py-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
                     <div class="flex items-start justify-between gap-3">
                         <div class="min-w-0">
                             <p class="text-sm font-semibold text-gray-900 dark:text-white/90">{{ $provider['label'] }}</p>
@@ -100,7 +100,7 @@
         data-assistant-name="Interview Chatbot"
         class="space-y-6">
         <section class="grid gap-6 xl:grid-cols-12 xl:items-start">
-            <article class="min-w-0 rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:col-span-8">
+            <article class="min-w-0 rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 xl:col-span-8">
                 <div class="flex flex-col gap-6 border-b border-gray-200 pb-5 dark:border-gray-800 lg:flex-row lg:items-end lg:justify-between">
                     <div class="max-w-2xl">
                         <h2 class="text-lg font-semibold text-gray-900 dark:text-white/90">Coach Chat Workspace</h2>
@@ -265,7 +265,7 @@
             </article>
 
             <div class="grid min-w-0 auto-rows-fr gap-6 md:grid-cols-2 xl:col-span-4 xl:block xl:space-y-6">
-                <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:h-auto">
+                <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 xl:h-auto">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Current Scope</h3>
                     <p id="chatbotScopeTitle" class="mt-4 text-lg font-semibold text-gray-900 dark:text-white/90">
                         All Philippine Interviews
@@ -281,7 +281,7 @@
                     </div>
                 </article>
 
-                <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:h-auto">
+                <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 xl:h-auto">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Quick Prompts</h3>
@@ -293,7 +293,7 @@
                     <div id="chatbotQuickPrompts" class="mt-4 flex flex-wrap gap-2"></div>
                 </article>
 
-                <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:h-auto">
+                <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 xl:h-auto">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Latest Result</h3>
@@ -311,7 +311,7 @@
                     <div id="chatbotFeedbackPanel" class="mt-4 space-y-4"></div>
                 </article>
 
-                <article class="h-full rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] xl:h-auto">
+                <article class="h-full rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80 xl:h-auto">
                     <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Guardrails</h3>
                     <ul class="mt-4 space-y-3 text-sm leading-6 text-gray-600 dark:text-gray-400">
                         <li class="rounded-xl bg-gray-50 px-4 py-3 dark:bg-gray-900/70">
