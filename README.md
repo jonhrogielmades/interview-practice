@@ -13,6 +13,13 @@ InterviewPilot is a modern, AI-powered interview practice platform built with **
 - **Administrative Control Panel:** A fully featured admin dashboard for managing users, monitoring API routing, content planning, and overseeing practice records.
 - **Modern User Experience:** Features a premium, fully responsive design with smooth animations, dynamic navigation, and an intuitive UI. Secure authentication via Google OAuth and email.
 
+## Recent Updates
+
+- **Enhanced System UI & 3D Interactions:** Implemented a modern 3D tilt/hover effect on the homepage video preview, alongside refined header elements with enhanced smooth transition hover effects.
+- **Header Component Cleanup:** Streamlined the application header UI by restructuring date, time (now including seconds), and utility toggles for a cleaner aesthetic.
+- **Robust AI Service Error Handling:** Added robust error handling and timeout management for AI translation and chatbot service calls to prevent "infinite loading" states during high latency or API provider failures.
+- **Vite & Node.js Compatibility:** Ensured development environment compatibility by updating necessary configuration documentation for Node.js (20.19+) and Vite requirements.
+
 ## Tech Stack
 
 - **Backend:** Laravel 12 (PHP 8.2+)
