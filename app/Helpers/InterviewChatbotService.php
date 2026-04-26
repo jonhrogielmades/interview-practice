@@ -652,7 +652,7 @@ class InterviewChatbotService
             ],
         ];
 
-        $response = Http::timeout(20)
+        $response = Http::timeout(8)
             ->acceptJson()
             ->withHeaders([
                 'x-goog-api-key' => $apiKey,
@@ -759,7 +759,7 @@ class InterviewChatbotService
 
         $model = (string) config('services.claude.model', 'claude-haiku-4-5-20251001');
 
-        $response = Http::timeout(20)
+        $response = Http::timeout(8)
             ->acceptJson()
             ->withHeaders([
                 'x-api-key' => $apiKey,
@@ -877,7 +877,7 @@ class InterviewChatbotService
             return null;
         }
 
-        $response = Http::timeout(20)
+        $response = Http::timeout(8)
             ->acceptJson()
             ->withToken($apiKey)
             ->withHeaders($headers)
@@ -930,7 +930,7 @@ class InterviewChatbotService
 
         $model = (string) config('services.cohere.model', 'command-r7b-12-2024');
 
-        $response = Http::timeout(20)
+        $response = Http::timeout(8)
             ->acceptJson()
             ->withToken($apiKey)
             ->withHeaders([

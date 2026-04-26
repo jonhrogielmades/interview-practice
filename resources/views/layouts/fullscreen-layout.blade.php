@@ -152,5 +152,6 @@ window.addEventListener('resize', checkMobile);">
 </body>
 
 @stack('scripts')
+<script src="{{ asset('js/ai-translator.js') }}"></script>
 
 </html>

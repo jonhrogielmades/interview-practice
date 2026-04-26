@@ -16,11 +16,15 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceController;
+use App\Http\Controllers\TranslationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // public homepage
 Route::get('/', HomeController::class)->name('home');
+
+// AI Translation Endpoint
+Route::post('/api/translate', [TranslationController::class, 'translate'])->name('api.translate');
 
 Route::middleware('guest')->group(function () {
     Route::get('/signin', function () {

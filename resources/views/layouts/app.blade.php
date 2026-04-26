@@ -48,6 +48,11 @@
                     localStorage.setItem('theme-color', color);
                     this.updateTheme();
                 },
+                setTheme(theme) {
+                    this.theme = theme;
+                    localStorage.setItem('theme', this.theme);
+                    this.updateTheme();
+                },
                 toggle() {
                     this.theme = this.theme === 'light' ? 'dark' : 'light';
                     localStorage.setItem('theme', this.theme);
@@ -379,5 +384,6 @@
 </body>
 
 @stack('scripts')
+<script src="{{ asset('js/ai-translator.js') }}"></script>
 
 </html>

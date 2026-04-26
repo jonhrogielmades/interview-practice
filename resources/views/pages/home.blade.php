@@ -276,7 +276,7 @@
                     <button
                         type="button"
                         @click="$store.theme.toggle()"
-                        class="inline-flex h-11 items-center gap-3 rounded-full border border-brand-100 bg-white px-4 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:border-brand-200 hover:text-brand-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
+                        class="inline-flex h-11 items-center gap-3 rounded-full border border-brand-100 bg-white px-4 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-600 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
                         :aria-label="$store.theme.theme === 'dark' ? 'Switch to day theme' : 'Switch to night theme'"
                     >
                         <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300">
@@ -480,7 +480,7 @@
                                         />
                                 </div>
 
-                                <div class="absolute -left-4 bottom-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
+                                <!-- <div class="absolute -left-4 bottom-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
                                     <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $questionSampleCount }}+</p>
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Sample questions ready now</p>
                                 </div>
@@ -498,7 +498,7 @@
                                 <div class="absolute bottom-8 right-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg lg:block dark:border-gray-800 dark:bg-gray-900/95">
                                     <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ count($responseModes) }} response styles</p>
                                     <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Text, voice, and hybrid</p>
-                                </div>
+                                </div> -->
                             </div>
                         </div>
                     </div>
