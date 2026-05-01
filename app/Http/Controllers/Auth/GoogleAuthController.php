@@ -112,6 +112,7 @@ class GoogleAuthController extends Controller
         }
 
         Auth::login($user, true);
+        $notifications->sendGoogleLoginNotification($user);
         $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard'));

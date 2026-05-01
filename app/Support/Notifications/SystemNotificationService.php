@@ -28,6 +28,27 @@ class SystemNotificationService
         ]));
     }
 
+    public function sendGoogleLoginNotification(User $user): void
+    {
+        $user->notify(new SystemDatabaseNotification([
+            'title' => 'New Google Login Detected',
+            'body' => sprintf(
+                'Hello %s, you just logged into your account using Google. If this wasn\'t you, please secure your account immediately.',
+                $user->name
+            ),
+            'icon' => 'shield-check',
+            'tone' => 'brand',
+            'action_url' => route('dashboard'),
+            'action_label' => 'Review Account',
+            'mail' => true, // Explicitly trigger mail channel
+            'meta' => [
+                'audience' => 'user',
+                'event' => 'google_login',
+                'timestamp' => now()->toIso8601String(),
+            ],
+        ]));
+    }
+
     public function notifyAdminsAboutRegistration(User $user, string $source): void
     {
         $this->notifyAdmins([

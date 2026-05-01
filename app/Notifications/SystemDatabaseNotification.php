@@ -21,7 +21,29 @@ class SystemDatabaseNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if (! empty($this->payload['mail']) || in_array('mail', $this->payload['channels'] ?? [])) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): \Illuminate\Notifications\Messages\MailMessage
+    {
+        $mail = (new \Illuminate\Notifications\Messages\MailMessage)
+            ->subject((string) ($this->payload['title'] ?? 'Notification'))
+            ->line((string) ($this->payload['body'] ?? ''));
+
+        if ($url = ($this->payload['action_url'] ?? null)) {
+            $mail->action((string) ($this->payload['action_label'] ?? 'View Details'), $url);
+        }
+
+        return $mail;
     }
 
     /**
