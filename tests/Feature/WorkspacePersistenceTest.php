@@ -15,12 +15,24 @@ it('stores and returns setup and session data through workspace endpoints', func
         'preferredCategoryId' => 'it',
         'voiceMode' => 'hybrid',
         'notes' => 'Focus on concise technical examples.',
+        'targetField' => 'Junior Laravel Developer',
+        'panelMode' => 'technical',
+        'difficultMode' => true,
+        'fillerTracking' => true,
+        'adviserReviewMode' => true,
+        'weeklyGoal' => 4,
+        'reminderDays' => ['Monday', 'Wednesday', 'Friday'],
     ];
 
     $this->putJson(route('workspace.setup.update'), $setupPayload)
         ->assertOk()
         ->assertJsonPath('setup.questionCount', 5)
-        ->assertJsonPath('setup.preferredCategoryId', 'it');
+        ->assertJsonPath('setup.preferredCategoryId', 'it')
+        ->assertJsonPath('setup.targetField', 'Junior Laravel Developer')
+        ->assertJsonPath('setup.panelMode', 'technical')
+        ->assertJsonPath('setup.difficultMode', true)
+        ->assertJsonPath('setup.weeklyGoal', 4)
+        ->assertJsonPath('setup.reminderDays.1', 'Wednesday');
 
     $sessionPayload = [
         'id' => 'session-test-001',
@@ -199,6 +211,47 @@ it('stores and returns setup and session data through workspace endpoints', func
                         'facialComposureLabel' => 'Facial composure looks calm and professional.',
                         'tip' => 'Relax the face slightly more before the next answer.',
                     ],
+                    'answerVersions' => [
+                        [
+                            'label' => 'First Answer',
+                            'answer' => 'I built a Laravel scheduling dashboard.',
+                            'savedAt' => now()->subMinute()->toISOString(),
+                            'source' => 'Manual draft',
+                            'question' => 'Tell me about a project you developed and your role in it.',
+                        ],
+                        [
+                            'label' => 'Improved Answer',
+                            'answer' => 'I built a Laravel scheduling dashboard and led the backend integration work.',
+                            'savedAt' => now()->toISOString(),
+                            'source' => 'Submitted answer',
+                            'question' => 'Tell me about a project you developed and your role in it.',
+                        ],
+                    ],
+                    'speakingHabits' => [
+                        'fillerCounts' => ['um' => 1, 'like' => 0],
+                        'totalFillers' => 1,
+                        'totalWords' => 12,
+                        'fillerRate' => 8.3,
+                        'repeatedPhraseCount' => 0,
+                        'longPauseCount' => 1,
+                        'pacePerMinute' => 97,
+                        'summary' => 'Filler words are showing up often.',
+                    ],
+                    'panel' => [
+                        'mode' => 'panel',
+                        'role' => 'Technical Interviewer',
+                    ],
+                    'documentAnalysis' => [
+                        'categoryName' => 'IT / Programming',
+                        'analyzedAt' => now()->toISOString(),
+                        'signalCount' => 3,
+                    ],
+                    'adviserReview' => [
+                        'reviewer' => 'Teacher / Adviser',
+                        'sessionComment' => 'Good technical example. Add a measurable result next time.',
+                        'updatedAt' => now()->toISOString(),
+                        'status' => 'Reviewed',
+                    ],
                 ],
             ],
         ],
@@ -212,6 +265,9 @@ it('stores and returns setup and session data through workspace endpoints', func
     $this->getJson(route('workspace.bootstrap'))
         ->assertOk()
         ->assertJsonPath('workspace.setup.voiceMode', 'hybrid')
+        ->assertJsonPath('workspace.setup.targetField', 'Junior Laravel Developer')
+        ->assertJsonPath('workspace.setup.panelMode', 'technical')
+        ->assertJsonPath('workspace.setup.adviserReviewMode', true)
         ->assertJsonPath('workspace.sessions.0.id', 'session-test-001')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.strengths.0', 'Your answer is clear and easy to follow.')
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.criteria.clarity', 'The structure is easy to follow.')
@@ -221,7 +277,12 @@ it('stores and returns setup and session data through workspace endpoints', func
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.manuscriptRubric.overall', 4.23)
         ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.eyeContactScore', 7.9)
         ->assertJsonPath('workspace.sessions.0.criteriaAverages.manuscriptOverall', 4.23)
-        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.tip', 'Relax the face slightly more before the next answer.');
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.visualSnapshot.tip', 'Relax the face slightly more before the next answer.')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.answerVersions.1.label', 'Improved Answer')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.speakingHabits.totalFillers', 1)
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.panel.role', 'Technical Interviewer')
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.documentAnalysis.signalCount', 3)
+        ->assertJsonPath('workspace.sessions.0.answers.0.feedbackSummary.adviserReview.sessionComment', 'Good technical example. Add a measurable result next time.');
 });
 
 it('clears setup and sessions independently', function () {

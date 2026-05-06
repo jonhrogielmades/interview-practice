@@ -1,4 +1,5 @@
-<div class="mx-auto mb-10 w-full max-w-60 rounded-2xl bg-gray-50 px-4 py-5 text-center dark:bg-white/[0.03]">
+<div class="mx-auto mb-10 w-full max-w-60 rounded-lg border border-warning-200 bg-white/70 px-4 py-5 text-left shadow-theme-xs backdrop-blur dark:border-warning-500/20 dark:bg-white/[0.04]">
+    <div class="mb-3 h-1 w-10 rounded-full bg-warning-500"></div>
     <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">
         Admin Control Center
     </h3>

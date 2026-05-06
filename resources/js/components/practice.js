@@ -57,6 +57,7 @@ export function initPractice() {
         questionAgentStatusTone: "neutral",
         questionAgentProviderCatalog: normalizeQuestionAgentProviders(rawChatbotBootstrap.providers),
         questionAgentSelectedProviderId: resolveQuestionAgentDefaultProvider(rawChatbotBootstrap),
+        fieldBuilderSelectedProviderId: resolveFieldBuilderDefaultProvider(rawChatbotBootstrap),
         questionAgentResolvedProviderLabel: null,
         questionAgentRequestId: 0,
         fieldBuilderHistory: [],
@@ -77,11 +78,47 @@ export function initPractice() {
         openingConversationCompleted: false,
         openingConversationFocusPending: false,
         openingConversationReply: "",
-        autoAdvanceTimeout: null
+        autoAdvanceTimeout: null,
+        panelMode: "single",
+        difficultMode: false,
+        documentAnalysis: null,
+        answerVersionsByQuestionIndex: {},
+        currentHabitSnapshot: null,
+        versionCompareVisible: false
     };
 
     const VOICE_AUTO_SUBMIT_DELAY_MS = 2600;
     const VOICE_COMMAND_HELP_TEXT = "You can say: repeat question, next question, pause, continue, send answer, clear answer, camera on, camera off, give me a hint, new questions, or end interview.";
+    const FILLER_WORD_PATTERNS = [
+        { key: "um", label: "Um", pattern: /\b(?:um+|uh+|ah+|erm)\b/gi },
+        { key: "like", label: "Like", pattern: /\blike\b/gi },
+        { key: "actually", label: "Actually", pattern: /\bactually\b/gi },
+        { key: "basically", label: "Basically", pattern: /\bbasically\b/gi },
+        { key: "youKnow", label: "You know", pattern: /\byou know\b/gi },
+        { key: "iThink", label: "I think", pattern: /\bi think\b/gi }
+    ];
+    const PANEL_INTERVIEWERS = [
+        {
+            id: "hr",
+            label: "HR Interviewer",
+            cue: "I am checking motivation, communication, values, and fit."
+        },
+        {
+            id: "technical",
+            label: "Technical Interviewer",
+            cue: "I am checking skills, problem solving, examples, and role readiness."
+        },
+        {
+            id: "scholarship",
+            label: "Scholarship Committee",
+            cue: "I am checking discipline, need, service, goals, and contribution."
+        },
+        {
+            id: "admission",
+            label: "Admission Officer",
+            cue: "I am checking program fit, readiness, study habits, and future plans."
+        }
+    ];
 
     const elements = {
         questionCountSelect: document.getElementById("questionCountSelect"),
@@ -128,6 +165,24 @@ export function initPractice() {
         practiceModalWorkspaceValue: document.getElementById("practiceModalWorkspaceValue"),
         practiceModalFieldValue: document.getElementById("practiceModalFieldValue"),
         practiceModalFieldMeta: document.getElementById("practiceModalFieldMeta"),
+        openResumeAnalyzerModalBtn: document.getElementById("openResumeAnalyzerModalBtn"),
+        resumeAnalyzerModal: document.getElementById("resumeAnalyzerModal"),
+        resumeAnalyzerModalBackdrop: document.getElementById("resumeAnalyzerModalBackdrop"),
+        closeResumeAnalyzerModalBtn: document.getElementById("closeResumeAnalyzerModalBtn"),
+        resumeAnalyzerCategorySelect: document.getElementById("resumeAnalyzerCategorySelect"),
+        resumeDocumentInput: document.getElementById("resumeDocumentInput"),
+        resumeDocumentText: document.getElementById("resumeDocumentText"),
+        analyzeResumeBtn: document.getElementById("analyzeResumeBtn"),
+        applyResumeQuestionsBtn: document.getElementById("applyResumeQuestionsBtn"),
+        resumeAnalyzerStatus: document.getElementById("resumeAnalyzerStatus"),
+        resumeAnalyzerSummary: document.getElementById("resumeAnalyzerSummary"),
+        resumeAnalyzerDetectedTag: document.getElementById("resumeAnalyzerDetectedTag"),
+        resumeAnalyzerQuestionList: document.getElementById("resumeAnalyzerQuestionList"),
+        resumeAnalyzerSignalGrid: document.getElementById("resumeAnalyzerSignalGrid"),
+        panelModeSelect: document.getElementById("panelModeSelect"),
+        panelModeSummary: document.getElementById("panelModeSummary"),
+        difficultModeToggle: document.getElementById("difficultModeToggle"),
+        difficultModeSummary: document.getElementById("difficultModeSummary"),
         selectedCategoryName: document.getElementById("selectedCategoryName"),
         selectedCategoryDescription: document.getElementById("selectedCategoryDescription"),
         questionCounter: document.getElementById("questionCounter"),
@@ -145,6 +200,14 @@ export function initPractice() {
         coachTipText: document.getElementById("coachTipText"),
         questionKeywordTags: document.getElementById("questionKeywordTags"),
         responseInput: document.getElementById("responseInput"),
+        fillerTrackerSummary: document.getElementById("fillerTrackerSummary"),
+        fillerTrackerTag: document.getElementById("fillerTrackerTag"),
+        fillerTrackerGrid: document.getElementById("fillerTrackerGrid"),
+        saveAnswerVersionBtn: document.getElementById("saveAnswerVersionBtn"),
+        compareAnswerVersionsBtn: document.getElementById("compareAnswerVersionsBtn"),
+        answerVersionSummary: document.getElementById("answerVersionSummary"),
+        answerVersionTag: document.getElementById("answerVersionTag"),
+        answerVersionComparePanel: document.getElementById("answerVersionComparePanel"),
         startPracticeBtn: document.getElementById("startPracticeBtn"),
         startVoiceBtn: document.getElementById("startVoiceBtn"),
         stopVoiceBtn: document.getElementById("stopVoiceBtn"),
@@ -290,6 +353,14 @@ export function initPractice() {
         return "auto";
     }
 
+    function resolveFieldBuilderDefaultProvider(bootstrap) {
+        const requestedId = typeof bootstrap?.defaultProviderId === "string"
+            ? bootstrap.defaultProviderId
+            : "auto";
+
+        return requestedId === "local" ? "local" : "auto";
+    }
+
     function getSelectedFocusMode() {
         return practiceData.focusModes[Number(elements.focusModeSelect.value)] || practiceData.focusModes[0];
     }
@@ -344,6 +415,441 @@ export function initPractice() {
 
     function roundScore(value, fallback = 0) {
         return Number(clampScore(value, fallback).toFixed(1));
+    }
+
+    function countPatternMatches(text, pattern) {
+        return (String(text || "").match(pattern) || []).length;
+    }
+
+    function analyzeSpeakingHabits(text, elapsedSeconds = 0) {
+        const normalizedText = String(text || "").trim();
+        const words = normalizedText ? normalizedText.split(/\s+/).filter(Boolean) : [];
+        const fillerCounts = FILLER_WORD_PATTERNS.reduce((counts, item) => {
+            counts[item.key] = countPatternMatches(normalizedText, item.pattern);
+            return counts;
+        }, {});
+        const totalFillers = Object.values(fillerCounts).reduce((sum, value) => sum + value, 0);
+        const repeatedPhraseMatches = countPatternMatches(normalizedText, /\b(\w+)(?:\s+\1\b){1,}/gi);
+        const longPauseCount = countPatternMatches(normalizedText, /(?:\.{3,}|—|--|\b(pause|long pause)\b)/gi);
+        const fillerRate = words.length ? Number(((totalFillers / words.length) * 100).toFixed(1)) : 0;
+        const pacePerMinute = elapsedSeconds > 0
+            ? Math.round((words.length / Math.max(elapsedSeconds, 1)) * 60)
+            : 0;
+        const dominantFillers = FILLER_WORD_PATTERNS
+            .filter((item) => fillerCounts[item.key] > 0)
+            .sort((left, right) => fillerCounts[right.key] - fillerCounts[left.key])
+            .slice(0, 3)
+            .map((item) => ({
+                key: item.key,
+                label: item.label,
+                count: fillerCounts[item.key]
+            }));
+
+        let summary = "No filler words detected yet.";
+
+        if (totalFillers > 0) {
+            summary = `${totalFillers} filler word${totalFillers === 1 ? "" : "s"} detected.`;
+        }
+
+        if (fillerRate >= 6) {
+            summary = "Filler words are showing up often. Slow down and pause silently before your next point.";
+        } else if (fillerRate > 0 && fillerRate < 3) {
+            summary = "Filler use is light. Keep the same direct pacing.";
+        }
+
+        return {
+            fillerCounts,
+            totalFillers,
+            totalWords: words.length,
+            fillerRate,
+            repeatedPhraseCount: repeatedPhraseMatches,
+            longPauseCount,
+            pacePerMinute,
+            dominantFillers,
+            summary
+        };
+    }
+
+    function renderFillerTracker(snapshot = state.currentHabitSnapshot) {
+        if (!elements.fillerTrackerSummary || !elements.fillerTrackerGrid || !elements.fillerTrackerTag) {
+            return;
+        }
+
+        const habits = snapshot || analyzeSpeakingHabits("");
+        const fillerLabel = `${habits.totalFillers} filler${habits.totalFillers === 1 ? "" : "s"}`;
+
+        elements.fillerTrackerSummary.textContent = habits.summary;
+        elements.fillerTrackerTag.textContent = fillerLabel;
+        elements.fillerTrackerTag.className = habits.fillerRate >= 6
+            ? "inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"
+            : "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+
+        const topFillers = habits.dominantFillers.length
+            ? habits.dominantFillers
+            : [{ label: "Top filler", count: 0 }];
+        const cards = [
+            ["Words", habits.totalWords],
+            ["Filler rate", `${habits.fillerRate}%`],
+            ["Repeated phrases", habits.repeatedPhraseCount],
+            ["Long pauses", habits.longPauseCount],
+            ...topFillers.map((item) => [item.label, item.count])
+        ].slice(0, 6);
+
+        elements.fillerTrackerGrid.innerHTML = cards.map(([label, value]) => `
+            <div class="rounded-xl border border-gray-200 bg-white px-3 py-2 dark:border-gray-800 dark:bg-gray-950/40">
+                <p class="text-[11px] uppercase tracking-wide text-gray-500">${escapeHtml(label)}</p>
+                <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(value)}</p>
+            </div>
+        `).join("");
+    }
+
+    function getQuestionVersionKey() {
+        return String(state.questionIndex);
+    }
+
+    function getCurrentQuestionVersions() {
+        return state.answerVersionsByQuestionIndex[getQuestionVersionKey()] || [];
+    }
+
+    function renderAnswerVersionControls() {
+        if (!elements.answerVersionSummary || !elements.answerVersionTag || !elements.answerVersionComparePanel) {
+            return;
+        }
+
+        const versions = getCurrentQuestionVersions();
+        const answerText = String(elements.responseInput?.value || "").trim();
+        const canSave = Boolean(answerText && state.selectedCategory && getActiveQuestionCount() > 0);
+        const canCompare = versions.length >= 2;
+
+        elements.answerVersionSummary.textContent = versions.length
+            ? `${versions.length} draft version${versions.length === 1 ? "" : "s"} saved for this question.`
+            : "No saved draft versions yet.";
+        elements.answerVersionTag.textContent = `${versions.length} version${versions.length === 1 ? "" : "s"}`;
+
+        if (elements.saveAnswerVersionBtn) {
+            elements.saveAnswerVersionBtn.disabled = !canSave;
+        }
+
+        if (elements.compareAnswerVersionsBtn) {
+            elements.compareAnswerVersionsBtn.disabled = !canCompare;
+        }
+
+        if (!state.versionCompareVisible || !canCompare) {
+            elements.answerVersionComparePanel.classList.add("hidden");
+            elements.answerVersionComparePanel.innerHTML = "";
+            return;
+        }
+
+        const first = versions[0];
+        const latest = versions[versions.length - 1];
+
+        elements.answerVersionComparePanel.classList.remove("hidden");
+        elements.answerVersionComparePanel.innerHTML = [
+            ["First Answer", first],
+            ["Improved Answer", latest]
+        ].map(([label, version]) => `
+            <div class="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-950/40">
+                <p class="text-xs font-medium uppercase tracking-wide text-gray-500">${label}</p>
+                <p class="content-break mt-2 max-h-32 overflow-y-auto text-xs leading-5 text-gray-600 dark:text-gray-400">${escapeHtml(version.answer).replace(/\n/g, "<br>")}</p>
+            </div>
+        `).join("");
+    }
+
+    function saveCurrentAnswerVersion(source = "Manual draft") {
+        const answerText = String(elements.responseInput?.value || "").trim();
+
+        if (!answerText || !state.selectedCategory || getActiveQuestionCount() === 0) {
+            showMessage("warning", "Write or record an answer before saving a version.");
+            return;
+        }
+
+        const key = getQuestionVersionKey();
+        const versions = state.answerVersionsByQuestionIndex[key] || [];
+        const latest = versions[versions.length - 1];
+
+        if (latest && latest.answer === answerText) {
+            showMessage("info", "That draft is already the latest saved answer version.");
+            return;
+        }
+
+        state.answerVersionsByQuestionIndex[key] = [
+            ...versions,
+            {
+                label: versions.length === 0 ? "First Answer" : `Version ${versions.length + 1}`,
+                answer: answerText,
+                savedAt: new Date().toISOString(),
+                source,
+                question: getDisplayedQuestion()
+            }
+        ].slice(-8);
+        state.versionCompareVisible = state.answerVersionsByQuestionIndex[key].length >= 2;
+        renderAnswerVersionControls();
+        showMessage("success", "Answer draft version saved.");
+    }
+
+    function getPanelById(panelId) {
+        return PANEL_INTERVIEWERS.find((panel) => panel.id === panelId) || null;
+    }
+
+    function getActivePanelInterviewer() {
+        if (state.panelMode === "single") {
+            return null;
+        }
+
+        if (state.panelMode === "panel") {
+            return PANEL_INTERVIEWERS[state.questionIndex % PANEL_INTERVIEWERS.length] || PANEL_INTERVIEWERS[0];
+        }
+
+        return getPanelById(state.panelMode);
+    }
+
+    function getDisplayedQuestion(question = getActiveQuestion()) {
+        const normalizedQuestion = String(question || "").trim();
+        const panel = getActivePanelInterviewer();
+
+        if (!normalizedQuestion || !panel) {
+            return normalizedQuestion;
+        }
+
+        return `${panel.label}: ${normalizedQuestion}`;
+    }
+
+    function syncInterviewModeControls() {
+        if (elements.panelModeSelect) {
+            elements.panelModeSelect.value = state.panelMode;
+        }
+
+        if (elements.panelModeSummary) {
+            const panel = state.panelMode === "panel"
+                ? { label: "Panel Rotation", cue: "Questions rotate across HR, technical, scholarship, and admission perspectives." }
+                : getPanelById(state.panelMode);
+            elements.panelModeSummary.textContent = panel
+                ? `${panel.label}: ${panel.cue}`
+                : "Single interviewer is active.";
+        }
+
+        if (elements.difficultModeToggle) {
+            elements.difficultModeToggle.checked = state.difficultMode;
+        }
+
+        if (elements.difficultModeSummary) {
+            elements.difficultModeSummary.textContent = state.difficultMode
+                ? "Pressure questions and challenging follow-ups are active."
+                : "Standard questions are active.";
+        }
+    }
+
+    function showResumeAnalyzerStatus(type, message) {
+        if (!elements.resumeAnalyzerStatus) {
+            return;
+        }
+
+        const styles = {
+            success: "border-success-200 bg-success-50 text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300",
+            warning: "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300",
+            info: "border-gray-200 bg-gray-50 text-gray-700 dark:border-gray-700 dark:bg-gray-900/70 dark:text-gray-300"
+        };
+
+        elements.resumeAnalyzerStatus.className = `mt-4 rounded-2xl border px-4 py-3 text-sm ${styles[type] || styles.info}`;
+        elements.resumeAnalyzerStatus.textContent = message;
+        elements.resumeAnalyzerStatus.classList.remove("hidden");
+    }
+
+    function inferDocumentCategory(text) {
+        const lower = String(text || "").toLowerCase();
+        const selected = String(elements.resumeAnalyzerCategorySelect?.value || "auto");
+
+        if (selected !== "auto") {
+            return getPracticeCategoryById(selected) || practiceData.categories[0];
+        }
+
+        const scores = practiceData.categories.map((category) => {
+            const fieldHits = (category.fieldSuggestions || []).filter((item) => lower.includes(String(item).toLowerCase())).length;
+            const keywordHits = (category.keywords || []).filter((item) => lower.includes(String(item).toLowerCase())).length;
+            const categoryHits = countPatternMatches(lower, new RegExp(category.id === "it" ? "\\b(programming|developer|software|capstone|laravel|javascript|database|debug)\\b" : category.id, "gi"));
+            const scholarshipHits = category.id === "scholarship" ? countPatternMatches(lower, /\b(scholarship|financial need|grant|tuition|service|community)\b/gi) : 0;
+            const admissionHits = category.id === "admission" ? countPatternMatches(lower, /\b(admission|course|program|college|university|senior high)\b/gi) : 0;
+
+            return {
+                category,
+                score: fieldHits + keywordHits + categoryHits + scholarshipHits + admissionHits
+            };
+        }).sort((left, right) => right.score - left.score);
+
+        return scores[0]?.score > 0 ? scores[0].category : practiceData.categories[0];
+    }
+
+    function extractDocumentSignals(text, category) {
+        const normalized = String(text || "").replace(/\s+/g, " ").trim();
+        const lower = normalized.toLowerCase();
+        const words = normalized.split(/\s+/).filter(Boolean);
+        const matchedKeywords = (category.keywords || []).filter((keyword) => lower.includes(String(keyword).toLowerCase()));
+        const projectSignals = Array.from(new Set((normalized.match(/\b(?:project|capstone|internship|ojt|leadership|volunteer|research|award|achievement|organization|community|family|course|program|role|skill)\w*\b/gi) || [])
+            .map((item) => item.toLowerCase())
+            .slice(0, 10)));
+        const actionSignals = Array.from(new Set((normalized.match(/\b(?:led|built|created|organized|managed|improved|supported|developed|designed|handled|solved|served|helped|studied|learned)\b/gi) || [])
+            .map((item) => item.toLowerCase())
+            .slice(0, 8)));
+        const gaps = [
+            matchedKeywords.length < 2 ? "Add more category-specific keywords." : "",
+            !/\b(result|impact|outcome|improved|increased|reduced|achieved|\d+%?)\b/i.test(normalized) ? "Prepare measurable results or visible outcomes." : "",
+            words.length < 80 ? "Add more context before generating a full mock interview." : ""
+        ].filter(Boolean);
+
+        return {
+            wordCount: words.length,
+            matchedKeywords,
+            projectSignals,
+            actionSignals,
+            gaps
+        };
+    }
+
+    function buildDocumentQuestions(category, signals) {
+        const focus = signals.projectSignals[0] || signals.matchedKeywords[0] || getSelectedFieldTitle() || category.name;
+        const action = signals.actionSignals[0] || "handled";
+        const gapFocus = signals.gaps[0] || "make your answer more specific";
+        const pressureSuffix = state.difficultMode ? " Be specific about what you personally did and why we should trust your answer." : "";
+        const questions = [
+            `Walk me through the part of your application that best proves you are ready for ${focus}.`,
+            `Your document mentions ${focus}. What specific example shows your role, actions, and result?`,
+            `How did you ${action} something meaningful, and what did you learn from that experience?`,
+            `What part of your application might an interviewer question, and how would you clarify it professionally?`,
+            `If another applicant has similar credentials, what evidence from your document makes you stand out?${pressureSuffix}`,
+            `What would you improve in your preparation based on this gap: ${gapFocus}`
+        ];
+
+        return Array.from(new Set(questions)).slice(0, state.questionCount);
+    }
+
+    function renderResumeAnalysis(analysis) {
+        if (!elements.resumeAnalyzerSummary || !elements.resumeAnalyzerDetectedTag || !elements.resumeAnalyzerQuestionList || !elements.resumeAnalyzerSignalGrid) {
+            return;
+        }
+
+        const { category, signals, questions } = analysis;
+
+        elements.resumeAnalyzerSummary.textContent = `${questions.length} questions generated from ${signals.wordCount} words. Matched ${signals.matchedKeywords.length} ${category.name.toLowerCase()} signal${signals.matchedKeywords.length === 1 ? "" : "s"}.`;
+        elements.resumeAnalyzerDetectedTag.textContent = category.name;
+        elements.resumeAnalyzerDetectedTag.className = "inline-flex items-center rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300";
+        elements.resumeAnalyzerQuestionList.innerHTML = questions.map((question, index) => `
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                <p class="text-xs uppercase tracking-wide text-gray-500">Question ${index + 1}</p>
+                <p class="content-break mt-2 text-sm font-semibold leading-6 text-gray-900 dark:text-white/90">${escapeHtml(question)}</p>
+            </div>
+        `).join("");
+
+        const signalCards = [
+            ["Word Count", signals.wordCount],
+            ["Matched Keywords", signals.matchedKeywords.join(", ") || "None yet"],
+            ["Document Signals", signals.projectSignals.join(", ") || "Add clearer achievements"],
+            ["Preparation Gaps", signals.gaps.join(" ") || "No major gaps detected"]
+        ];
+
+        elements.resumeAnalyzerSignalGrid.innerHTML = signalCards.map(([label, value]) => `
+            <div class="rounded-xl border border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                <p class="text-xs uppercase tracking-wide text-gray-500">${escapeHtml(label)}</p>
+                <p class="content-break mt-2 text-sm font-semibold leading-6 text-gray-900 dark:text-white/90">${escapeHtml(value)}</p>
+            </div>
+        `).join("");
+
+        if (elements.applyResumeQuestionsBtn) {
+            elements.applyResumeQuestionsBtn.disabled = questions.length === 0;
+        }
+    }
+
+    function analyzeResumeDocument() {
+        const text = String(elements.resumeDocumentText?.value || "").trim();
+
+        if (!text) {
+            showResumeAnalyzerStatus("warning", "Paste or upload application text before generating questions.");
+            return;
+        }
+
+        const category = inferDocumentCategory(text);
+        const signals = extractDocumentSignals(text, category);
+        const questions = buildDocumentQuestions(category, signals);
+
+        state.documentAnalysis = {
+            categoryId: category.id,
+            categoryName: category.name,
+            analyzedAt: new Date().toISOString(),
+            signals,
+            questions
+        };
+
+        renderResumeAnalysis({ category, signals, questions });
+        showResumeAnalyzerStatus("success", "Document questions are ready. You can use them in the live practice workspace.");
+    }
+
+    async function applyResumeAnalysisToPractice() {
+        if (!state.documentAnalysis?.questions?.length) {
+            showResumeAnalyzerStatus("warning", "Generate document-based questions first.");
+            return;
+        }
+
+        const category = getPracticeCategoryById(state.documentAnalysis.categoryId) || practiceData.categories[0];
+
+        closeResumeAnalyzerModal({ returnFocus: false });
+        stopVoiceInput({ commitTranscript: false });
+        state.selectedCategory = category;
+        state.pendingCategory = category;
+        state.questionCount = state.documentAnalysis.questions.length;
+        state.activeQuestions = state.documentAnalysis.questions.slice();
+        state.questionIndex = 0;
+        state.answeredCount = 0;
+        state.feedbackHistory = [];
+        state.answerVersionsByQuestionIndex = {};
+        state.versionCompareVisible = false;
+        state.lastProcessEvaluations = null;
+        state.sessionId = createSessionId();
+        state.sessionStartedAt = new Date().toISOString();
+        state.sessionSaved = false;
+        const selectedPacing = getSelectedPacingMode();
+        state.timerTarget = selectedPacing.seconds;
+        elements.timerTargetValue.textContent = formatTime(state.timerTarget);
+
+        updateSelectedCategoryButtons();
+        resetQuestionAgentConversation(category);
+        state.questionSourceLabel = "Document analyzer";
+        state.questionSetSummary = `Resume/Application Analyzer prepared ${state.activeQuestions.length} questions from the pasted application document.`;
+        syncQuestionAgentPresentation();
+        loadCurrentQuestion();
+        updatePracticeModalSummary();
+        openPracticeModal({ focusResponse: true, playOpening: true });
+        showMessage("success", "Document-based questions are now active in the practice workspace.");
+    }
+
+    function openResumeAnalyzerModal({ focusInput = false } = {}) {
+        if (!elements.resumeAnalyzerModal) {
+            return;
+        }
+
+        if (!isResumeAnalyzerModalOpen()) {
+            elements.resumeAnalyzerModal.classList.remove("hidden");
+            elements.resumeAnalyzerModal.classList.add("flex");
+            elements.resumeAnalyzerModal.setAttribute("aria-hidden", "false");
+            lockBodyScroll();
+        }
+
+        if (focusInput) {
+            window.setTimeout(() => elements.resumeDocumentText?.focus(), 0);
+        }
+    }
+
+    function closeResumeAnalyzerModal({ returnFocus = true } = {}) {
+        if (!elements.resumeAnalyzerModal || !isResumeAnalyzerModalOpen()) {
+            return;
+        }
+
+        elements.resumeAnalyzerModal.classList.add("hidden");
+        elements.resumeAnalyzerModal.classList.remove("flex");
+        elements.resumeAnalyzerModal.setAttribute("aria-hidden", "true");
+        unlockBodyScroll();
+
+        if (returnFocus) {
+            elements.openResumeAnalyzerModalBtn?.focus();
+        }
     }
 
     function getLearningActivityMeta(activityId) {
@@ -650,6 +1156,14 @@ export function initPractice() {
         return Boolean(elements.practiceQuestionAgentModal) && !elements.practiceQuestionAgentModal.classList.contains("hidden");
     }
 
+    function isResumeAnalyzerModalOpen() {
+        return Boolean(elements.resumeAnalyzerModal) && !elements.resumeAnalyzerModal.classList.contains("hidden");
+    }
+
+    function getPracticeCategoryById(categoryId) {
+        return practiceData.categories.find((category) => category.id === categoryId) || null;
+    }
+
     function lockBodyScroll() {
         const activeModalCount = Number(document.body.dataset.practiceModalCount || "0") + 1;
 
@@ -771,9 +1285,33 @@ export function initPractice() {
         elements.editPracticeFieldBtn.disabled = !state.selectedCategory && !state.pendingCategory;
     }
 
-    function getQuestionAgentProviderLabel() {
-        const provider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId) || getQuestionAgentProviderById("auto");
-        return getQuestionAgentProviderSummary(provider) || "Auto";
+    function getFieldBuilderProviderOptions() {
+        return [
+            {
+                id: "auto",
+                label: "AI Provider",
+                description: "Automatically tries the active AI APIs in priority order, then falls back to the local PH coach.",
+                configured: true,
+                type: "router",
+                model: null
+            },
+            {
+                id: "local",
+                label: "Local PH coach",
+                description: "Use the built-in Philippine interview coach without calling an external API.",
+                configured: true,
+                type: "fallback",
+                model: null
+            }
+        ];
+    }
+
+    function getFieldBuilderProviderById(providerId = "") {
+        return getFieldBuilderProviderOptions().find((provider) => provider.id === providerId) || getFieldBuilderProviderOptions()[0];
+    }
+
+    function getFieldBuilderProviderLabel() {
+        return getFieldBuilderProviderById(state.fieldBuilderSelectedProviderId).label;
     }
 
     function updatePracticeModalSummary() {
@@ -1343,30 +1881,26 @@ export function initPractice() {
         const activeCategory = category;
         const activePlan = activeCategory ? getFieldPlanForCategory(activeCategory) : null;
         const previewPlan = createFieldPlanFromInputs(activeCategory) || activePlan;
-        const selectedProvider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId) || getQuestionAgentProviderById("auto");
+        const selectedProvider = getFieldBuilderProviderById(state.fieldBuilderSelectedProviderId);
         const allApiLabels = state.questionAgentProviderCatalog
             .filter((provider) => provider.type === "remote")
             .map((provider) => getQuestionAgentProviderSummary(provider))
             .filter(Boolean)
             .join(", ");
         const configuredApiCount = state.questionAgentProviderCatalog.filter((provider) => provider.type === "remote" && provider.configured).length;
-        let providerHelpText = "Choose which API should build the field plan.";
+        let providerHelpText = "Choose AI Provider for automatic API routing or Local PH coach for offline fallback.";
 
         if (selectedProvider?.id === "auto") {
             providerHelpText = configuredApiCount > 0
-                ? `Available APIs: ${allApiLabels}. Auto uses your configured provider order before local fallback.`
-                : `Available APIs: ${allApiLabels}. Add API keys in .env to enable them, or keep using the local PH coach.`;
+                ? `AI Provider can use these active routes: ${allApiLabels}. If one API is down, it tries the next configured API before local fallback.`
+                : `AI Provider has no active API keys yet. Add API keys in .env, or use the local PH coach.`;
         } else if (selectedProvider?.id === "local") {
             providerHelpText = "Use the built-in local PH coach without calling an external API.";
-        } else if (selectedProvider?.configured) {
-            providerHelpText = `${selectedProvider.description}${selectedProvider.model ? ` Model: ${selectedProvider.model}.` : ""}`;
-        } else if (selectedProvider) {
-            providerHelpText = `${selectedProvider.description} Add its API key in .env to enable it.`;
         }
 
-        elements.practiceFieldProviderValue.textContent = `Provider: ${getQuestionAgentProviderLabel()}`;
+        elements.practiceFieldProviderValue.textContent = `Provider: ${getFieldBuilderProviderLabel()}`;
         if (elements.practiceFieldProviderSelect) {
-            elements.practiceFieldProviderSelect.value = state.questionAgentSelectedProviderId;
+            elements.practiceFieldProviderSelect.value = state.fieldBuilderSelectedProviderId;
         }
         if (elements.practiceFieldProviderHelpText) {
             elements.practiceFieldProviderHelpText.textContent = providerHelpText;
@@ -1390,7 +1924,7 @@ export function initPractice() {
         updateFieldSummaryUI();
     }
 
-    function resetFieldBuilderForCategory(category, { prefillNeed = "", preserveInputs = false } = {}) {
+    function resetFieldBuilderForCategory(category, { prefillNeed = "", prefillTitle = "", preserveInputs = false } = {}) {
         const activePlan = getFieldPlanForCategory(category);
 
         state.pendingCategory = category;
@@ -1403,7 +1937,7 @@ export function initPractice() {
         }];
 
         if (!preserveInputs) {
-            elements.practiceFieldInput.value = activePlan?.title || "";
+            elements.practiceFieldInput.value = activePlan?.title || String(prefillTitle || "").trim();
             elements.practiceFieldNeedInput.value = activePlan?.userNeed || String(prefillNeed || "").trim();
         }
 
@@ -1414,12 +1948,12 @@ export function initPractice() {
         syncFieldBuilderModal(category);
     }
 
-    function openPracticeFieldModal(category, { prefillNeed = "", preserveInputs = false, focusInput = true } = {}) {
+    function openPracticeFieldModal(category, { prefillNeed = "", prefillTitle = "", preserveInputs = false, focusInput = true } = {}) {
         if (!elements.practiceFieldModal || !category) {
             return;
         }
 
-        resetFieldBuilderForCategory(category, { prefillNeed, preserveInputs });
+        resetFieldBuilderForCategory(category, { prefillNeed, prefillTitle, preserveInputs });
 
         if (!isFieldModalOpen()) {
             elements.practiceFieldModal.classList.remove("hidden");
@@ -1499,7 +2033,7 @@ export function initPractice() {
                 body: {
                     message,
                     mode: "field_builder",
-                    providerId: state.questionAgentSelectedProviderId,
+                    providerId: state.fieldBuilderSelectedProviderId,
                     categoryId: category.id
                 }
             });
@@ -1591,9 +2125,10 @@ export function initPractice() {
         const categoryName = state.selectedCategory?.name || "interview";
         const fieldTitle = getSelectedFieldTitle();
         const question = getActiveQuestion();
+        const displayedQuestion = getDisplayedQuestion(question);
 
         return [
-            question ? `Question: ${question}` : "Question: Add your answer focus.",
+            displayedQuestion ? `Question: ${displayedQuestion}` : "Question: Add your answer focus.",
             "",
             "1. Direct answer:",
             "2. Situation or context:",
@@ -2359,6 +2894,9 @@ export function initPractice() {
         state.isApplyingTranscript = true;
         elements.responseInput.value = combineTranscriptSegments(state.recognitionBaseText, state.recognitionInterimText);
         state.isApplyingTranscript = false;
+        state.currentHabitSnapshot = analyzeSpeakingHabits(elements.responseInput.value, state.timerSeconds);
+        renderFillerTracker();
+        renderAnswerVersionControls();
     }
 
     function commitRecognitionInterimText() {
@@ -2799,7 +3337,7 @@ export function initPractice() {
             return;
         }
 
-        const optionMarkup = state.questionAgentProviderCatalog.map((provider) => {
+        const questionAgentOptionMarkup = state.questionAgentProviderCatalog.map((provider) => {
             const isAvailable = provider.configured || provider.id === "auto" || provider.id === "local";
             const selected = provider.id === state.questionAgentSelectedProviderId ? " selected" : "";
             const disabled = isAvailable ? "" : " disabled";
@@ -2811,11 +3349,17 @@ export function initPractice() {
         }).join("");
 
         if (elements.practiceQuestionAgentProviderSelect) {
-            elements.practiceQuestionAgentProviderSelect.innerHTML = optionMarkup;
+            elements.practiceQuestionAgentProviderSelect.innerHTML = questionAgentOptionMarkup;
         }
 
         if (elements.practiceFieldProviderSelect) {
-            elements.practiceFieldProviderSelect.innerHTML = optionMarkup;
+            const fieldBuilderOptionMarkup = getFieldBuilderProviderOptions().map((provider) => {
+                const selected = provider.id === state.fieldBuilderSelectedProviderId ? " selected" : "";
+
+                return `<option value="${escapeHtml(provider.id)}"${selected}>${escapeHtml(provider.label)}</option>`;
+            }).join("");
+
+            elements.practiceFieldProviderSelect.innerHTML = fieldBuilderOptionMarkup;
         }
     }
 
@@ -2853,8 +3397,17 @@ export function initPractice() {
         const fieldPlan = getFieldPlanForCategory(category) || (state.selectedCategory?.id === category.id ? state.selectedFieldPlan : null);
         const fieldSuffix = buildFieldInstructionSuffix(fieldPlan);
         const learningActivityInstruction = buildLearningActivityInstruction();
+        const difficultInstruction = state.difficultMode
+            ? "Use difficult interview mode: include pressure questions, challenging follow-ups, and prompts that ask the candidate to justify weak points professionally."
+            : "";
+        const panel = state.panelMode === "panel"
+            ? { label: "a rotating panel of HR, technical, scholarship, and admission interviewers" }
+            : getPanelById(state.panelMode);
+        const panelInstruction = panel
+            ? `Write the questions as if they are being asked by ${panel.label}.`
+            : "";
 
-        return [baseInstruction, learningActivityInstruction, fieldSuffix]
+        return [baseInstruction, learningActivityInstruction, fieldSuffix, difficultInstruction, panelInstruction]
             .filter(Boolean)
             .join(" ");
     }
@@ -3033,6 +3586,9 @@ export function initPractice() {
         state.activeQuestions = [];
         state.answeredCount = 0;
         state.feedbackHistory = [];
+        state.answerVersionsByQuestionIndex = {};
+        state.currentHabitSnapshot = analyzeSpeakingHabits("");
+        state.versionCompareVisible = false;
         state.lastProcessEvaluations = null;
         state.sessionStartedAt = new Date().toISOString();
         state.sessionSaved = false;
@@ -3050,6 +3606,8 @@ export function initPractice() {
         elements.questionTimerValue.textContent = "00:00";
         resetRecognitionDraft();
         resetFeedbackPlaceholder();
+        renderFillerTracker();
+        renderAnswerVersionControls();
     }
 
     function showQuestionSetLoadingState(category) {
@@ -3073,6 +3631,9 @@ export function initPractice() {
         state.questionIndex = 0;
         state.answeredCount = 0;
         state.feedbackHistory = [];
+        state.answerVersionsByQuestionIndex = {};
+        state.currentHabitSnapshot = analyzeSpeakingHabits("");
+        state.versionCompareVisible = false;
         state.lastProcessEvaluations = null;
         state.sessionId = createSessionId();
         state.sessionStartedAt = new Date().toISOString();
@@ -3265,6 +3826,8 @@ export function initPractice() {
         }
 
         const question = getActiveQuestion();
+        const displayedQuestion = getDisplayedQuestion(question);
+        const panel = getActivePanelInterviewer();
 
         cancelAutoAdvance();
         cancelPendingQuestionSpeech();
@@ -3281,30 +3844,34 @@ export function initPractice() {
         state.timerAlertShown = false;
         state.timerPaused = false;
 
-        elements.currentQuestionText.textContent = question;
+        elements.currentQuestionText.textContent = displayedQuestion;
         elements.questionTimerValue.textContent = "00:00";
         updateFocusModeDisplay();
         elements.selectedCategoryName.textContent = state.selectedCategory.name;
         elements.selectedCategoryDescription.textContent = state.questionSetSummary;
         elements.practiceStatusTag.textContent = "Session active";
         elements.practiceStatusTag.className = "inline-flex items-center rounded-full bg-success-100 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/10 dark:text-success-300";
-        elements.practiceLabelTag.textContent = "Interviewer ready";
+        elements.practiceLabelTag.textContent = panel ? `${panel.label} ready` : "Interviewer ready";
         elements.selectedPracticeFieldTag.textContent = getSelectedFieldTitle() ? `Field: ${getSelectedFieldTitle()}` : "Field not set";
 
         renderKeywords(state.selectedCategory.keywords);
         updateQuestionProgress();
         elements.responseInput.value = "";
+        state.currentHabitSnapshot = analyzeSpeakingHabits("");
+        state.versionCompareVisible = false;
+        renderFillerTracker();
+        renderAnswerVersionControls();
         clearMessage();
         updateTipsPanel();
         updateSessionActionButtons();
     }
 
-    async function selectCategory(category, { skipFieldModal = false, prefillNeed = "" } = {}) {
+    async function selectCategory(category, { skipFieldModal = false, prefillNeed = "", prefillTitle = "" } = {}) {
         const fieldPlan = getFieldPlanForCategory(category);
         const learningActivityContext = state.learningActivityContext;
 
         if (!skipFieldModal) {
-            openPracticeFieldModal(category, { prefillNeed });
+            openPracticeFieldModal(category, { prefillNeed, prefillTitle });
             return;
         }
 
@@ -3992,7 +4559,7 @@ export function initPractice() {
     }
 
     function buildLocalCoachAdviceMessage() {
-        const question = getActiveQuestion();
+        const question = getDisplayedQuestion();
         const focus = getSelectedFocusMode();
 
         return [
@@ -4013,7 +4580,7 @@ export function initPractice() {
     }
 
     async function requestCoachAdviceForCommand(sourceText) {
-        const question = getActiveQuestion();
+        const question = getDisplayedQuestion();
         const message = [
             "The user gave a spoken interview command and wants immediate coaching during a live mock interview.",
             sourceText ? `User command: ${sourceText}` : "",
@@ -4303,7 +4870,8 @@ export function initPractice() {
         }
 
         const answer = getResponseText();
-        const activeQuestion = getActiveQuestion();
+        const rawQuestion = getActiveQuestion();
+        const activeQuestion = getDisplayedQuestion(rawQuestion);
 
         if (!activeQuestion) {
             if (!automatic) {
@@ -4379,6 +4947,22 @@ export function initPractice() {
             feedbackMessage = "Your answer was evaluated and saved, but AI feedback is temporarily unavailable so local automated feedback was used.";
         }
 
+        const versionKey = getQuestionVersionKey();
+        const submittedVersions = state.answerVersionsByQuestionIndex[versionKey] || [];
+
+        if (!submittedVersions.some((version) => version.answer === answer)) {
+            state.answerVersionsByQuestionIndex[versionKey] = [
+                ...submittedVersions,
+                {
+                    label: submittedVersions.length === 0 ? "First Answer" : "Improved Answer",
+                    answer,
+                    savedAt: new Date().toISOString(),
+                    source: "Submitted answer",
+                    question: activeQuestion
+                }
+            ].slice(-8);
+        }
+
         const historyEntry = {
             questionIndex: state.questionIndex,
             questionNumber: state.questionIndex + 1,
@@ -4386,7 +4970,27 @@ export function initPractice() {
             answer,
             elapsedSeconds: state.timerSeconds,
             inputMode: state.currentMode,
-            feedbackSummary: finalSummary,
+            feedbackSummary: {
+                ...finalSummary,
+                answerVersions: getCurrentQuestionVersions(),
+                speakingHabits: analyzeSpeakingHabits(answer, state.timerSeconds),
+                panel: getActivePanelInterviewer()
+                    ? {
+                        mode: state.panelMode,
+                        role: getActivePanelInterviewer().label
+                    }
+                    : {
+                        mode: state.panelMode,
+                        role: "Single Interviewer"
+                    },
+                documentAnalysis: state.documentAnalysis
+                    ? {
+                        categoryName: state.documentAnalysis.categoryName,
+                        analyzedAt: state.documentAnalysis.analyzedAt,
+                        signalCount: state.documentAnalysis.signals?.projectSignals?.length || 0
+                    }
+                    : null
+            },
             ...scoreData
         };
         const existingIndex = state.feedbackHistory.findIndex((entry) => entry.questionIndex === state.questionIndex);
@@ -4400,6 +5004,9 @@ export function initPractice() {
         state.answeredCount = state.feedbackHistory.length;
         state.sessionSaved = false;
         state.feedbackLoading = false;
+        state.currentHabitSnapshot = analyzeSpeakingHabits(answer, state.timerSeconds);
+        renderFillerTracker();
+        renderAnswerVersionControls();
 
         updateTipsPanel();
         updateSessionActionButtons();
@@ -4693,8 +5300,15 @@ export function initPractice() {
 
         const preferredCategory = practiceData.categories.find((item) => item.id === savedSetup.preferredCategoryId);
 
+        state.panelMode = savedSetup.panelMode || "single";
+        state.difficultMode = Boolean(savedSetup.difficultMode);
+        syncInterviewModeControls();
+
         if (preferredCategory) {
-            selectCategory(preferredCategory, { prefillNeed: savedSetup.notes || "" });
+            selectCategory(preferredCategory, {
+                prefillNeed: savedSetup.notes || "",
+                prefillTitle: savedSetup.targetField || ""
+            });
         }
 
         const responsePreferenceLabel = {
@@ -4713,6 +5327,18 @@ export function initPractice() {
 
         if (responsePreferenceLabel[savedSetup.voiceMode]) {
             message += ` Response preference: ${responsePreferenceLabel[savedSetup.voiceMode]}.`;
+        }
+
+        if (savedSetup.targetField) {
+            message += ` Target field: ${savedSetup.targetField}.`;
+        }
+
+        if (savedSetup.panelMode && savedSetup.panelMode !== "single") {
+            message += " Mock panel defaults are active.";
+        }
+
+        if (savedSetup.difficultMode) {
+            message += " Difficult mode is active.";
         }
 
         if (trimmedNotes) {
@@ -4877,6 +5503,9 @@ export function initPractice() {
         elements.pacingModeSelect.value = String(savedSetup.pacingModeIndex);
 
         state.questionCount = Number(elements.questionCountSelect.value);
+        state.panelMode = savedSetup.panelMode || "single";
+        state.difficultMode = Boolean(savedSetup.difficultMode);
+        syncInterviewModeControls();
 
         const selectedPacing = getSelectedPacingMode();
         const selectedFocus = getSelectedFocusMode();
@@ -4905,6 +5534,14 @@ export function initPractice() {
 
         if (responsePreferenceLabel[savedSetup.voiceMode]) {
             message += ` Response preference: ${responsePreferenceLabel[savedSetup.voiceMode]}.`;
+        }
+
+        if (savedSetup.panelMode && savedSetup.panelMode !== "single") {
+            message += " Mock panel defaults are active.";
+        }
+
+        if (savedSetup.difficultMode) {
+            message += " Difficult mode is active.";
         }
 
         const trimmedNotes = savedSetup.notes.trim().replace(/\s+/g, " ");
@@ -4953,10 +5590,80 @@ export function initPractice() {
         }
 
         updateManualResponseState();
+        state.currentHabitSnapshot = analyzeSpeakingHabits(elements.responseInput.value, state.timerSeconds);
+        renderFillerTracker();
+        renderAnswerVersionControls();
     });
 
     elements.openPracticeCategoryModalBtn?.addEventListener("click", () => {
         handleStartPracticeClick();
+    });
+
+    elements.panelModeSelect?.addEventListener("change", (event) => {
+        state.panelMode = String(event.target.value || "single");
+        syncInterviewModeControls();
+
+        if (state.selectedCategory && getActiveQuestionCount() > 0) {
+            loadCurrentQuestion();
+            showMessage("info", state.panelMode === "single" ? "Single interviewer mode is active." : "Mock panel mode updated for the current question.");
+        }
+    });
+
+    elements.difficultModeToggle?.addEventListener("change", (event) => {
+        state.difficultMode = Boolean(event.target.checked);
+        syncInterviewModeControls();
+
+        if (state.selectedCategory) {
+            showMessage(
+                "info",
+                state.difficultMode
+                    ? "Difficult interview mode is on. Regenerate questions to add pressure prompts."
+                    : "Difficult interview mode is off."
+            );
+        }
+    });
+
+    elements.saveAnswerVersionBtn?.addEventListener("click", () => {
+        saveCurrentAnswerVersion("Manual draft");
+    });
+
+    elements.compareAnswerVersionsBtn?.addEventListener("click", () => {
+        state.versionCompareVisible = !state.versionCompareVisible;
+        renderAnswerVersionControls();
+    });
+
+    elements.openResumeAnalyzerModalBtn?.addEventListener("click", () => {
+        openResumeAnalyzerModal({ focusInput: true });
+    });
+
+    elements.closeResumeAnalyzerModalBtn?.addEventListener("click", () => {
+        closeResumeAnalyzerModal();
+    });
+
+    elements.resumeAnalyzerModalBackdrop?.addEventListener("click", () => {
+        closeResumeAnalyzerModal({ returnFocus: false });
+    });
+
+    elements.resumeDocumentInput?.addEventListener("change", async (event) => {
+        const file = event.target.files?.[0];
+
+        if (!file) {
+            return;
+        }
+
+        try {
+            const text = await file.text();
+            elements.resumeDocumentText.value = text;
+            showResumeAnalyzerStatus("info", `${file.name} loaded. Generate questions when ready.`);
+        } catch (error) {
+            console.error(error);
+            showResumeAnalyzerStatus("warning", "That file could not be read as text. Paste the document content instead.");
+        }
+    });
+
+    elements.analyzeResumeBtn?.addEventListener("click", analyzeResumeDocument);
+    elements.applyResumeQuestionsBtn?.addEventListener("click", () => {
+        void applyResumeAnalysisToPractice();
     });
 
     const handleLearningActionClick = (event) => {
@@ -4983,13 +5690,11 @@ export function initPractice() {
     });
 
     elements.practiceFieldProviderSelect?.addEventListener("change", (event) => {
-        state.questionAgentSelectedProviderId = String(event.target.value || "auto");
-        state.questionAgentResolvedProviderLabel = null;
-        syncQuestionAgentPresentation();
+        state.fieldBuilderSelectedProviderId = String(event.target.value || "auto") === "local" ? "local" : "auto";
         syncFieldBuilderModal();
 
-        const provider = getQuestionAgentProviderById(state.questionAgentSelectedProviderId);
-        showFieldChatStatus("info", `${getQuestionAgentProviderSummary(provider) || "Auto"} will be used for the field builder and the next question generation.`);
+        const provider = getFieldBuilderProviderById(state.fieldBuilderSelectedProviderId);
+        showFieldChatStatus("info", `${provider.label} will be used for the field builder.`);
     });
 
     elements.practiceFieldGenerateBtn.addEventListener("click", () => {
@@ -5072,6 +5777,11 @@ export function initPractice() {
 
     window.addEventListener("keydown", (event) => {
         if (event.key === "Escape") {
+            if (isResumeAnalyzerModalOpen()) {
+                closeResumeAnalyzerModal();
+                return;
+            }
+
             if (isQuestionAgentModalOpen()) {
                 closeQuestionAgentModal();
                 return;
@@ -5130,7 +5840,10 @@ export function initPractice() {
     applyQuestionAgentProviderCatalog(state.questionAgentProviderCatalog, state.questionAgentSelectedProviderId);
     resetQuestionAgentConversation();
     updateTipsPanel();
+    syncInterviewModeControls();
     syncFieldBuilderModal();
+    renderFillerTracker();
+    renderAnswerVersionControls();
     updateSessionActionButtons();
     const launchedFromCategoryQuery = launchCategoryFromQuery(savedSetup);
     if (!launchedFromCategoryQuery) {

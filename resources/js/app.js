@@ -20,8 +20,8 @@ const loadFlatpickr = async () => {
     return sharedImports.flatpickr;
 };
 
-window.InterviewPilot = window.InterviewPilot || {};
-window.InterviewPilot.loadFlatpickr = loadFlatpickr;
+window.SpeakReadyAI = window.SpeakReadyAI || {};
+window.SpeakReadyAI.loadFlatpickr = loadFlatpickr;
 
 Alpine.start();
 
@@ -101,7 +101,7 @@ const initializePageLoader = () => {
         }
     };
 
-    window.InterviewPilotLoader = {
+    window.SpeakReadyAILoader = {
         show: showLoader,
         hide: hideLoader,
     };
@@ -146,6 +146,39 @@ const initializePageLoader = () => {
 
 initializePageLoader();
 
+const initializeRevealMotion = () => {
+    const revealElements = Array.from(document.querySelectorAll('[data-reveal]'));
+
+    if (revealElements.length === 0) {
+        return;
+    }
+
+    const showElement = (element) => {
+        element.classList.add('is-visible');
+    };
+
+    if (!('IntersectionObserver' in window)) {
+        revealElements.forEach(showElement);
+        return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (!entry.isIntersecting) {
+                return;
+            }
+
+            showElement(entry.target);
+            observer.unobserve(entry.target);
+        });
+    }, {
+        rootMargin: '0px 0px -8% 0px',
+        threshold: 0.12,
+    });
+
+    revealElements.forEach((element) => observer.observe(element));
+};
+
 const initializeWhenPresent = (selector, loadModule, initializeModule, errorLabel) => {
     if (!document.querySelector(selector)) {
         return;
@@ -173,6 +206,8 @@ const scheduleBackgroundTask = (task, errorLabel) => {
 
 // Initialize components on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+    initializeRevealMotion();
+
     if (window.__INTERVIEW_WORKSPACE_ROUTES__) {
         scheduleBackgroundTask(async () => {
             const { initializeWorkspaceMigration } = await import('./components/workspace-api');

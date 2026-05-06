@@ -2,6 +2,9 @@
 
 namespace App\Support;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+
 class InterviewPracticeCatalog
 {
     public static function manuscriptOverview(): array
@@ -19,6 +22,30 @@ class InterviewPracticeCatalog
     }
 
     public static function practiceQuestionBank(): array
+    {
+        $bank = self::defaultPracticeQuestionBank();
+        $managedQuestions = self::managedQuestionBankRows();
+
+        if ($managedQuestions->isEmpty()) {
+            return $bank;
+        }
+
+        $questionsByCategory = $managedQuestions->groupBy('category_id');
+
+        foreach ($bank as $categoryId => $category) {
+            $bank[$categoryId]['questions'] = $questionsByCategory
+                ->get($categoryId, collect())
+                ->filter(fn ($question) => (bool) ($question->is_active ?? false))
+                ->map(fn ($question) => (string) $question->question)
+                ->filter(fn (string $question) => trim($question) !== '')
+                ->values()
+                ->all();
+        }
+
+        return $bank;
+    }
+
+    protected static function defaultPracticeQuestionBank(): array
     {
         return [
             'job' => [
@@ -102,6 +129,24 @@ class InterviewPracticeCatalog
                 ],
             ],
         ];
+    }
+
+    protected static function managedQuestionBankRows()
+    {
+        try {
+            if (! Schema::hasTable('question_bank_questions')) {
+                return collect();
+            }
+
+            return DB::table('question_bank_questions')
+                ->select(['category_id', 'question', 'is_active', 'sort_order', 'id'])
+                ->orderBy('category_id')
+                ->orderBy('sort_order')
+                ->orderBy('id')
+                ->get();
+        } catch (\Throwable) {
+            return collect();
+        }
     }
 
     public static function focusModes(): array
@@ -261,7 +306,7 @@ class InterviewPracticeCatalog
     public static function chatbotSystemInstruction(): string
     {
         $lines = [
-            'You are InterviewPilot PH Coach, a chatbot for interview practice in the Philippines only.',
+            'You are SpeakReady AI PH Coach, a chatbot for interview practice in the Philippines only.',
             'You may only answer questions related to interview preparation, interview answers, sample interview questions, follow-up questions, or coaching for the supported Philippine categories.',
             'Supported categories: Job Interview, Scholarship Interview, College Admission, and IT / Programming.',
             'Do not answer unrelated topics like general trivia, recipes, politics, health advice, or coding help unrelated to interviews.',
@@ -458,6 +503,13 @@ class InterviewPracticeCatalog
             'preferredCategoryId' => 'job',
             'voiceMode' => 'text',
             'notes' => '',
+            'targetField' => '',
+            'panelMode' => 'single',
+            'difficultMode' => false,
+            'fillerTracking' => true,
+            'adviserReviewMode' => false,
+            'weeklyGoal' => 3,
+            'reminderDays' => ['Monday', 'Thursday'],
             'savedAt' => null,
         ];
     }
@@ -471,6 +523,15 @@ class InterviewPracticeCatalog
         $preferredCategoryId = (string) ($input['preferredCategoryId'] ?? $input['preferred_category_id'] ?? $normalized['preferredCategoryId']);
         $voiceMode = (string) ($input['voiceMode'] ?? $input['voice_mode'] ?? $normalized['voiceMode']);
         $notes = is_string($input['notes'] ?? null) ? trim((string) $input['notes']) : '';
+        $advancedOptions = is_array($input['advancedOptions'] ?? null)
+            ? $input['advancedOptions']
+            : (is_array($input['advanced_options'] ?? null) ? $input['advanced_options'] : $input);
+        $targetField = is_string($advancedOptions['targetField'] ?? $advancedOptions['target_field'] ?? null)
+            ? trim((string) ($advancedOptions['targetField'] ?? $advancedOptions['target_field']))
+            : '';
+        $panelMode = (string) ($advancedOptions['panelMode'] ?? $advancedOptions['panel_mode'] ?? $normalized['panelMode']);
+        $weeklyGoal = (int) ($advancedOptions['weeklyGoal'] ?? $advancedOptions['weekly_goal'] ?? $normalized['weeklyGoal']);
+        $reminderDays = $advancedOptions['reminderDays'] ?? $advancedOptions['reminder_days'] ?? $normalized['reminderDays'];
         $savedAt = $input['savedAt'] ?? $input['saved_at'] ?? null;
 
         if (in_array($questionCount, self::questionCountOptions(), true)) {
@@ -494,9 +555,36 @@ class InterviewPracticeCatalog
         }
 
         $normalized['notes'] = mb_substr($notes, 0, 500);
+        $normalized['targetField'] = mb_substr($targetField, 0, 120);
+        $normalized['panelMode'] = in_array($panelMode, ['single', 'panel', 'hr', 'technical', 'scholarship', 'admission'], true)
+            ? $panelMode
+            : 'single';
+        $normalized['difficultMode'] = filter_var(
+            $advancedOptions['difficultMode'] ?? $advancedOptions['difficult_mode'] ?? $normalized['difficultMode'],
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $normalized['fillerTracking'] = filter_var(
+            $advancedOptions['fillerTracking'] ?? $advancedOptions['filler_tracking'] ?? $normalized['fillerTracking'],
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $normalized['adviserReviewMode'] = filter_var(
+            $advancedOptions['adviserReviewMode'] ?? $advancedOptions['adviser_review_mode'] ?? $normalized['adviserReviewMode'],
+            FILTER_VALIDATE_BOOLEAN
+        );
+        $normalized['weeklyGoal'] = max(1, min(7, $weeklyGoal));
+        $normalized['reminderDays'] = collect($reminderDays)
+            ->filter(fn ($day) => is_string($day))
+            ->map(fn (string $day) => ucfirst(strtolower(trim($day))))
+            ->filter(fn (string $day) => in_array($day, ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], true))
+            ->unique()
+            ->take(7)
+            ->values()
+            ->all();
+        if ($normalized['reminderDays'] === []) {
+            $normalized['reminderDays'] = ['Monday', 'Thursday'];
+        }
         $normalized['savedAt'] = is_string($savedAt) && $savedAt !== '' ? $savedAt : null;
 
         return $normalized;
     }
 }
-

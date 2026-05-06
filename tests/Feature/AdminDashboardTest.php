@@ -2,7 +2,9 @@
 
 use App\Models\InterviewSession;
 use App\Models\InterviewSessionAnswer;
+use App\Models\QuestionBankQuestion;
 use App\Models\User;
+use App\Support\InterviewPracticeCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -112,7 +114,8 @@ test('admins can open the admin dashboard and review system metrics', function (
         ->assertSeeText('IT / Programming')
         ->assertSeeText('User Management')
         ->assertSeeText('API Management')
-        ->assertSeeText('Question Bank & Announcements')
+        ->assertSeeText('Question Bank')
+        ->assertSeeText('Announcements')
         ->assertSeeText('Monitoring Records');
 });
 
@@ -135,8 +138,9 @@ test('admin sidebar shows the admin dashboard link', function () {
         ->assertSeeText('Admin Dashboard')
         ->assertSee('href="/admin/dashboard"', false)
         ->assertSee('href="/admin/users"', false)
+        ->assertSee('href="/admin/question-bank"', false)
+        ->assertSee('href="/admin/announcements"', false)
         ->assertSee('href="/admin/apis"', false)
-        ->assertSee('href="/admin/content"', false)
         ->assertSee('href="/admin/monitoring"', false);
 });
 
@@ -171,16 +175,30 @@ test('admins can open the dedicated api management page', function () {
         ->assertSeeText('Run Live API Check');
 });
 
-test('admins can open the content management page', function () {
+test('admins can open the dedicated question bank page', function () {
     $admin = User::factory()->admin()->create([
         'email' => 'admin@example.com',
     ]);
 
     $this->actingAs($admin)
-        ->get(route('admin.content'))
+        ->get(route('admin.question-bank'))
         ->assertOk()
-        ->assertSeeText('Question Bank & Announcements')
+        ->assertSeeText('Question Bank')
         ->assertSeeText('Category Question Banks')
+        ->assertSeeText('Add question')
+        ->assertSeeText('Local PH coach')
+        ->assertSeeText('Announcement Templates');
+});
+
+test('admins can open the dedicated announcements page', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.announcements'))
+        ->assertOk()
+        ->assertSeeText('Announcements')
         ->assertSeeText('Announcement Templates');
 });
 
@@ -414,5 +432,99 @@ test('updating core admin fields preserves profile data that is not exposed in t
         'country' => 'Philippines',
         'city_state' => 'Pasig',
         'facebook_url' => 'https://facebook.com/hidden.fields',
+    ]);
+});
+
+test('admins can create a managed question bank question', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    $this->actingAs($admin)
+        ->post(route('admin.question-bank.questions.store'), [
+            'question_modal' => 'create',
+            'category_id' => 'it',
+            'provider_id' => 'local',
+            'question' => 'How would you explain your Laravel capstone to a non-technical Philippine interviewer?',
+            'guidance' => 'Listen for concise project scope, user value, and owned tasks.',
+            'sort_order' => 99,
+            'is_active' => '1',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseHas('question_bank_questions', [
+        'category_id' => 'it',
+        'provider_id' => 'local',
+        'source_type' => 'local',
+        'question' => 'How would you explain your Laravel capstone to a non-technical Philippine interviewer?',
+        'is_active' => true,
+    ]);
+
+    expect(InterviewPracticeCatalog::chatbotCategoryContext('it')['questions'])
+        ->toContain('How would you explain your Laravel capstone to a non-technical Philippine interviewer?');
+});
+
+test('admins can update a managed question bank question from an ai provider source', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    $question = QuestionBankQuestion::query()->create([
+        'category_id' => 'job',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'Old interview prompt?',
+        'guidance' => null,
+        'is_active' => true,
+        'sort_order' => 10,
+    ]);
+
+    $this->actingAs($admin)
+        ->put(route('admin.question-bank.questions.update', $question), [
+            'question_modal' => 'edit-'.$question->id,
+            'category_id' => 'job',
+            'provider_id' => 'groq',
+            'question' => 'What strengths from your OJT match this Philippine job opening?',
+            'guidance' => 'Expect a specific strength, brief evidence, and role fit.',
+            'sort_order' => 4,
+            'is_active' => '0',
+        ])
+        ->assertRedirect()
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseHas('question_bank_questions', [
+        'id' => $question->id,
+        'provider_id' => 'groq',
+        'source_type' => 'ai_provider',
+        'question' => 'What strengths from your OJT match this Philippine job opening?',
+        'is_active' => false,
+        'sort_order' => 4,
+    ]);
+});
+
+test('admins can delete a managed question bank question', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    $question = QuestionBankQuestion::query()->create([
+        'category_id' => 'scholarship',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'Temporary scholarship prompt?',
+        'is_active' => true,
+        'sort_order' => 20,
+    ]);
+
+    $this->actingAs($admin)
+        ->delete(route('admin.question-bank.questions.destroy', $question))
+        ->assertRedirect()
+        ->assertSessionHas('status');
+
+    $this->assertDatabaseMissing('question_bank_questions', [
+        'id' => $question->id,
     ]);
 });

@@ -44,17 +44,23 @@ class InterviewWorkspaceService
             return $normalized;
         }
 
+        $values = [
+            'question_count' => $normalized['questionCount'],
+            'focus_mode_index' => $normalized['focusModeIndex'],
+            'pacing_mode_index' => $normalized['pacingModeIndex'],
+            'preferred_category_id' => $normalized['preferredCategoryId'],
+            'voice_mode' => $normalized['voiceMode'],
+            'notes' => $normalized['notes'],
+            'saved_at' => now(),
+        ];
+
+        if (Schema::hasColumn('interview_session_setups', 'advanced_options')) {
+            $values['advanced_options'] = $this->sessionSetupAdvancedOptions($normalized);
+        }
+
         $setup = InterviewSessionSetup::query()->updateOrCreate(
             ['workspace_token' => $this->resolver->currentToken()],
-            [
-                'question_count' => $normalized['questionCount'],
-                'focus_mode_index' => $normalized['focusModeIndex'],
-                'pacing_mode_index' => $normalized['pacingModeIndex'],
-                'preferred_category_id' => $normalized['preferredCategoryId'],
-                'voice_mode' => $normalized['voiceMode'],
-                'notes' => $normalized['notes'],
-                'saved_at' => now(),
-            ],
+            $values,
         );
 
         return $this->mapSetup($setup);
@@ -192,8 +198,27 @@ class InterviewWorkspaceService
             'preferredCategoryId' => $setup->preferred_category_id,
             'voiceMode' => $setup->voice_mode,
             'notes' => $setup->notes,
+            'advancedOptions' => (array) ($setup->advanced_options ?? []),
             'savedAt' => $setup->saved_at?->toISOString(),
         ]);
+    }
+
+    protected function sessionSetupAdvancedOptions(array $setup): array
+    {
+        return [
+            'targetField' => $this->sanitizeText($setup['targetField'] ?? null, 120) ?? '',
+            'panelMode' => in_array(($setup['panelMode'] ?? 'single'), ['single', 'panel', 'hr', 'technical', 'scholarship', 'admission'], true)
+                ? $setup['panelMode']
+                : 'single',
+            'difficultMode' => (bool) ($setup['difficultMode'] ?? false),
+            'fillerTracking' => (bool) ($setup['fillerTracking'] ?? true),
+            'adviserReviewMode' => (bool) ($setup['adviserReviewMode'] ?? false),
+            'weeklyGoal' => max(1, min(7, (int) ($setup['weeklyGoal'] ?? 3))),
+            'reminderDays' => array_values(array_filter(
+                (array) ($setup['reminderDays'] ?? []),
+                fn ($day) => is_string($day) && $day !== ''
+            )),
+        ];
     }
 
     protected function mapSession(InterviewSession $session): array
@@ -282,6 +307,21 @@ class InterviewWorkspaceService
                         'visualSnapshot' => $this->normalizeVisualSnapshot(
                             (array) ($feedbackSummary['visualSnapshot'] ?? [])
                         ),
+                        'answerVersions' => $this->normalizeAnswerVersions(
+                            (array) ($feedbackSummary['answerVersions'] ?? [])
+                        ),
+                        'speakingHabits' => $this->normalizeSpeakingHabits(
+                            (array) ($feedbackSummary['speakingHabits'] ?? [])
+                        ),
+                        'panel' => $this->normalizePanelContext(
+                            (array) ($feedbackSummary['panel'] ?? [])
+                        ),
+                        'documentAnalysis' => $this->normalizeDocumentAnalysis(
+                            (array) ($feedbackSummary['documentAnalysis'] ?? [])
+                        ),
+                        'adviserReview' => $this->normalizeAdviserReview(
+                            (array) ($feedbackSummary['adviserReview'] ?? [])
+                        ),
                     ],
                 ];
             })->all(),
@@ -361,8 +401,139 @@ class InterviewWorkspaceService
                 'visualSnapshot' => $this->normalizeVisualSnapshot(
                     (array) data_get($input, 'feedbackSummary.visualSnapshot', [])
                 ),
+                'answerVersions' => $this->normalizeAnswerVersions(
+                    (array) data_get($input, 'feedbackSummary.answerVersions', [])
+                ),
+                'speakingHabits' => $this->normalizeSpeakingHabits(
+                    (array) data_get($input, 'feedbackSummary.speakingHabits', [])
+                ),
+                'panel' => $this->normalizePanelContext(
+                    (array) data_get($input, 'feedbackSummary.panel', [])
+                ),
+                'documentAnalysis' => $this->normalizeDocumentAnalysis(
+                    (array) data_get($input, 'feedbackSummary.documentAnalysis', [])
+                ),
+                'adviserReview' => $this->normalizeAdviserReview(
+                    (array) data_get($input, 'feedbackSummary.adviserReview', [])
+                ),
             ],
         ];
+    }
+
+    protected function normalizeAnswerVersions(array $input): array
+    {
+        return collect(Arr::wrap($input))
+            ->filter(fn ($version) => is_array($version))
+            ->take(8)
+            ->map(function (array $version, int $index) {
+                $answer = $this->sanitizeText($version['answer'] ?? null, 20000);
+
+                if ($answer === null) {
+                    return null;
+                }
+
+                return [
+                    'label' => $this->sanitizeText($version['label'] ?? null, 80) ?? ($index === 0 ? 'First Answer' : 'Improved Answer'),
+                    'answer' => $answer,
+                    'savedAt' => $this->normalizeDateTimeString($version['savedAt'] ?? null) ?? now()->toISOString(),
+                    'source' => $this->sanitizeText($version['source'] ?? null, 120) ?? 'Practice workspace',
+                    'question' => $this->sanitizeText($version['question'] ?? null, 4000),
+                ];
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    protected function normalizeSpeakingHabits(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $fillerCounts = collect((array) ($input['fillerCounts'] ?? []))
+            ->mapWithKeys(function (mixed $count, mixed $key) {
+                $cleanKey = $this->sanitizeIdentifier((string) $key);
+
+                if ($cleanKey === null) {
+                    return [];
+                }
+
+                return [$cleanKey => max(0, min(999, (int) $count))];
+            })
+            ->take(12)
+            ->all();
+
+        $dominantFillers = collect(Arr::wrap($input['dominantFillers'] ?? []))
+            ->filter(fn ($item) => is_array($item))
+            ->take(5)
+            ->map(function (array $item) {
+                return [
+                    'key' => $this->sanitizeIdentifier($item['key'] ?? null) ?? 'filler',
+                    'label' => $this->sanitizeText($item['label'] ?? null, 80) ?? 'Filler',
+                    'count' => max(0, min(999, (int) ($item['count'] ?? 0))),
+                ];
+            })
+            ->all();
+
+        $normalized = [
+            'fillerCounts' => $fillerCounts,
+            'totalFillers' => max(0, min(999, (int) ($input['totalFillers'] ?? 0))),
+            'totalWords' => max(0, min(5000, (int) ($input['totalWords'] ?? 0))),
+            'fillerRate' => round(max(0, min(100, (float) ($input['fillerRate'] ?? 0))), 1),
+            'repeatedPhraseCount' => max(0, min(999, (int) ($input['repeatedPhraseCount'] ?? 0))),
+            'longPauseCount' => max(0, min(999, (int) ($input['longPauseCount'] ?? 0))),
+            'pacePerMinute' => max(0, min(500, (int) ($input['pacePerMinute'] ?? 0))),
+            'dominantFillers' => $dominantFillers,
+            'summary' => $this->sanitizeText($input['summary'] ?? null, 500),
+        ];
+
+        return array_filter($normalized, fn ($value) => $value !== null && $value !== []);
+    }
+
+    protected function normalizePanelContext(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $normalized = [
+            'mode' => $this->sanitizeText($input['mode'] ?? null, 50),
+            'role' => $this->sanitizeText($input['role'] ?? null, 120),
+        ];
+
+        return array_filter($normalized, fn ($value) => $value !== null);
+    }
+
+    protected function normalizeDocumentAnalysis(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $normalized = [
+            'categoryName' => $this->sanitizeText($input['categoryName'] ?? null, 120),
+            'analyzedAt' => $this->normalizeDateTimeString($input['analyzedAt'] ?? null),
+            'signalCount' => max(0, min(999, (int) ($input['signalCount'] ?? 0))),
+        ];
+
+        return array_filter($normalized, fn ($value) => $value !== null);
+    }
+
+    protected function normalizeAdviserReview(array $input): array
+    {
+        if ($input === []) {
+            return [];
+        }
+
+        $normalized = [
+            'reviewer' => $this->sanitizeText($input['reviewer'] ?? null, 120) ?? 'Teacher / Adviser',
+            'sessionComment' => $this->sanitizeText($input['sessionComment'] ?? null, 2000),
+            'updatedAt' => $this->normalizeDateTimeString($input['updatedAt'] ?? null) ?? now()->toISOString(),
+            'status' => $this->sanitizeText($input['status'] ?? null, 80) ?? 'Reviewed',
+        ];
+
+        return array_filter($normalized, fn ($value) => $value !== null);
     }
 
     protected function normalizeProcessEvaluations(array $input): array

@@ -154,6 +154,25 @@ export const responsePreferenceOptions = [
     }
 ];
 
+export const panelModeOptions = [
+    { value: "single", label: "Single Interviewer" },
+    { value: "panel", label: "Panel Rotation" },
+    { value: "hr", label: "HR Interviewer" },
+    { value: "technical", label: "Technical Interviewer" },
+    { value: "scholarship", label: "Scholarship Committee" },
+    { value: "admission", label: "Admission Officer" }
+];
+
+export const reminderDayOptions = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday"
+];
+
 export const SESSION_SETUP_STORAGE_KEY = "ai_interview_session_setup_defaults";
 export const SESSION_SETUP_UPDATED_EVENT = "session-setup-updated";
 
@@ -201,6 +220,13 @@ export function createDefaultSessionSetup() {
         preferredCategoryId: practiceData.categories[0].id,
         voiceMode: responsePreferenceOptions[0].value,
         notes: "",
+        targetField: "",
+        panelMode: panelModeOptions[0].value,
+        difficultMode: false,
+        fillerTracking: true,
+        adviserReviewMode: false,
+        weeklyGoal: 3,
+        reminderDays: ["Monday", "Thursday"],
         savedAt: null
     };
 }
@@ -211,6 +237,10 @@ export function getQuestionCountOption(value) {
 
 export function getResponsePreferenceOption(value) {
     return responsePreferenceOptions.find((option) => option.value === value) || responsePreferenceOptions[0];
+}
+
+export function getPanelModeOption(value) {
+    return panelModeOptions.find((option) => option.value === value) || panelModeOptions[0];
 }
 
 export function normalizeSessionSetup(input = {}) {
@@ -243,6 +273,32 @@ export function normalizeSessionSetup(input = {}) {
     }
 
     normalized.notes = typeof input.notes === "string" ? input.notes.trim().slice(0, 500) : "";
+    normalized.targetField = typeof input.targetField === "string" ? input.targetField.trim().slice(0, 120) : "";
+
+    const panelMode = String(input.panelMode ?? "");
+    if (panelModeOptions.some((option) => option.value === panelMode)) {
+        normalized.panelMode = panelMode;
+    }
+
+    normalized.difficultMode = Boolean(input.difficultMode);
+    normalized.fillerTracking = input.fillerTracking !== false;
+    normalized.adviserReviewMode = Boolean(input.adviserReviewMode);
+
+    const weeklyGoal = Number(input.weeklyGoal);
+    if (Number.isInteger(weeklyGoal) && weeklyGoal >= 1 && weeklyGoal <= 7) {
+        normalized.weeklyGoal = weeklyGoal;
+    }
+
+    if (Array.isArray(input.reminderDays)) {
+        const reminderDays = Array.from(new Set(input.reminderDays
+            .map((day) => String(day || "").trim())
+            .filter((day) => reminderDayOptions.includes(day))));
+
+        if (reminderDays.length > 0) {
+            normalized.reminderDays = reminderDays;
+        }
+    }
+
     normalized.savedAt = typeof input.savedAt === "string" ? input.savedAt : null;
 
     return normalized;

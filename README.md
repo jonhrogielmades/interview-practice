@@ -1,6 +1,6 @@
-# InterviewPilot
+# SpeakReady AI
 
-InterviewPilot is a modern, AI-powered interview practice platform built with **Laravel 12**, **Tailwind CSS v4**, **Alpine.js**, and **Vite**. It provides users with a comprehensive simulation environment to practice and refine their interviewing skills across various disciplines, leveraging artificial intelligence for dynamic question generation, real-time voice interaction, and detailed performance feedback.
+SpeakReady AI is a modern, AI-powered interview practice platform built with **Laravel 12**, **Tailwind CSS v4**, **Alpine.js**, and **Vite**. It provides users with a comprehensive simulation environment to practice and refine their interviewing skills across various disciplines, leveraging artificial intelligence for dynamic question generation, real-time voice interaction, and detailed performance feedback.
 
 ## Key Features
 
@@ -61,7 +61,7 @@ npm run dev
 Configure your AI providers by adding your API keys to the `.env` file:
 
 ```env
-DB_DATABASE=interviewpilot_db
+DB_DATABASE=speakready_ai_db
 
 # AI Chatbot Configuration
 INTERVIEW_CHATBOT_DEFAULT_PROVIDER=auto
@@ -79,7 +79,7 @@ COHERE_API_KEY=your_key_here
 
 ## Mobile LAN Access (Testing)
 
-InterviewPilot is fully responsive and optimized for mobile devices (including camera and microphone support). To test on your mobile device within the same Wi-Fi network:
+SpeakReady AI is fully responsive and optimized for mobile devices (including camera and microphone support). To test on your mobile device within the same Wi-Fi network:
 
 1. **Find your local IP address:**
    - Windows: Run `ipconfig` (look for "IPv4 Address").
@@ -99,7 +99,7 @@ InterviewPilot is fully responsive and optimized for mobile devices (including c
 ## Project Structure
 
 ```text
-interviewpilot/
+speakready-ai/
 ├── app/          # Laravel core application logic
 ├── bootstrap/    # Framework bootstrap scripts
 ├── config/       # Application configuration files

@@ -138,6 +138,97 @@
             </div>
         </article>
 
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">
+                    Interview Enhancements
+                </h3>
+                <p class="mt-1 text-left text-sm text-gray-500 dark:text-gray-400 md:text-justify">
+                    Save the defaults for panel, pressure, document, voice-habit, and adviser-supported practice.
+                </p>
+            </div>
+
+            <div class="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="setupTargetField">
+                        Target Field / Role / Course
+                    </label>
+                    <input
+                        id="setupTargetField"
+                        type="text"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                        placeholder="Example: Junior Laravel Developer" />
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="setupPanelMode">
+                        Mock Panel Mode
+                    </label>
+                    <select
+                        id="setupPanelMode"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90"></select>
+                </div>
+
+                <div>
+                    <label
+                        class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                        for="setupWeeklyGoal">
+                        Weekly Practice Goal
+                    </label>
+                    <input
+                        id="setupWeeklyGoal"
+                        type="number"
+                        min="1"
+                        max="7"
+                        class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90" />
+                </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 md:grid-cols-3">
+                <label class="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    <input
+                        id="setupDifficultMode"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+                    <span>
+                        <span class="block text-sm font-semibold text-gray-900 dark:text-white/90">Difficult Interview Mode</span>
+                        <span class="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Pressure prompts and tougher follow-ups.</span>
+                    </span>
+                </label>
+
+                <label class="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    <input
+                        id="setupFillerTracking"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+                    <span>
+                        <span class="block text-sm font-semibold text-gray-900 dark:text-white/90">Filler Word Tracker</span>
+                        <span class="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Track repeated words and speaking habits.</span>
+                    </span>
+                </label>
+
+                <label class="flex items-start gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    <input
+                        id="setupAdviserReviewMode"
+                        type="checkbox"
+                        class="mt-1 h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+                    <span>
+                        <span class="block text-sm font-semibold text-gray-900 dark:text-white/90">Teacher / Adviser Review</span>
+                        <span class="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">Prepare saved sessions for comment review.</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="mt-5">
+                <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-400">Practice Reminder Days</p>
+                <div id="setupReminderDays" class="grid gap-2 sm:grid-cols-2 xl:grid-cols-4"></div>
+            </div>
+        </article>
+
         <article
             class="rounded-2xl border border-brand-100 bg-brand-50/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-brand-500/20 dark:bg-brand-500/10">
             <div class="mb-4">
@@ -275,11 +366,56 @@
                 </div>
                 <div
                     class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Target Field</p>
+                    <strong
+                        id="summaryTargetField"
+                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                        Not set
+                    </strong>
+                </div>
+                <div
+                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Panel Mode</p>
+                    <strong
+                        id="summaryPanelMode"
+                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                        Single Interviewer
+                    </strong>
+                </div>
+                <div
+                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Advanced Tools</p>
+                    <strong
+                        id="summaryDifficultMode"
+                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                        Standard mode
+                    </strong>
+                </div>
+                <div
+                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
                     <p class="text-xs uppercase tracking-wide text-gray-500">Estimated Session Time</p>
                     <strong
                         id="summaryEstimatedTime"
                         class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
                         09:00 total
+                    </strong>
+                </div>
+                <div
+                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Weekly Goal</p>
+                    <strong
+                        id="summaryWeeklyGoal"
+                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                        3 sessions
+                    </strong>
+                </div>
+                <div
+                    class="rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 dark:border-gray-800 dark:bg-gray-900/70">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Reminder Days</p>
+                    <strong
+                        id="summaryReminderDays"
+                        class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                        Monday, Thursday
                     </strong>
                 </div>
             </div>

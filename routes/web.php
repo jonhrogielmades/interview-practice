@@ -4,9 +4,11 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\GoogleAuthController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Admin\AdminApiManagementController;
-use App\Http\Controllers\Admin\AdminContentPageController;
+use App\Http\Controllers\Admin\AdminAnnouncementsPageController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\AdminMonitoringPageController;
+use App\Http\Controllers\Admin\AdminQuestionBankController;
+use App\Http\Controllers\Admin\AdminQuestionBankPageController;
 use App\Http\Controllers\Admin\AdminUsersPageController;
 use App\Http\Controllers\Admin\UserManagementController;
 use App\Http\Controllers\ChatbotPageController;
@@ -152,7 +154,12 @@ Route::middleware('auth')->group(function () {
         Route::put('/users/{user}', [UserManagementController::class, 'update'])->name('users.update');
         Route::delete('/users/{user}', [UserManagementController::class, 'destroy'])->name('users.destroy');
         Route::get('/apis', AdminApiManagementController::class)->name('apis');
-        Route::get('/content', AdminContentPageController::class)->name('content');
+        Route::get('/content', AdminQuestionBankPageController::class)->name('content');
+        Route::get('/question-bank', AdminQuestionBankPageController::class)->name('question-bank');
+        Route::post('/question-bank/questions', [AdminQuestionBankController::class, 'store'])->name('question-bank.questions.store');
+        Route::put('/question-bank/questions/{question}', [AdminQuestionBankController::class, 'update'])->name('question-bank.questions.update');
+        Route::delete('/question-bank/questions/{question}', [AdminQuestionBankController::class, 'destroy'])->name('question-bank.questions.destroy');
+        Route::get('/announcements', AdminAnnouncementsPageController::class)->name('announcements');
         Route::get('/monitoring', AdminMonitoringPageController::class)->name('monitoring');
         Route::get('/mobile-lan', [FeaturePageController::class, 'show'])
             ->defaults('page', 'mobile-lan')

@@ -76,12 +76,12 @@
             <!-- Logo (mobile only) -->
             <a href="/" class="xl:hidden flex min-w-0 items-center gap-3">
                 <span class="flex h-10 w-10 shrink-0 overflow-hidden rounded-2xl border border-gray-200 shadow-theme-xs dark:border-gray-700">
-                    <img src="/images/logo/interviewpilot-icon.png" alt="InterviewPilot"
+                    <img src="/images/logo/speakready-ai-icon.png" alt="SpeakReady AI"
                         class="h-full w-full object-cover object-top" />
                 </span>
                 <span class="min-w-0">
                     <span class="block truncate text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
-                        InterviewPilot
+                        SpeakReady AI
                     </span>
                     <span class="block truncate text-[11px] font-medium uppercase tracking-[0.22em] text-gray-400 dark:text-gray-500">
                         Interview Practice System
@@ -114,12 +114,7 @@
                             </svg>
                         </span>
                         <input type="text" placeholder="Search or type command..."
-                            class="h-11 w-full rounded-lg border border-gray-200/80 bg-gray-50/50 py-2.5 pl-12 pr-14 text-sm text-gray-800 shadow-sm transition-all duration-300 placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-400 dark:focus:bg-gray-900 xl:w-[430px]" />
-                        <button
-                            class="absolute right-2.5 top-1/2 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400">
-                            <span> Ctrl </span>
-                            <span> K </span>
-                        </button>
+                            class="h-11 w-full rounded-lg border border-gray-200/80 bg-white/70 py-2.5 pl-12 pr-4 text-sm text-gray-800 shadow-theme-xs transition-all duration-300 placeholder:text-gray-400 focus:border-brand-500 focus:bg-white focus:outline-hidden focus:ring-4 focus:ring-brand-500/10 dark:border-white/10 dark:bg-white/5 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-400 dark:focus:bg-gray-900 xl:w-[430px]" />
                     </div>
                 </form>
             </div>

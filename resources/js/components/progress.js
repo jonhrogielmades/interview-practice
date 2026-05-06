@@ -2,7 +2,8 @@ import {
     PRACTICE_SESSIONS_UPDATED_EVENT,
     clearPracticeSessions,
     readPracticeSessions,
-    removePracticeSession
+    removePracticeSession,
+    writePracticeSessions
 } from "./practice-storage";
 import {
     buildManuscriptRubric,
@@ -29,10 +30,16 @@ export function initProgress() {
         sessionReviewContainer: document.getElementById("sessionReviewContainer"),
         categoryBreakdownList: document.getElementById("categoryBreakdownList"),
         progressSummaryText: document.getElementById("progressSummaryText"),
+        studyPlanWeakSkill: document.getElementById("studyPlanWeakSkill"),
+        personalizedStudyPlanContainer: document.getElementById("personalizedStudyPlanContainer"),
+        practiceCalendarList: document.getElementById("practiceCalendarList"),
         progressCapstoneRubricGrid: document.getElementById("progressCapstoneRubricGrid"),
         criteriaAnalyticsGrid: document.getElementById("criteriaAnalyticsGrid"),
+        competencyGapList: document.getElementById("competencyGapList"),
         recentPerformanceCards: document.getElementById("recentPerformanceCards"),
         progressAchievementList: document.getElementById("progressAchievementList"),
+        readinessCertificateContainer: document.getElementById("readinessCertificateContainer"),
+        progressCertificateDownloadBtn: document.getElementById("progressCertificateDownloadBtn"),
         progressExportJsonBtn: document.getElementById("progressExportJsonBtn"),
         progressExportCsvBtn: document.getElementById("progressExportCsvBtn"),
         progressClearHistoryBtn: document.getElementById("progressClearHistoryBtn"),
@@ -56,6 +63,9 @@ export function initProgress() {
         overall: 0,
         readinessLabel: "No data yet"
     };
+    let competencyGaps = [];
+    let studyPlan = [];
+    let practiceCalendar = [];
     let isMutating = false;
 
     hydrateData();
@@ -118,6 +128,35 @@ export function initProgress() {
         }
     });
 
+    elements.sessionReviewContainer.addEventListener("click", async (event) => {
+        const saveButton = event.target.closest("[data-save-adviser-session]");
+
+        if (!saveButton || isMutating) {
+            return;
+        }
+
+        const sessionId = saveButton.dataset.saveAdviserSession;
+        const textarea = elements.sessionReviewContainer.querySelector(`[data-adviser-session-comment="${cssEscape(sessionId)}"]`);
+        const comment = String(textarea?.value || "").trim();
+
+        if (!sessionId) {
+            return;
+        }
+
+        try {
+            setMutating(true);
+            await saveAdviserSessionComment(sessionId, comment);
+            hydrateData();
+            renderEverything();
+            showStatus("success", comment ? "Teacher/adviser comment saved." : "Teacher/adviser comment cleared.");
+        } catch (error) {
+            console.error(error);
+            showStatus("warning", "The teacher/adviser comment could not be saved right now.");
+        } finally {
+            setMutating(false);
+        }
+    });
+
     window.addEventListener(PRACTICE_SESSIONS_UPDATED_EVENT, () => {
         hideStatus();
         hydrateData();
@@ -144,6 +183,9 @@ export function initProgress() {
         streakDays = calculateStreakDays(sessions);
         overallAverage = average(sessions.map((session) => Number(session.averageScore) || 0));
         capstoneAverages = buildCapstoneAverages(sessions);
+        competencyGaps = buildCompetencyGaps(sessions);
+        studyPlan = buildPersonalizedStudyPlan(competencyGaps, sessions);
+        practiceCalendar = buildPracticeCalendar(studyPlan);
     }
 
     function formatDate(dateValue, withTime = false) {
@@ -175,6 +217,14 @@ export function initProgress() {
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#39;");
+    }
+
+    function cssEscape(value) {
+        if (window.CSS?.escape) {
+            return window.CSS.escape(String(value ?? ""));
+        }
+
+        return String(value ?? "").replace(/[^a-zA-Z0-9_-]/g, "\\$&");
     }
 
     function renderEmptyState(title, body) {
@@ -210,17 +260,27 @@ export function initProgress() {
         elements.progressExportJsonBtn.disabled = exportDisabled;
         elements.progressExportCsvBtn.disabled = exportDisabled;
         elements.progressClearHistoryBtn.disabled = clearDisabled;
+        if (elements.progressCertificateDownloadBtn) {
+            elements.progressCertificateDownloadBtn.disabled = exportDisabled;
+        }
 
         [
             elements.progressExportJsonBtn,
             elements.progressExportCsvBtn,
-            elements.progressClearHistoryBtn
-        ].forEach((element) => {
+            elements.progressClearHistoryBtn,
+            elements.progressCertificateDownloadBtn
+        ].filter(Boolean).forEach((element) => {
             element.classList.toggle("cursor-not-allowed", element.disabled);
             element.classList.toggle("opacity-60", element.disabled);
         });
 
         elements.sessionHistoryContainer.querySelectorAll("[data-delete-session-id]").forEach((button) => {
+            button.disabled = isMutating;
+            button.classList.toggle("cursor-not-allowed", isMutating);
+            button.classList.toggle("opacity-60", isMutating);
+        });
+
+        elements.sessionReviewContainer.querySelectorAll("[data-save-adviser-session]").forEach((button) => {
             button.disabled = isMutating;
             button.classList.toggle("cursor-not-allowed", isMutating);
             button.classList.toggle("opacity-60", isMutating);
@@ -252,9 +312,12 @@ export function initProgress() {
         renderSessionReview();
         renderCategoryCards();
         renderSummary();
+        renderStudyPlan();
         renderCapstoneRubric();
         renderCriteriaAnalytics();
+        renderCompetencyGaps();
         renderRecentCards();
+        renderReadinessCertificate();
         renderAchievements();
         updateActionState();
     }
@@ -313,6 +376,167 @@ export function initProgress() {
             grammar: Number((totals.grammar / items.length).toFixed(1)),
             professionalism: Number((totals.professionalism / items.length).toFixed(1))
         };
+    }
+
+    function getAllAnswers(items = sessions) {
+        return items.flatMap((session) => Array.isArray(session.answers) ? session.answers : []);
+    }
+
+    function averageCriteria(items, keys) {
+        if (!items.length) {
+            return 0;
+        }
+
+        const values = items.map((session) => {
+            const criteria = session.criteriaAverages || {};
+            const keyedValues = keys.map((key) => Number(criteria[key]) || 0).filter((value) => value > 0);
+            return keyedValues.length ? average(keyedValues) : 0;
+        }).filter((value) => value > 0);
+
+        return values.length ? average(values) : 0;
+    }
+
+    function buildSpeakingHabitAverages(items) {
+        const answers = getAllAnswers(items);
+        const habits = answers
+            .map((answer) => answer.feedbackSummary?.speakingHabits || null)
+            .filter((habit) => habit && typeof habit === "object");
+
+        if (!habits.length) {
+            return {
+                fillerRate: 0,
+                totalFillers: 0,
+                longPauses: 0
+            };
+        }
+
+        return {
+            fillerRate: average(habits.map((habit) => Number(habit.fillerRate) || 0)),
+            totalFillers: Math.round(habits.reduce((sum, habit) => sum + (Number(habit.totalFillers) || 0), 0)),
+            longPauses: Math.round(habits.reduce((sum, habit) => sum + (Number(habit.longPauseCount) || 0), 0))
+        };
+    }
+
+    function buildCompetencyGaps(items) {
+        if (!items.length) {
+            return [
+                { key: "clarity", label: "Clarity", score: 0, target: 8, recommendation: "Complete one short answer drill and focus on main point, example, and result." },
+                { key: "confidence", label: "Confidence", score: 0, target: 8, recommendation: "Record one answer aloud and remove uncertain phrases before retrying." },
+                { key: "bodyLanguage", label: "Body Language", score: 0, target: 8, recommendation: "Run a camera check for posture, eye contact, and calm movement." }
+            ];
+        }
+
+        const habitAverages = buildSpeakingHabitAverages(items);
+        const confidenceBase = average([
+            averageCriteria(items, ["professionalism"]),
+            overallAverage || 0
+        ].filter((value) => value > 0));
+        const confidencePenalty = Math.min(2, habitAverages.fillerRate / 5);
+        const bodyLanguage = averageCriteria(items, ["eyeContact", "posture", "headMovement", "facialComposure"]);
+        const gaps = [
+            {
+                key: "confidence",
+                label: "Confidence",
+                score: roundToOne(Math.max(0, confidenceBase - confidencePenalty)),
+                target: 8,
+                recommendation: habitAverages.fillerRate >= 4
+                    ? "Practice a voice rehearsal and replace filler words with short silent pauses."
+                    : "Practice one pressure question with a stronger opening sentence."
+            },
+            {
+                key: "clarity",
+                label: "Clarity",
+                score: criteriaAverages.clarity,
+                target: 8,
+                recommendation: "Use a direct answer, one example, and a closing result."
+            },
+            {
+                key: "grammar",
+                label: "Grammar",
+                score: criteriaAverages.grammar,
+                target: 8,
+                recommendation: "Use shorter complete sentences and polish transitions before submitting."
+            },
+            {
+                key: "relevance",
+                label: "Relevance",
+                score: criteriaAverages.relevance,
+                target: 8,
+                recommendation: "Mirror the question language and connect every example back to the prompt."
+            },
+            {
+                key: "professionalism",
+                label: "Professionalism",
+                score: criteriaAverages.professionalism,
+                target: 8,
+                recommendation: "Strengthen word choice with responsibility, teamwork, learning, and results."
+            },
+            {
+                key: "bodyLanguage",
+                label: "Body Language",
+                score: bodyLanguage,
+                target: 8,
+                recommendation: bodyLanguage > 0
+                    ? "Run a camera presence check and keep eye contact, posture, and head movement steady."
+                    : "Turn on camera during practice to capture non-verbal readiness signals."
+            }
+        ];
+
+        return gaps
+            .map((gap) => ({
+                ...gap,
+                score: roundToOne(gap.score || 0),
+                gap: roundToOne(Math.max(0, gap.target - (gap.score || 0)))
+            }))
+            .sort((left, right) => {
+                if (left.score === 0 && right.score !== 0) return 1;
+                if (right.score === 0 && left.score !== 0) return -1;
+                return right.gap - left.gap;
+            });
+    }
+
+    function roundToOne(value) {
+        return Number((Number(value) || 0).toFixed(1));
+    }
+
+    function buildPersonalizedStudyPlan(gaps, items) {
+        const weakest = gaps.filter((gap) => gap.score > 0).slice(0, 4);
+        const source = weakest.length ? weakest : gaps.slice(0, 4);
+        const latestCategory = items[0]?.categoryName || "your main interview track";
+        const planSeeds = [
+            ["Monday", "Clarity Drill", "Practice a 90-second answer with main point, example, and result."],
+            ["Tuesday", "STAR Answer Rewrite", "Rewrite one saved answer into situation, task, action, and result."],
+            ["Wednesday", "Voice Rehearsal", "Record the answer aloud and reduce filler words."],
+            ["Thursday", "Panel Follow-up", "Answer one follow-up from HR, technical, scholarship, or admission perspective."],
+            ["Friday", "Difficult Mode", "Practice one pressure question and defend your strongest evidence."]
+        ];
+
+        return planSeeds.map(([day, title, fallback], index) => {
+            const gap = source[index % Math.max(source.length, 1)];
+
+            return {
+                day,
+                title: gap ? `${gap.label} ${title}` : title,
+                focus: gap?.label || "Interview readiness",
+                action: gap?.recommendation || fallback,
+                context: latestCategory,
+                target: gap?.target || 8
+            };
+        });
+    }
+
+    function buildPracticeCalendar(plan) {
+        const calendarDays = ["Monday", "Tuesday", "Wednesday", "Thursday"];
+
+        return calendarDays.map((day) => {
+            const planItem = plan.find((item) => item.day === day) || plan[0];
+
+            return {
+                day,
+                label: planItem?.focus || "Practice",
+                detail: planItem?.action || "Complete one interview drill."
+            };
+        });
     }
 
     function buildCapstoneAverages(items) {
@@ -536,6 +760,157 @@ export function initProgress() {
         `).join("");
     }
 
+    function getSessionAdviserReview(session) {
+        const firstAnswer = Array.isArray(session.answers) ? session.answers[0] : null;
+        return firstAnswer?.feedbackSummary?.adviserReview || {};
+    }
+
+    async function saveAdviserSessionComment(sessionId, comment) {
+        const updatedSessions = sessions.map((session) => {
+            if (session.id !== sessionId) {
+                return session;
+            }
+
+            const answers = Array.isArray(session.answers) && session.answers.length
+                ? session.answers
+                : [{
+                    questionIndex: 0,
+                    questionNumber: 1,
+                    question: "Teacher / adviser review",
+                    answer: "",
+                    average: 0,
+                    clarity: 0,
+                    relevance: 0,
+                    grammar: 0,
+                    professionalism: 0,
+                    matchedKeywords: 0,
+                    elapsedSeconds: 0,
+                    inputMode: "Review",
+                    feedbackSummary: {}
+                }];
+
+            return {
+                ...session,
+                answers: answers.map((answer, index) => index === 0
+                    ? {
+                        ...answer,
+                        feedbackSummary: {
+                            ...(answer.feedbackSummary || {}),
+                            adviserReview: comment
+                                ? {
+                                    reviewer: "Teacher / Adviser",
+                                    sessionComment: comment,
+                                    updatedAt: new Date().toISOString(),
+                                    status: "Reviewed"
+                                }
+                                : {}
+                        }
+                    }
+                    : answer)
+            };
+        });
+
+        await writePracticeSessions(updatedSessions);
+    }
+
+    function renderAnswerVersions(answer) {
+        const versions = answer.feedbackSummary?.answerVersions || [];
+
+        if (!Array.isArray(versions) || versions.length < 2) {
+            return "";
+        }
+
+        const first = versions[0];
+        const latest = versions[versions.length - 1];
+
+        return `
+            <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Answer Improvement Version History</p>
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                        ${versions.length} versions
+                    </span>
+                </div>
+                <div class="mt-3 grid gap-3 sm:grid-cols-2">
+                    ${[
+                        ["First Answer", first],
+                        ["Improved Answer", latest]
+                    ].map(([label, version]) => `
+                        <div class="rounded-xl border border-gray-200 bg-white p-3 dark:border-gray-800 dark:bg-gray-950/40">
+                            <p class="text-xs font-medium uppercase tracking-wide text-gray-500">${label}</p>
+                            <p class="content-break mt-2 max-h-36 overflow-y-auto text-xs leading-5 text-gray-600 dark:text-gray-400">${escapeHtml(version.answer).replace(/\n/g, "<br>")}</p>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+        `;
+    }
+
+    function renderSpeakingHabits(answer) {
+        const habits = answer.feedbackSummary?.speakingHabits || null;
+
+        if (!habits || typeof habits !== "object" || Number(habits.totalWords || 0) === 0) {
+            return "";
+        }
+
+        const fillerCounts = habits.fillerCounts || {};
+        const topFillers = Object.entries(fillerCounts)
+            .filter(([, count]) => Number(count) > 0)
+            .sort((left, right) => Number(right[1]) - Number(left[1]))
+            .slice(0, 3)
+            .map(([label, count]) => `${label}: ${count}`)
+            .join(", ");
+
+        return `
+            <div class="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-xs uppercase tracking-wide text-gray-500">Filler Word And Speaking Habits</p>
+                    <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                        ${Number(habits.totalFillers || 0)} fillers
+                    </span>
+                </div>
+                <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                    <div class="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Filler Rate</p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white/90">${Number(habits.fillerRate || 0).toFixed(1)}%</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Long Pauses</p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white/90">${Number(habits.longPauseCount || 0)}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Top Fillers</p>
+                        <p class="content-break mt-1 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(topFillers || "None")}</p>
+                    </div>
+                </div>
+                <p class="mt-3 text-xs leading-5 text-gray-500 dark:text-gray-400">${escapeHtml(habits.summary || "Speaking habit data saved with this answer.")}</p>
+            </div>
+        `;
+    }
+
+    function renderAnswerContextBadges(answer) {
+        const panel = answer.feedbackSummary?.panel;
+        const documentAnalysis = answer.feedbackSummary?.documentAnalysis;
+        const badges = [
+            panel?.role ? `Panel: ${panel.role}` : "",
+            documentAnalysis?.categoryName ? `Document: ${documentAnalysis.categoryName}` : ""
+        ].filter(Boolean);
+
+        if (!badges.length) {
+            return "";
+        }
+
+        return `
+            <div class="mt-3 flex flex-wrap gap-2">
+                ${badges.map((badge) => `
+                    <span class="rounded-full bg-brand-50 px-3 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/10 dark:text-brand-300">
+                        ${escapeHtml(badge)}
+                    </span>
+                `).join("")}
+            </div>
+        `;
+    }
+
     function renderSessionReview() {
         if (!sessions.length) {
             elements.sessionReviewContainer.innerHTML = renderEmptyState(
@@ -545,7 +920,10 @@ export function initProgress() {
             return;
         }
 
-        elements.sessionReviewContainer.innerHTML = sessions.map((session) => `
+        elements.sessionReviewContainer.innerHTML = sessions.map((session) => {
+            const adviserReview = getSessionAdviserReview(session);
+
+            return `
             <details class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
                 <summary class="cursor-pointer list-none">
                     <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -560,10 +938,36 @@ export function initProgress() {
                 </summary>
 
                 <div class="mt-4 space-y-4">
+                    <div class="rounded-2xl border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-500/20 dark:bg-brand-500/5">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h5 class="text-sm font-semibold text-gray-900 dark:text-white/90">Teacher / Adviser Review Mode</h5>
+                                <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                    Save a review comment for this student's session.
+                                </p>
+                            </div>
+                            <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                                ${adviserReview.updatedAt ? `Updated ${formatDate(adviserReview.updatedAt)}` : "Not reviewed"}
+                            </span>
+                        </div>
+                        <textarea
+                            data-adviser-session-comment="${escapeHtml(session.id)}"
+                            rows="3"
+                            class="mt-3 min-h-[92px] w-full rounded-2xl border border-gray-300 bg-white px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                            placeholder="Add comments about strengths, revisions, or next practice tasks.">${escapeHtml(adviserReview.sessionComment || "")}</textarea>
+                        <button
+                            type="button"
+                            data-save-adviser-session="${escapeHtml(session.id)}"
+                            class="mt-3 inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600">
+                            Save Adviser Comment
+                        </button>
+                    </div>
+
                     ${session.answers.map((answer) => `
                         <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-950/40">
                             <p class="text-xs uppercase tracking-wide text-gray-500">Question ${answer.questionNumber}</p>
                             <h5 class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(answer.question)}</h5>
+                            ${renderAnswerContextBadges(answer)}
                             <p class="mt-3 text-sm leading-7 text-gray-600 dark:text-gray-400">${escapeHtml(answer.answer)}</p>
                             <div class="mt-4 grid gap-3 sm:grid-cols-3">
                                 <div class="rounded-xl bg-gray-50 px-3 py-3 dark:bg-gray-900">
@@ -579,11 +983,14 @@ export function initProgress() {
                                     <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(answer.inputMode || "Text")}</p>
                                 </div>
                             </div>
+                            ${renderSpeakingHabits(answer)}
+                            ${renderAnswerVersions(answer)}
                         </div>
                     `).join("")}
                 </div>
             </details>
-        `).join("");
+        `;
+        }).join("");
     }
 
     function renderCategoryCards() {
@@ -621,6 +1028,121 @@ export function initProgress() {
         const topCategory = categoryBreakdown[0]?.categoryName || "your main category";
         const bestCriterion = Object.entries(criteriaAverages).sort((left, right) => right[1] - left[1])[0];
         elements.progressSummaryText.textContent = `You have saved ${sessions.length} session${sessions.length === 1 ? "" : "s"} with an internal average of ${overallAverage.toFixed(1)}/10 and a capstone overall of ${capstoneAverages.overall.toFixed(2)}/5. ${topCategory} is currently your strongest category, and ${bestCriterion[0]} is your top scoring criterion.`;
+    }
+
+    function renderStudyPlan() {
+        if (!elements.personalizedStudyPlanContainer || !elements.practiceCalendarList) {
+            return;
+        }
+
+        const weakest = competencyGaps.find((gap) => gap.score > 0) || competencyGaps[0];
+
+        elements.studyPlanWeakSkill.textContent = weakest
+            ? `Focus: ${weakest.label}`
+            : "Awaiting sessions";
+
+        if (!sessions.length) {
+            elements.personalizedStudyPlanContainer.innerHTML = renderEmptyState(
+                "No personalized plan yet",
+                "Save a practice session to generate a score-based weekly plan."
+            );
+        } else {
+            elements.personalizedStudyPlanContainer.innerHTML = studyPlan.map((item) => `
+                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    <div class="flex items-center justify-between gap-3">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">${escapeHtml(item.day)}</p>
+                        <span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-gray-700 shadow-theme-xs dark:bg-gray-800 dark:text-gray-300">
+                            Target ${Number(item.target).toFixed(1)}/10
+                        </span>
+                    </div>
+                    <h4 class="mt-3 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(item.title)}</h4>
+                    <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">${escapeHtml(item.action)}</p>
+                    <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">${escapeHtml(item.context)}</p>
+                </div>
+            `).join("");
+        }
+
+        elements.practiceCalendarList.innerHTML = practiceCalendar.map((item) => `
+            <div class="rounded-2xl border border-brand-100 bg-brand-50/60 p-4 dark:border-brand-500/20 dark:bg-brand-500/5">
+                <p class="text-xs uppercase tracking-wide text-brand-600 dark:text-brand-300">${escapeHtml(item.day)}</p>
+                <h4 class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(item.label)}</h4>
+                <p class="mt-2 text-xs leading-5 text-gray-600 dark:text-gray-400">${escapeHtml(item.detail)}</p>
+            </div>
+        `).join("");
+    }
+
+    function renderCompetencyGaps() {
+        if (!elements.competencyGapList) {
+            return;
+        }
+
+        if (!sessions.length) {
+            elements.competencyGapList.innerHTML = renderEmptyState(
+                "No competency gaps yet",
+                "Saved sessions will populate the confidence, clarity, grammar, relevance, professionalism, and body language view."
+            );
+            return;
+        }
+
+        elements.competencyGapList.innerHTML = competencyGaps.map((gap) => {
+            const width = Math.max(5, Math.min(100, gap.score * 10));
+            const tone = gap.gap >= 2
+                ? "text-amber-600 dark:text-amber-300"
+                : "text-success-600 dark:text-success-300";
+
+            return `
+                <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                    <div class="flex items-center justify-between gap-3">
+                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">${escapeHtml(gap.label)}</h4>
+                        <span class="text-sm font-medium ${tone}">${Number(gap.score).toFixed(1)}/10</span>
+                    </div>
+                    <div class="mt-3 h-2 rounded-full bg-gray-200 dark:bg-gray-800">
+                        <div class="h-2 rounded-full bg-brand-500" style="width: ${width}%"></div>
+                    </div>
+                    <p class="mt-3 text-xs leading-5 text-gray-500 dark:text-gray-400">${escapeHtml(gap.recommendation)}</p>
+                </div>
+            `;
+        }).join("");
+    }
+
+    function renderReadinessCertificate() {
+        if (!elements.readinessCertificateContainer) {
+            return;
+        }
+
+        const eligible = sessions.length >= 3 && capstoneAverages.overall >= 3;
+        const latestSession = sessions[0];
+        const status = eligible ? "Ready to issue" : "Keep practicing";
+        const requirementText = eligible
+            ? "Minimum practice evidence completed."
+            : `${Math.max(0, 3 - sessions.length)} more saved session${Math.max(0, 3 - sessions.length) === 1 ? "" : "s"} recommended before issuing.`;
+
+        elements.readinessCertificateContainer.innerHTML = `
+            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Certificate Status</p>
+                        <h4 class="mt-2 text-base font-semibold text-gray-900 dark:text-white/90">${status}</h4>
+                    </div>
+                    <span class="rounded-full ${eligible ? "bg-success-100 text-success-700 dark:bg-success-500/10 dark:text-success-300" : "bg-amber-100 text-amber-700 dark:bg-amber-500/10 dark:text-amber-300"} px-3 py-1 text-xs font-medium">
+                        ${escapeHtml(capstoneAverages.readinessLabel)}
+                    </span>
+                </div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Sessions</p>
+                        <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">${sessions.length}</p>
+                    </div>
+                    <div class="rounded-xl border border-gray-200 bg-white px-3 py-3 dark:border-gray-800 dark:bg-gray-950/40">
+                        <p class="text-xs uppercase tracking-wide text-gray-500">Rubric Overall</p>
+                        <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white/90">${capstoneAverages.overall.toFixed(2)}/5</p>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm leading-6 text-gray-600 dark:text-gray-400">
+                    ${escapeHtml(requirementText)}${latestSession ? ` Latest track: ${escapeHtml(latestSession.categoryName)}.` : ""}
+                </p>
+            </div>
+        `;
     }
 
     function renderCapstoneRubric() {
@@ -754,6 +1276,8 @@ export function initProgress() {
                 totalSessions: sessions.length,
                 overallAverage,
                 capstoneAverages,
+                competencyGaps,
+                studyPlan,
                 sessions
             };
 
@@ -795,6 +1319,30 @@ export function initProgress() {
             ].join(","));
 
             downloadFile("capstone-progress-sessions.csv", [header.join(","), ...rows].join("\n"), "text/csv;charset=utf-8");
+        });
+
+        elements.progressCertificateDownloadBtn?.addEventListener("click", () => {
+            if (!sessions.length) {
+                showStatus("info", "Save at least one practice session before downloading a certificate report.");
+                return;
+            }
+
+            const weakest = competencyGaps[0];
+            const certificate = [
+                "Interview Readiness Certificate / Report",
+                `Generated: ${formatDate(new Date().toISOString(), true)}`,
+                `Saved sessions: ${sessions.length}`,
+                `Overall average: ${overallAverage.toFixed(1)}/10`,
+                `Capstone readiness: ${capstoneAverages.overall.toFixed(2)}/5 (${capstoneAverages.readinessLabel})`,
+                weakest ? `Next focus: ${weakest.label} - ${weakest.recommendation}` : "",
+                "",
+                "Weekly Study Plan:",
+                ...studyPlan.map((item) => `${item.day}: ${item.title} - ${item.action}`),
+                "",
+                "This report is generated by the AI-Based Interview Practice System from saved practice sessions."
+            ].filter((line) => line !== "").join("\n");
+
+            downloadFile("interview-readiness-certificate.txt", certificate, "text/plain;charset=utf-8");
         });
     }
 }

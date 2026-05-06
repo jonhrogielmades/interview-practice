@@ -35,7 +35,7 @@
 
             <div x-data="{
                 init() {
-                    const loadFlatpickr = window.InterviewPilot?.loadFlatpickr;
+                    const loadFlatpickr = window.SpeakReadyAI?.loadFlatpickr;
 
                     if (!loadFlatpickr) {
                         return;

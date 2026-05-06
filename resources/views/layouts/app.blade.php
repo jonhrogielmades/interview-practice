@@ -6,10 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ $title ?? 'Dashboard' }} | InterviewPilot</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/logo/interviewpilot-icon.png') }}">
-    <link rel="shortcut icon" href="{{ asset('images/logo/interviewpilot-icon.png') }}">
-    <link rel="apple-touch-icon" href="{{ asset('images/logo/interviewpilot-icon.png') }}">
+    <title>{{ $title ?? 'Dashboard' }} | SpeakReady AI</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/logo/speakready-ai-icon.png') }}">
+    <link rel="shortcut icon" href="{{ asset('images/logo/speakready-ai-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/logo/speakready-ai-icon.png') }}">
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -22,8 +22,8 @@
         document.addEventListener('alpine:init', () => {
             Alpine.store('theme', {
                 colors: [
-                    { id: 'ocean', label: 'Ocean', swatch: '#465fff', accent: '#0ba5ec' },
-                    { id: 'emerald', label: 'Emerald', swatch: '#12b76a', accent: '#06b6d4' },
+                    { id: 'ocean', label: 'Studio', swatch: '#147864', accent: '#f97316' },
+                    { id: 'emerald', label: 'Emerald', swatch: '#12b76a', accent: '#4c63e6' },
                 ],
                 init() {
                     const savedTheme = localStorage.getItem('theme');
@@ -115,7 +115,7 @@
                 active: false,
                 currentStepIndex: 0,
                 steps: [],
-                storageKey: 'interviewpilot.dashboard-onboarding-complete',
+                storageKey: 'speakready-ai.dashboard-onboarding-complete',
                 initialized: false,
 
                 init() {

@@ -49,6 +49,10 @@ export default defineConfig(({ mode }) => {
                 plugins: [],
             },
         },
+        build: {
+            // ApexCharts is loaded only on chart pages, but its vendor chunk is expectedly large.
+            chunkSizeWarningLimit: 700,
+        },
         server: {
             host: '0.0.0.0',
             port: devServerPort,

@@ -94,6 +94,62 @@
                         </p>
                     </div>
                 </div>
+
+                <div class="mt-5 grid gap-3 xl:grid-cols-3">
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Resume/Application Analyzer</h4>
+                                <p class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                    Turn a resume, scholarship essay, or admission profile into targeted interview questions.
+                                </p>
+                            </div>
+                            <button
+                                id="openResumeAnalyzerModalBtn"
+                                type="button"
+                                class="inline-flex items-center justify-center rounded-lg border border-brand-300 px-3 py-2 text-xs font-medium text-brand-600 transition hover:bg-brand-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10">
+                                Open Analyzer
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                        <label
+                            class="block text-sm font-semibold text-gray-900 dark:text-white/90"
+                            for="panelModeSelect">
+                            Mock Panel Interview
+                        </label>
+                        <select
+                            id="panelModeSelect"
+                            class="dark:bg-dark-900 mt-3 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                            <option value="single">Single Interviewer</option>
+                            <option value="panel">Panel Rotation</option>
+                            <option value="hr">HR Interviewer</option>
+                            <option value="technical">Technical Interviewer</option>
+                            <option value="scholarship">Scholarship Committee</option>
+                            <option value="admission">Admission Officer</option>
+                        </select>
+                        <p id="panelModeSummary" class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                            Single interviewer is active.
+                        </p>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <h4 class="text-sm font-semibold text-gray-900 dark:text-white/90">Difficult Interview Mode</h4>
+                                <p id="difficultModeSummary" class="mt-1 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                    Standard questions are active.
+                                </p>
+                            </div>
+                            <label class="relative inline-flex cursor-pointer items-center">
+                                <input id="difficultModeToggle" type="checkbox" class="peer sr-only">
+                                <span class="h-6 w-11 rounded-full bg-gray-200 transition peer-checked:bg-brand-500 dark:bg-gray-700"></span>
+                                <span class="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white transition peer-checked:translate-x-5"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
             </article>
         </div>
     </section>
@@ -311,6 +367,8 @@
                             <select
                                 id="practiceFieldProviderSelect"
                                 class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                <option value="auto">AI Provider</option>
+                                <option value="local">Local PH coach</option>
                             </select>
                             <p
                                 id="practiceFieldProviderHelpText"
@@ -467,6 +525,189 @@
                         <div
                             id="practiceFieldChatStatus"
                             class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+                    </article>
+                </section>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div
+    id="resumeAnalyzerModal"
+    x-data="{
+        viewportWidth: window.innerWidth,
+        handleResize: null,
+        init() {
+            this.handleResize = () => {
+                this.viewportWidth = window.innerWidth;
+            };
+
+            this.handleResize();
+            window.addEventListener('resize', this.handleResize);
+        },
+        destroy() {
+            if (this.handleResize) {
+                window.removeEventListener('resize', this.handleResize);
+            }
+        },
+        get isDesktop() {
+            return this.viewportWidth >= 1280;
+        },
+        get sidebarOffset() {
+            if (!this.isDesktop) {
+                return 0;
+            }
+
+            return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
+        },
+        get topOffset() {
+            return this.viewportWidth >= 640 ? 88 : 64;
+        },
+        get wrapperPadding() {
+            if (this.viewportWidth >= 1280) {
+                return 24;
+            }
+
+            if (this.viewportWidth >= 640) {
+                return 20;
+            }
+
+            return 12;
+        },
+        get wrapperStyle() {
+            return `top: ${this.topOffset}px; left: ${this.sidebarOffset}px; right: 0; bottom: 0; padding: ${this.wrapperPadding}px;`;
+        }
+    }"
+    class="fixed z-[10010] hidden items-start justify-center"
+    :style="wrapperStyle"
+    aria-hidden="true"
+    aria-labelledby="resumeAnalyzerModalTitle"
+    aria-modal="true"
+    role="dialog">
+    <div id="resumeAnalyzerModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm"></div>
+
+    <div
+        class="relative z-10 flex h-full w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/90 sm:rounded-3xl">
+        <div
+            class="flex shrink-0 items-start justify-between gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:px-6">
+            <div class="max-w-2xl">
+                <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
+                    Document-Based Practice
+                </p>
+                <h2 id="resumeAnalyzerModalTitle" class="mt-1 text-lg font-semibold text-gray-900 dark:text-white/90">
+                    Resume / Application Analyzer
+                </h2>
+                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    Paste or upload application text, then generate questions matched to the strongest signals and gaps.
+                </p>
+            </div>
+
+            <button
+                id="closeResumeAnalyzerModalBtn"
+                type="button"
+                class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gray-100 text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white sm:h-11 sm:w-11">
+                <span class="sr-only">Close resume analyzer</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        fill-rule="evenodd"
+                        clip-rule="evenodd"
+                        d="M6.04289 16.5413C5.65237 16.9318 5.65237 17.565 6.04289 17.9555C6.43342 18.346 7.06658 18.346 7.45711 17.9555L11.9987 13.4139L16.5408 17.956C16.9313 18.3466 17.5645 18.3466 17.955 17.956C18.3455 17.5655 18.3455 16.9323 17.955 16.5418L13.4129 11.9997L17.955 7.4576C18.3455 7.06707 18.3455 6.43391 17.955 6.04338C17.5645 5.65286 16.9313 5.65286 16.5408 6.04338L11.9987 10.5855L7.45711 6.0439C7.06658 5.65338 6.43342 5.65338 6.04289 6.0439C5.65237 6.43442 5.65237 7.06759 6.04289 7.45811L10.5845 11.9997L6.04289 16.5413Z"
+                        fill="currentColor" />
+                </svg>
+            </button>
+        </div>
+
+        <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+            <div class="grid gap-6 xl:grid-cols-12">
+                <section class="space-y-5 xl:col-span-5">
+                    <article class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    for="resumeAnalyzerCategorySelect">
+                                    Practice Track
+                                </label>
+                                <select
+                                    id="resumeAnalyzerCategorySelect"
+                                    class="dark:bg-dark-900 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                    <option value="auto">Auto Detect</option>
+                                    <option value="job">Job Interview</option>
+                                    <option value="scholarship">Scholarship Interview</option>
+                                    <option value="admission">College Admission</option>
+                                    <option value="it">IT / Programming</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label
+                                    class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                    for="resumeDocumentInput">
+                                    Upload Text File
+                                </label>
+                                <input
+                                    id="resumeDocumentInput"
+                                    type="file"
+                                    accept=".txt,.md,.csv,.json,.rtf"
+                                    class="dark:bg-dark-900 block h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 shadow-theme-xs file:mr-3 file:rounded-md file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-xs file:font-medium file:text-brand-600 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:file:bg-brand-500/10 dark:file:text-brand-300" />
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label
+                                class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400"
+                                for="resumeDocumentText">
+                                Resume, Essay, or Admission Profile
+                            </label>
+                            <textarea
+                                id="resumeDocumentText"
+                                rows="12"
+                                class="min-h-[260px] w-full rounded-2xl border border-gray-300 bg-transparent px-4 py-3 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30"
+                                placeholder="Paste achievements, skills, project details, scholarship essay points, admission goals, or application notes here."></textarea>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap gap-3">
+                            <button
+                                id="analyzeResumeBtn"
+                                type="button"
+                                class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 sm:w-auto">
+                                Generate Questions
+                            </button>
+                            <button
+                                id="applyResumeQuestionsBtn"
+                                type="button"
+                                disabled
+                                class="inline-flex w-full items-center justify-center rounded-lg border border-brand-300 px-4 py-3 text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10 sm:w-auto">
+                                Use In Practice
+                            </button>
+                        </div>
+
+                        <div id="resumeAnalyzerStatus" class="mt-4 hidden rounded-2xl border px-4 py-3 text-sm"></div>
+                    </article>
+                </section>
+
+                <section class="space-y-5 xl:col-span-7">
+                    <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                            <div>
+                                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Generated Interview Questions</h3>
+                                <p id="resumeAnalyzerSummary" class="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+                                    Add a document and generate questions to begin.
+                                </p>
+                            </div>
+                            <span
+                                id="resumeAnalyzerDetectedTag"
+                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                Awaiting document
+                            </span>
+                        </div>
+
+                        <div id="resumeAnalyzerQuestionList" class="mt-5 space-y-3"></div>
+                    </article>
+
+                    <article class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-gray-900/70">
+                        <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Document Signals</h3>
+                        <div id="resumeAnalyzerSignalGrid" class="mt-4 grid gap-3 sm:grid-cols-2"></div>
                     </article>
                 </section>
             </div>
@@ -647,14 +888,70 @@
                                 <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
                                     Voice commands work locally: try "pause", "continue", "next question", "send answer", "camera on", "give me a hint", or "end interview".
                                 </p>
+
+                                <div class="mt-4 grid gap-3 xl:grid-cols-2">
+                                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                        <div class="flex flex-wrap items-start justify-between gap-3">
+                                            <div>
+                                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Filler Word Tracker</p>
+                                                <strong
+                                                    id="fillerTrackerSummary"
+                                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                                    Start typing or speaking to analyze habits.
+                                                </strong>
+                                            </div>
+                                            <span
+                                                id="fillerTrackerTag"
+                                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                0 fillers
+                                            </span>
+                                        </div>
+                                        <div id="fillerTrackerGrid" class="mt-4 grid gap-2 sm:grid-cols-2"></div>
+                                    </div>
+
+                                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-gray-900/70">
+                                        <div class="flex flex-wrap items-start justify-between gap-3">
+                                            <div>
+                                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500">Answer Versions</p>
+                                                <strong
+                                                    id="answerVersionSummary"
+                                                    class="mt-2 block text-sm font-semibold text-gray-900 dark:text-white/90">
+                                                    No saved draft versions yet.
+                                                </strong>
+                                            </div>
+                                            <span
+                                                id="answerVersionTag"
+                                                class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                                0 versions
+                                            </span>
+                                        </div>
+
+                                        <div class="mt-4 flex flex-wrap gap-2">
+                                            <button
+                                                id="saveAnswerVersionBtn"
+                                                type="button"
+                                                class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-3 py-2 text-xs font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                                                Save Draft Version
+                                            </button>
+                                            <button
+                                                id="compareAnswerVersionsBtn"
+                                                type="button"
+                                                class="inline-flex items-center justify-center rounded-lg border border-brand-300 px-3 py-2 text-xs font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10">
+                                                Compare Versions
+                                            </button>
+                                        </div>
+
+                                        <div id="answerVersionComparePanel" class="mt-4 hidden grid gap-3 sm:grid-cols-2"></div>
+                                    </div>
+                                </div>
                             </div>
 
                             <div class="flex flex-wrap gap-3">
                                 <button
                                     id="startPracticeBtn"
                                     type="button"
-                                    class="hidden">
-                                    Interviewer Will Ask
+                                    class="inline-flex w-full items-center justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] sm:w-auto">
+                                    Ask Question
                                 </button>
 
                                 <button
@@ -674,15 +971,15 @@
                                 <button
                                     id="submitAnswerBtn"
                                     type="button"
-                                    class="hidden">
+                                    class="inline-flex w-full items-center justify-center rounded-lg bg-success-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs transition hover:bg-success-600 disabled:cursor-not-allowed disabled:opacity-50 min-h-[44px] sm:w-auto">
                                     Send Answer
                                 </button>
 
                                 <button
                                     id="nextQuestionBtn"
                                     type="button"
-                                    class="hidden">
-                                    Continue Automatically
+                                    class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] min-h-[44px] sm:w-auto">
+                                    Next Question
                                 </button>
 
                                 <button

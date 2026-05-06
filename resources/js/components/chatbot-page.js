@@ -183,7 +183,7 @@ export function initChatbotPage() {
             {
                 role: "assistant",
                 text: buildGreetingMessage(),
-                provider: "InterviewPilot PH Coach",
+                provider: "SpeakReady AI PH Coach",
                 usedFallback: false
             }
         ];
@@ -785,7 +785,7 @@ export function initChatbotPage() {
             state.messages.push({
                 role: "assistant",
                 text: "The chatbot could not complete that request right now. Please try again in a moment.",
-                provider: "InterviewPilot PH Coach",
+                provider: "SpeakReady AI PH Coach",
                 usedFallback: true
             });
             renderConversation();

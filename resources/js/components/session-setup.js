@@ -2,12 +2,15 @@ import {
     practiceData,
     questionCountOptions,
     responsePreferenceOptions,
+    panelModeOptions,
+    reminderDayOptions,
     formatPracticeTime,
     readSessionSetup,
     writeSessionSetup,
     clearSessionSetup,
     getQuestionCountOption,
     getResponsePreferenceOption,
+    getPanelModeOption,
     normalizeSessionSetup,
     SESSION_SETUP_UPDATED_EVENT
 } from "./practice-config";
@@ -26,13 +29,25 @@ export function initSessionSetup() {
         preferredCategory: document.getElementById("setupPreferredCategory"),
         voiceMode: document.getElementById("setupVoiceMode"),
         notes: document.getElementById("setupNotes"),
+        targetField: document.getElementById("setupTargetField"),
+        panelMode: document.getElementById("setupPanelMode"),
+        difficultMode: document.getElementById("setupDifficultMode"),
+        fillerTracking: document.getElementById("setupFillerTracking"),
+        adviserReviewMode: document.getElementById("setupAdviserReviewMode"),
+        weeklyGoal: document.getElementById("setupWeeklyGoal"),
+        reminderDays: document.getElementById("setupReminderDays"),
         notesCount: document.getElementById("setupNotesCount"),
         summaryQuestionCount: document.getElementById("summaryQuestionCount"),
         summaryCoachMode: document.getElementById("summaryCoachMode"),
         summaryPacingMode: document.getElementById("summaryPacingMode"),
         summaryCategory: document.getElementById("summaryCategory"),
         summaryVoiceMode: document.getElementById("summaryVoiceMode"),
+        summaryTargetField: document.getElementById("summaryTargetField"),
+        summaryPanelMode: document.getElementById("summaryPanelMode"),
+        summaryDifficultMode: document.getElementById("summaryDifficultMode"),
         summaryEstimatedTime: document.getElementById("summaryEstimatedTime"),
+        summaryWeeklyGoal: document.getElementById("summaryWeeklyGoal"),
+        summaryReminderDays: document.getElementById("summaryReminderDays"),
         summaryNotes: document.getElementById("summaryNotes"),
         summaryCategoryDescription: document.getElementById("summaryCategoryDescription"),
         summaryCategoryQuestion: document.getElementById("summaryCategoryQuestion"),
@@ -93,6 +108,23 @@ export function initSessionSetup() {
         elements.voiceMode.innerHTML = responsePreferenceOptions
             .map((option) => `<option value="${option.value}">${option.label}</option>`)
             .join("");
+
+        elements.panelMode.innerHTML = panelModeOptions
+            .map((option) => `<option value="${option.value}">${option.label}</option>`)
+            .join("");
+
+        elements.reminderDays.innerHTML = reminderDayOptions
+            .map((day) => `
+                <label class="flex items-center gap-2 rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700 dark:border-gray-800 dark:bg-gray-900/70 dark:text-gray-300">
+                    <input
+                        type="checkbox"
+                        value="${day}"
+                        data-reminder-day
+                        class="h-4 w-4 rounded border-gray-300 text-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900" />
+                    <span>${day}</span>
+                </label>
+            `)
+            .join("");
     }
 
     function readFormState() {
@@ -103,6 +135,14 @@ export function initSessionSetup() {
             preferredCategoryId: elements.preferredCategory.value,
             voiceMode: elements.voiceMode.value,
             notes: elements.notes.value,
+            targetField: elements.targetField.value,
+            panelMode: elements.panelMode.value,
+            difficultMode: elements.difficultMode.checked,
+            fillerTracking: elements.fillerTracking.checked,
+            adviserReviewMode: elements.adviserReviewMode.checked,
+            weeklyGoal: Number(elements.weeklyGoal.value),
+            reminderDays: Array.from(elements.reminderDays.querySelectorAll("[data-reminder-day]:checked"))
+                .map((input) => input.value),
             savedAt: state.lastSavedSetup.savedAt
         });
     }
@@ -114,6 +154,15 @@ export function initSessionSetup() {
         elements.preferredCategory.value = setup.preferredCategoryId;
         elements.voiceMode.value = setup.voiceMode;
         elements.notes.value = setup.notes;
+        elements.targetField.value = setup.targetField;
+        elements.panelMode.value = setup.panelMode;
+        elements.difficultMode.checked = Boolean(setup.difficultMode);
+        elements.fillerTracking.checked = setup.fillerTracking !== false;
+        elements.adviserReviewMode.checked = Boolean(setup.adviserReviewMode);
+        elements.weeklyGoal.value = String(setup.weeklyGoal);
+        elements.reminderDays.querySelectorAll("[data-reminder-day]").forEach((input) => {
+            input.checked = setup.reminderDays.includes(input.value);
+        });
     }
 
     function getComparableSetup(setup) {
@@ -125,7 +174,14 @@ export function initSessionSetup() {
             pacingModeIndex: normalized.pacingModeIndex,
             preferredCategoryId: normalized.preferredCategoryId,
             voiceMode: normalized.voiceMode,
-            notes: normalized.notes
+            notes: normalized.notes,
+            targetField: normalized.targetField,
+            panelMode: normalized.panelMode,
+            difficultMode: normalized.difficultMode,
+            fillerTracking: normalized.fillerTracking,
+            adviserReviewMode: normalized.adviserReviewMode,
+            weeklyGoal: normalized.weeklyGoal,
+            reminderDays: normalized.reminderDays
         });
     }
 
@@ -146,15 +202,27 @@ export function initSessionSetup() {
         const pacingMode = practiceData.pacingModes[current.pacingModeIndex] || practiceData.pacingModes[0];
         const preferredCategory = practiceData.categories.find((category) => category.id === current.preferredCategoryId) || practiceData.categories[0];
         const voiceMode = getResponsePreferenceOption(current.voiceMode);
+        const panelMode = getPanelModeOption(current.panelMode);
         const notes = current.notes.trim();
+        const targetField = current.targetField.trim();
         const estimatedSeconds = current.questionCount * pacingMode.seconds;
+        const advancedTools = [
+            current.difficultMode ? "Difficult mode" : "Standard mode",
+            current.fillerTracking ? "Filler tracker" : "",
+            current.adviserReviewMode ? "Adviser review" : ""
+        ].filter(Boolean).join(" + ");
 
         elements.summaryQuestionCount.textContent = questionCount.label;
         elements.summaryCoachMode.textContent = focusMode.label;
         elements.summaryPacingMode.textContent = `${pacingMode.label} (${formatPracticeTime(pacingMode.seconds)})`;
         elements.summaryCategory.textContent = preferredCategory.name;
         elements.summaryVoiceMode.textContent = voiceMode.label;
+        elements.summaryTargetField.textContent = targetField || "Not set";
+        elements.summaryPanelMode.textContent = panelMode.label;
+        elements.summaryDifficultMode.textContent = advancedTools;
         elements.summaryEstimatedTime.textContent = `${formatPracticeTime(estimatedSeconds)} total`;
+        elements.summaryWeeklyGoal.textContent = `${current.weeklyGoal} session${current.weeklyGoal === 1 ? "" : "s"}`;
+        elements.summaryReminderDays.textContent = current.reminderDays.join(", ");
         elements.summaryNotes.textContent = notes || "No notes saved yet.";
         elements.summaryCategoryDescription.textContent = preferredCategory.description;
         elements.summaryCategoryQuestion.textContent = preferredCategory.questions[0] || "No sample question available yet.";
@@ -209,6 +277,13 @@ export function initSessionSetup() {
         if (elements.notes.value.length > 500) {
             elements.notes.value = elements.notes.value.slice(0, 500);
         }
+
+        if (elements.targetField.value.length > 120) {
+            elements.targetField.value = elements.targetField.value.slice(0, 120);
+        }
+
+        const weeklyGoal = Math.max(1, Math.min(7, Number(elements.weeklyGoal.value) || 1));
+        elements.weeklyGoal.value = String(weeklyGoal);
 
         updateSummary();
         syncDirtyState({ announce: true });
@@ -302,7 +377,14 @@ export function initSessionSetup() {
         elements.pacingMode,
         elements.preferredCategory,
         elements.voiceMode,
-        elements.notes
+        elements.notes,
+        elements.targetField,
+        elements.panelMode,
+        elements.difficultMode,
+        elements.fillerTracking,
+        elements.adviserReviewMode,
+        elements.weeklyGoal,
+        ...elements.reminderDays.querySelectorAll("[data-reminder-day]")
     ].forEach((element) => {
         element.addEventListener("input", handleFormChange);
         element.addEventListener("change", handleFormChange);

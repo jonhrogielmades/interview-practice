@@ -79,6 +79,25 @@
             <div id="sessionHistoryContainer" class="space-y-4"></div>
         </article>
 
+        <article
+            class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+            <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                    <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Personalized Study Plan</h3>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Weekly practice recommendations based on your weakest saved scores.
+                    </p>
+                </div>
+                <span
+                    id="studyPlanWeakSkill"
+                    class="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                    Awaiting sessions
+                </span>
+            </div>
+            <div id="personalizedStudyPlanContainer" class="grid gap-3 md:grid-cols-2"></div>
+            <div id="practiceCalendarList" class="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"></div>
+        </article>
+
         <article id="exportSection"
             class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
@@ -141,12 +160,36 @@
 
         <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
             <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Competency Gap Analysis</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Confidence, clarity, grammar, relevance, professionalism, and body language readiness.
+                </p>
+            </div>
+            <div id="competencyGapList" class="space-y-3"></div>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+            <div class="mb-5">
                 <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Recent Performance Cards</h3>
                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
                     Fast review of your latest three saved sessions.
                 </p>
             </div>
             <div id="recentPerformanceCards" class="space-y-3"></div>
+        </article>
+
+        <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+            <div class="mb-5">
+                <h3 class="text-base font-semibold text-gray-900 dark:text-white/90">Interview Readiness Certificate</h3>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Simple completion report generated from saved drills and rubric readiness.
+                </p>
+            </div>
+            <div id="readinessCertificateContainer"></div>
+            <button id="progressCertificateDownloadBtn" type="button"
+                class="mt-4 inline-flex w-full items-center justify-center rounded-lg border border-brand-300 px-4 py-3 text-sm font-medium text-brand-600 transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-brand-500/40 dark:text-brand-300 dark:hover:bg-brand-500/10">
+                Download Certificate Report
+            </button>
         </article>
 
         <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">

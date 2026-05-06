@@ -102,8 +102,13 @@ class MenuHelper
                     ],
                     [
                         'icon' => 'task',
-                        'name' => 'Question Bank & Announcements',
-                        'path' => '/admin/content',
+                        'name' => 'Question Bank',
+                        'path' => '/admin/question-bank',
+                    ],
+                    [
+                        'icon' => 'email',
+                        'name' => 'Announcements',
+                        'path' => '/admin/announcements',
                     ],
                     [
                         'icon' => 'charts',

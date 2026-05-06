@@ -3,7 +3,12 @@
 @section('content')
     <x-common.page-breadcrumb pageTitle="User Management" />
 
-    <div class="space-y-6">
+    <div
+        class="space-y-6"
+        x-data="{ editingUserId: @js(old('edit_user_id') ? (string) old('edit_user_id') : null) }"
+        x-effect="document.body.classList.toggle('overflow-hidden', editingUserId !== null)"
+        @keydown.escape.window="editingUserId = null"
+    >
         @if (session('status'))
             <div class="rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300">{{ session('status') }}</div>
         @endif
@@ -193,7 +198,7 @@
                                                 </form>
                                             @endif
 
-                                            <a href="#user-form-{{ $user['id'] }}" class="inline-flex w-full items-center justify-center rounded-xl border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20">Edit details</a>
+                                            <button type="button" @click="editingUserId = @js((string) $user['id'])" class="inline-flex w-full items-center justify-center rounded-xl border border-brand-200 bg-brand-50 px-4 py-2 text-sm font-medium text-brand-700 transition hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/20">Edit details</button>
 
                                             @if ($user['canDelete'])
                                                 <form method="POST" action="{{ route('admin.users.destroy', $user['id']) }}" onsubmit="return confirm('Delete this account? This action cannot be undone.')">
@@ -213,29 +218,42 @@
                 </div>
             </div>
         </section>
-        <section class="space-y-4">
-            <div>
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Profiles</h2>
-                <p class="text-sm text-gray-500 dark:text-gray-400">Update account details, profile information, and access level from this admin-only area.</p>
-            </div>
+        @foreach ($users as $user)
+            @php
+                $editingCurrentUser = old('edit_user_id') == (string) $user['id'];
+            @endphp
 
-            <div class="grid gap-4 xl:grid-cols-2">
-                @foreach ($users as $user)
-                    @php
-                        $editingCurrentUser = old('edit_user_id') == (string) $user['id'];
-                    @endphp
+            <div
+                x-show="editingUserId === @js((string) $user['id'])"
+                x-cloak
+                x-transition.opacity
+                class="fixed bottom-0 left-0 right-0 top-0 z-[99999] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+                :style="{ left: window.innerWidth >= 1280 ? (($store.sidebar.isExpanded || $store.sidebar.isHovered) ? '290px' : '90px') : '0px' }"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="edit-profile-title-{{ $user['id'] }}"
+            >
+                <div class="absolute inset-0 bg-gray-950/50 backdrop-blur-sm" @click="editingUserId = null"></div>
 
-                    <section id="user-form-{{ $user['id'] }}" class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-sm dark:border-gray-800 dark:bg-gray-900 lg:p-6">
-                        <div class="mb-5 flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                <section
+                    id="user-form-{{ $user['id'] }}"
+                    @click.stop
+                    x-transition.scale.origin.center
+                    class="relative max-h-[calc(100vh-2rem)] w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-theme-xl dark:border-gray-800 dark:bg-gray-900"
+                >
+                    <button type="button" @click="editingUserId = null" class="absolute right-4 top-4 z-10 inline-flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xl leading-none text-gray-500 transition hover:bg-gray-200 hover:text-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 dark:hover:text-white" aria-label="Close edit profile form">&times;</button>
+
+                    <div class="custom-scrollbar max-h-[calc(100vh-2rem)] overflow-y-auto p-5 lg:p-6">
+                        <div class="mb-5 flex flex-col gap-3 pr-12 lg:flex-row lg:items-start lg:justify-between">
                             <div>
                                 <div class="flex flex-wrap items-center gap-2">
-                                    <h3 class="text-base font-semibold text-gray-900 dark:text-white">{{ $user['name'] }}</h3>
+                                    <h2 id="edit-profile-title-{{ $user['id'] }}" class="text-lg font-semibold text-gray-900 dark:text-white">Edit Profile</h2>
                                     <span class="inline-flex items-center rounded-full bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">{{ $user['roleLabel'] }}</span>
                                     @if ($user['isPrimaryAdmin'])
                                         <span class="inline-flex items-center rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700 dark:bg-warning-500/15 dark:text-warning-300">Fixed admin</span>
                                     @endif
                                 </div>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $user['email'] }}</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $user['name'] }} &middot; {{ $user['email'] }}</p>
                             </div>
                             <p class="text-xs leading-5 text-gray-500 dark:text-gray-400 lg:max-w-xs lg:text-right">{{ $user['isPrimaryAdmin'] ? 'The fixed admin email and access level stay locked so the admin system always keeps a protected owner account.' : 'Leave the password blank if you only want to update profile details.' }}</p>
                         </div>
@@ -303,12 +321,13 @@
 
                             <div class="flex flex-wrap items-center gap-3">
                                 <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-brand-500 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-brand-600">Save changes</button>
+                                <button type="button" @click="editingUserId = null" class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700">Cancel</button>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">{{ $user['isPrimaryAdmin'] ? 'The fixed admin account can still update its profile details, but not its protected identity or access level.' : 'Editing stays inside the admin system and does not appear in the user workspace.' }}</p>
                             </div>
                         </form>
-                    </section>
-                @endforeach
+                    </div>
+                </section>
             </div>
-        </section>
+        @endforeach
     </div>
 @endsection

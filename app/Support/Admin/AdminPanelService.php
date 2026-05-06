@@ -5,6 +5,7 @@ namespace App\Support\Admin;
 use App\Helpers\InterviewChatbotService;
 use App\Models\InterviewSession;
 use App\Models\InterviewSessionAnswer;
+use App\Models\QuestionBankQuestion;
 use App\Models\User;
 use App\Support\InterviewPracticeCatalog;
 use Illuminate\Support\Collection;
@@ -37,10 +38,16 @@ class AdminPanelService
                     'tone' => 'brand',
                 ],
                 [
-                    'title' => 'Question Bank & Announcements',
-                    'body' => 'Review practice categories, starter question banks, and manuscript-aligned announcement templates.',
-                    'href' => route('admin.content'),
+                    'title' => 'Question Bank',
+                    'body' => 'Manage category questions used by the local PH coach and tagged AI provider sources.',
+                    'href' => route('admin.question-bank'),
                     'tone' => 'warning',
+                ],
+                [
+                    'title' => 'Announcements',
+                    'body' => 'Review manuscript-aligned reminder and feedback notice templates.',
+                    'href' => route('admin.announcements'),
+                    'tone' => 'success',
                 ],
                 [
                     'title' => 'Monitoring Records',
@@ -101,6 +108,103 @@ class AdminPanelService
                     'quickPrompts' => collect($category['quickPrompts'] ?? [])->take(3)->values()->all(),
                 ];
             })->values()->all(),
+            'announcements' => $announcements->values()->all(),
+            'adminAreas' => $adminAreas->values()->all(),
+        ];
+    }
+
+    public function questionBankManagement(InterviewChatbotService $chatbot): array
+    {
+        $catalog = collect(InterviewPracticeCatalog::practiceQuestionBank());
+        $questions = QuestionBankQuestion::query()->ordered()->get();
+        $activeQuestions = $questions->where('is_active', true);
+        $providerOptions = $this->questionProviderOptions($chatbot);
+        $categoryOptions = $catalog
+            ->map(fn (array $category, string $categoryId) => [
+                'id' => $categoryId,
+                'name' => (string) ($category['name'] ?? Str::headline($categoryId)),
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'summaryCards' => [
+                [
+                    'label' => 'Interview Categories',
+                    'value' => (string) $catalog->count(),
+                    'detail' => 'Managed categories in the current practice catalog',
+                    'tone' => 'brand',
+                ],
+                [
+                    'label' => 'Active Questions',
+                    'value' => (string) $activeQuestions->count(),
+                    'detail' => 'Prompts available to the local PH coach and workspace context',
+                    'tone' => 'blue',
+                ],
+                [
+                    'label' => 'AI Provider Sources',
+                    'value' => (string) $questions->where('source_type', 'ai_provider')->count(),
+                    'detail' => 'Questions tagged from Gemini, Groq, OpenRouter, Claude, Wisdom Gate, or Cohere',
+                    'tone' => 'warning',
+                ],
+                [
+                    'label' => 'Inactive Drafts',
+                    'value' => (string) $questions->where('is_active', false)->count(),
+                    'detail' => 'Stored prompts hidden from generated practice context',
+                    'tone' => 'success',
+                ],
+            ],
+            'questionBanks' => $catalog->map(function (array $category, string $categoryId) use ($questions) {
+                $categoryQuestions = $questions->where('category_id', $categoryId)->values();
+
+                return [
+                    'id' => $categoryId,
+                    'name' => (string) ($category['name'] ?? Str::headline($categoryId)),
+                    'description' => (string) ($category['description'] ?? 'Interview practice category'),
+                    'questionCount' => $categoryQuestions->where('is_active', true)->count(),
+                    'quickPrompts' => collect($category['quickPrompts'] ?? [])->take(3)->values()->all(),
+                    'questions' => $categoryQuestions->map(fn (QuestionBankQuestion $question) => $this->mappedQuestionBankQuestion($question))->all(),
+                ];
+            })->values()->all(),
+            'categoryOptions' => $categoryOptions,
+            'providerOptions' => $providerOptions,
+        ];
+    }
+
+    public function announcementManagement(): array
+    {
+        $announcements = collect(InterviewPracticeCatalog::defaultAnnouncementTemplates());
+        $adminAreas = collect(InterviewPracticeCatalog::manuscriptAdminAreas())
+            ->filter(fn (array $area) => Str::contains((string) ($area['title'] ?? ''), 'Announcements'))
+            ->values();
+
+        return [
+            'summaryCards' => [
+                [
+                    'label' => 'Announcement Templates',
+                    'value' => (string) $announcements->count(),
+                    'detail' => 'Default reminders and notices aligned to the manuscript scope',
+                    'tone' => 'warning',
+                ],
+                [
+                    'label' => 'Audience Groups',
+                    'value' => (string) $announcements->pluck('audience')->unique()->count(),
+                    'detail' => 'Distinct recipient directions for admin planning',
+                    'tone' => 'brand',
+                ],
+                [
+                    'label' => 'Notification Records',
+                    'value' => (string) DB::table('notifications')->count(),
+                    'detail' => 'Stored system notifications currently available',
+                    'tone' => 'blue',
+                ],
+                [
+                    'label' => 'Admin Coverage',
+                    'value' => (string) max($adminAreas->count(), 1),
+                    'detail' => 'Announcements now live on their own admin page',
+                    'tone' => 'success',
+                ],
+            ],
             'announcements' => $announcements->values()->all(),
             'adminAreas' => $adminAreas->values()->all(),
         ];
@@ -551,6 +655,55 @@ class AdminPanelService
         return (int) round(($completed / count($fields)) * 100);
     }
 
+    protected function mappedQuestionBankQuestion(QuestionBankQuestion $question): array
+    {
+        return [
+            'id' => $question->id,
+            'categoryId' => $question->category_id,
+            'providerId' => $question->provider_id,
+            'providerLabel' => $question->provider_label,
+            'sourceType' => $question->source_type,
+            'sourceLabel' => $question->source_type === 'ai_provider' ? 'AI provider' : 'Local PH coach',
+            'question' => $question->question,
+            'guidance' => $question->guidance,
+            'isActive' => (bool) $question->is_active,
+            'sortOrder' => (int) $question->sort_order,
+            'updatedAt' => optional($question->updated_at)->format('M j, Y g:i A') ?? 'Not updated yet',
+        ];
+    }
+
+    protected function questionProviderOptions(InterviewChatbotService $chatbot): array
+    {
+        $providers = collect($chatbot->frontendBootstrap()['providers'] ?? [])
+            ->reject(fn (array $provider) => ($provider['id'] ?? null) === 'auto')
+            ->filter(fn (array $provider) => filled($provider['id'] ?? null))
+            ->sortBy(fn (array $provider) => ($provider['id'] ?? null) === 'local' ? 0 : 1)
+            ->map(function (array $provider) {
+                $type = (string) ($provider['type'] ?? 'local');
+
+                return [
+                    'id' => (string) $provider['id'],
+                    'label' => (string) ($provider['label'] ?? Str::headline((string) $provider['id'])),
+                    'type' => $type,
+                    'typeLabel' => $type === 'remote' ? 'AI provider' : 'Local coach',
+                    'configured' => (bool) ($provider['configured'] ?? true),
+                ];
+            })
+            ->values();
+
+        if (! $providers->contains('id', 'local')) {
+            $providers->prepend([
+                'id' => 'local',
+                'label' => 'Local PH coach',
+                'type' => 'local',
+                'typeLabel' => 'Local coach',
+                'configured' => true,
+            ]);
+        }
+
+        return $providers->values()->all();
+    }
+
     protected function providerLabel(Collection $providers, string $providerId): string
     {
         return (string) ($providers->firstWhere('id', $providerId)['label'] ?? Str::headline(str_replace(['-', '_'], ' ', $providerId)));
@@ -569,5 +722,3 @@ class AdminPanelService
         };
     }
 }
-
-

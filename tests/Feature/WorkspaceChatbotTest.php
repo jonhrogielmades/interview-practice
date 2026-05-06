@@ -456,6 +456,52 @@ class WorkspaceChatbotTest extends TestCase
         Http::assertSentCount(2);
     }
 
+    public function test_chatbot_endpoint_selected_ai_provider_falls_through_to_next_configured_provider(): void
+    {
+        config()->set('services.gemini.api_key', 'gemini-test-key');
+        config()->set('services.gemini.model', 'gemini-2.5-flash');
+        config()->set('services.groq.api_key', 'groq-test-key');
+        config()->set('services.groq.model', 'openai/gpt-oss-20b');
+        config()->set('services.interview_chatbot.provider_priority', 'gemini,groq,openrouter,claude,wisdomgate,cohere');
+
+        Http::fake([
+            'https://generativelanguage.googleapis.com/*' => Http::response([
+                'error' => [
+                    'message' => 'Gemini unavailable',
+                ],
+            ], 503),
+            'https://api.groq.com/openai/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => 'Groq selected-provider fallback reply',
+                        ],
+                    ],
+                ],
+                'model' => 'openai/gpt-oss-20b',
+            ]),
+        ]);
+
+        $response = $this->actingAs(User::factory()->create())->postJson(route('workspace.chatbot'), [
+            'message' => 'Coach me for a Philippine job interview.',
+            'providerId' => 'gemini',
+            'categoryId' => 'job',
+            'history' => [],
+        ]);
+
+        $response
+            ->assertOk()
+            ->assertJson([
+                'reply' => 'Groq selected-provider fallback reply',
+                'provider' => 'Groq API (openai/gpt-oss-20b)',
+                'providerId' => 'groq',
+                'requestedProviderId' => 'gemini',
+                'usedFallback' => false,
+            ]);
+
+        Http::assertSentCount(2);
+    }
+
     public function test_chatbot_endpoint_uses_selected_gemini_provider_when_configured(): void
     {
         config()->set('services.gemini.api_key', 'gemini-test-key');

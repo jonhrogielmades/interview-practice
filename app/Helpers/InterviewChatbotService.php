@@ -550,11 +550,19 @@ class InterviewChatbotService
         }
 
         if ($requestedProviderId !== 'auto' && in_array($requestedProviderId, self::REMOTE_PROVIDER_IDS, true)) {
+            $ordered = [];
+
             if (($providers[$requestedProviderId]['configured'] ?? false) === true) {
-                return [$requestedProviderId, 'local'];
+                $ordered[] = $requestedProviderId;
             }
 
-            return ['local'];
+            foreach ($configuredRemoteProviders as $providerId) {
+                if ($providerId !== $requestedProviderId) {
+                    $ordered[] = $providerId;
+                }
+            }
+
+            return [...$ordered, 'local'];
         }
 
         return [...$configuredRemoteProviders, 'local'];
@@ -739,7 +747,7 @@ class InterviewChatbotService
             history: $history,
             headers: [
                 'HTTP-Referer' => rtrim((string) config('app.url', 'http://localhost'), '/'),
-                'X-Title' => (string) config('app.name', 'InterviewPilot'),
+                'X-Title' => (string) config('app.name', 'SpeakReady AI'),
             ],
         );
     }
@@ -934,7 +942,7 @@ class InterviewChatbotService
             ->acceptJson()
             ->withToken($apiKey)
             ->withHeaders([
-                'X-Client-Name' => (string) config('app.name', 'InterviewPilot'),
+                'X-Client-Name' => (string) config('app.name', 'SpeakReady AI'),
             ])
             ->post('https://api.cohere.com/v2/chat', [
                 'model' => $model,

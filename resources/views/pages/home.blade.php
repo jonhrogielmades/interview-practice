@@ -244,21 +244,19 @@
         }"
         @keydown.escape.window="authModalOpen ? closeAuthModal() : (mobileMenu = false)"
         @resize.window="authModalOpen && syncAuthPanelHeight()"
-        class="relative min-h-screen overflow-hidden bg-white text-gray-900 dark:bg-gray-950 dark:text-white"
+        class="relative min-h-screen overflow-hidden text-gray-900 dark:text-white"
     >
-        <div class="home-orb left-[-8rem] top-[-6rem] h-72 w-72 bg-gradient-to-tr from-brand-200 to-warning-200"></div>
-        <div class="home-orb right-[-6rem] top-20 h-80 w-80 bg-gradient-to-bl from-blue-light-100 to-brand-300 [animation-delay:1.5s]"></div>
-        <div class="home-orb bottom-[-8rem] left-1/3 h-80 w-80 bg-gradient-to-tr from-brand-100 to-blue-light-100 [animation-delay:3s]"></div>
-        <div class="home-grid absolute inset-0 opacity-25 dark:opacity-20"></div>
+        <div class="home-atmosphere"></div>
+        <div class="home-grid absolute inset-0 opacity-40 dark:opacity-25"></div>
 
-        <header class="sticky top-0 z-40 border-b border-brand-100/70 bg-white/90 backdrop-blur-xl dark:border-gray-800 dark:bg-gray-950/85">
-            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
+        <header class="sticky top-0 z-40 border-b border-brand-100/70 bg-white/85 backdrop-blur-xl dark:border-white/10 dark:bg-gray-950/85">
+            <div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
                 <a href="{{ route('home') }}" class="flex items-center gap-3">
-                    <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-                        <img src="{{ asset('images/logo/interviewpilot-icon.png') }}" alt="InterviewPilot" class="h-full w-full object-cover" />
+                    <span class="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border border-brand-100 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                        <img src="{{ asset('images/logo/speakready-ai-icon.png') }}" alt="SpeakReady AI" class="h-full w-full object-cover" />
                     </span>
                     <span>
-                        <span class="block text-base font-semibold text-gray-900 dark:text-white">InterviewPilot</span>
+                        <span class="block text-base font-semibold text-gray-900 dark:text-white">SpeakReady AI</span>
                         <span class="block text-xs text-gray-500 dark:text-gray-400">AI mock interviews for practice and feedback</span>
                     </span>
                 </a>
@@ -334,12 +332,12 @@
 
             <div x-show="mobileMenu" x-cloak x-transition.origin.top class="border-t border-brand-100/70 bg-white/95 px-4 py-4 lg:hidden dark:border-gray-800 dark:bg-gray-950/95">
                 <div class="mx-auto flex max-w-7xl flex-col gap-2">
-                    <a href="#home" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Home</a>
-                    <a href="#courses" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Courses</a>
-                    <a href="#mentors" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Mentors</a>
-                    <a href="#features" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Features</a>
-                    <a href="#developers" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Developers</a>
-                    <a href="#pricing" @click="mobileMenu = false" class="rounded-2xl px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Pricing</a>
+                    <a href="#home" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Home</a>
+                    <a href="#courses" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Courses</a>
+                    <a href="#mentors" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Mentors</a>
+                    <a href="#features" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Features</a>
+                    <a href="#developers" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Developers</a>
+                    <a href="#pricing" @click="mobileMenu = false" class="rounded-lg px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-brand-50 hover:text-brand-700 dark:text-gray-200 dark:hover:bg-gray-900 dark:hover:text-brand-300">Pricing</a>
 
                     <button
                         type="button"
@@ -380,35 +378,35 @@
         </header>
 
         <main class="relative z-10">
-            <section id="home" class="scroll-mt-28">
-                <div class="mx-auto max-w-7xl px-4 pb-24 pt-12 sm:px-6 lg:px-8 lg:pb-32 lg:pt-20">
-                    <div class="flex flex-col gap-10 lg:flex-row lg:items-center lg:justify-between xl:gap-12">
-                        <div class="w-full max-w-xl lg:w-5/12">
-                            <span class="inline-flex items-center gap-2 rounded-full border border-brand-200 bg-brand-50 px-4 py-2 text-xs font-semibold text-brand-700 shadow-theme-xs dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300">
-                                <span class="h-2 w-2 rounded-full bg-brand-500"></span>
-                                New AI Interview Labs Available
+            <section id="home" class="mt-4 scroll-mt-32 sm:mt-6 lg:mt-8">
+                <div class="mx-auto flex max-w-7xl items-center px-4 pb-12 pt-8 sm:px-6 lg:min-h-[calc(100vh-8rem)] lg:px-8 lg:py-10">
+                    <div class="grid w-full gap-8 lg:grid-cols-[0.94fr_1.06fr] lg:items-center xl:gap-10">
+                        <div class="w-full max-w-[40rem]" data-reveal>
+                            <span class="home-chip">
+                                <span class="h-2 w-2 rounded-full bg-warning-500"></span>
+                                AI Interview Practice System
                             </span>
 
-                            <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-4xl font-bold leading-tight text-transparent sm:text-4xl xl:text-5xl dark:from-white dark:to-gray-400">
-                                Master Interview Skills
-                                <span class="block text-brand-500">Anytime, Anywhere</span>
+                            <h1 class="mt-5 text-4xl font-semibold leading-[1.08] text-gray-950 sm:text-5xl lg:text-[3.35rem] xl:text-[3.65rem] dark:text-white">
+                                SpeakReady AI
+                                <span class="block text-brand-600 dark:text-brand-300">practice, feedback, and progress in one workspace</span>
                             </h1>
 
-                            <p class="mt-6 max-w-xl text-base leading-7 text-gray-600 sm:text-lg sm:leading-8 lg:text-xl lg:leading-9 dark:text-gray-300">
-                                Practice online with interview simulations, automated feedback, guided learning, and progress tracking.
+                            <p class="mt-4 max-w-[35rem] text-base leading-7 text-gray-600 dark:text-gray-300">
+                                Run realistic mock interviews, answer by voice or text, review AI feedback, and keep your readiness history organized before the real panel.
                             </p>
 
-                            <div class="mt-8 flex flex-col gap-4 sm:flex-row">
+                            <div class="mt-6 flex flex-col gap-3 sm:flex-row">
                                 @auth
                                     <a
                                         href="{{ $authPrimaryUrl }}"
-                                        class="bg-brand-500 inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300 hover:scale-105 hover:bg-brand-600"
+                                        class="interactive-link inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white shadow-theme-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-600 sm:w-auto"
                                     >
                                         {{ $authPrimaryLabel }}
                                     </a>
                                     <a
                                         href="{{ route('dashboard') }}"
-                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
+                                        class="interactive-link inline-flex h-11 w-full items-center justify-center rounded-lg border border-gray-200 bg-white/80 px-5 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300 sm:w-auto"
                                     >
                                         View Dashboard
                                     </a>
@@ -416,23 +414,23 @@
                                     <a
                                         href="{{ route('signup') }}"
                                         @click.prevent="openAuthModal('signup')"
-                                        class="bg-brand-500 inline-flex h-12 items-center justify-center rounded-full px-6 text-sm font-semibold text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300 hover:scale-105 hover:bg-brand-600"
+                                        class="interactive-link inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-semibold text-white shadow-theme-md transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-600 sm:w-auto"
                                     >
                                         Create Free Account
                                     </a>
                                     <a
                                         href="{{ route('signin') }}"
                                         @click.prevent="openAuthModal('signin')"
-                                        class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-1 hover:border-brand-200 hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300"
+                                        class="interactive-link inline-flex h-11 w-full items-center justify-center rounded-lg border border-gray-200 bg-white/80 px-5 text-sm font-semibold text-gray-700 shadow-theme-xs transition-all duration-300 hover:-translate-y-0.5 hover:border-brand-200 hover:bg-white hover:text-brand-700 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-900/80 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300 sm:w-auto"
                                     >
                                         Sign In
                                     </a>
                                 @endauth
                             </div>
 
-                            <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-gray-600 dark:text-gray-300">
+                            <div class="mt-6 grid max-w-2xl gap-3 sm:grid-cols-3">
                                 @foreach ($heroMetrics as $metric)
-                                    <div class="flex items-center gap-2">
+                                    <div class="home-metric-card flex min-w-0 items-center gap-3">
                                         <span class="inline-flex h-5 w-5 items-center justify-center text-brand-500 dark:text-brand-300">
                                             @switch($metric['icon'])
                                                 @case('tracks')
@@ -459,57 +457,55 @@
                                                 @break
                                             @endswitch
                                         </span>
-                                        <small class="text-sm leading-none text-gray-600 dark:text-gray-300">
-                                            <span class="font-bold text-gray-900 dark:text-white">{{ $metric['value'] }}</span>
-                                            {{ $metric['label'] }}
+                                        <small class="min-w-0 text-sm leading-5 text-gray-600 dark:text-gray-300">
+                                            <span class="block font-bold text-gray-900 dark:text-white">{{ $metric['value'] }}</span>
+                                            <span class="block">{{ $metric['label'] }}</span>
                                         </small>
                                     </div>
                                 @endforeach
                             </div>
                         </div>
 
-                        <div class="w-full lg:flex lg:w-7/12 lg:justify-end">
-                            <div class="home-panel relative mx-auto w-full max-w-3xl overflow-hidden border-white/80 bg-white/85 p-4 shadow-[0_35px_80px_-45px_rgba(15,23,42,0.45)] lg:mx-0 dark:border-gray-800 dark:bg-gray-900/80 sm:p-5">
-                                <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(70,95,255,0.18),_transparent_42%),radial-gradient(circle_at_bottom_right,_rgba(11,165,236,0.14),_transparent_35%)]"></div>
-                                <div class="relative overflow-hidden rounded-[28px] border border-brand-100 bg-gray-950 dark:border-gray-800 dark:bg-gray-900">
-                                    <div class="relative w-full overflow-hidden bg-gray-950">
-                                        <img
-                                            src="{{ asset('images/ai/video-thumb.png') }}"
-                                            alt="Interview practice preview"
-                                            class="block h-auto w-full"
-                                        />
-                                </div>
-
-                                <!-- <div class="absolute -left-4 bottom-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
-                                    <p class="text-lg font-semibold text-gray-900 dark:text-white">{{ $questionSampleCount }}+</p>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Sample questions ready now</p>
-                                </div>
-
-                                <div class="absolute -right-4 top-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg sm:block dark:border-gray-800 dark:bg-gray-900/95">
-                                    <div class="flex items-center">
-                                        <img src="{{ asset('images/user/user-01.jpg') }}" alt="" class="h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
-                                        <img src="{{ asset('images/user/user-02.png') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
-                                        <img src="{{ asset('images/user/user-03.png') }}" alt="" class="-ml-3 h-9 w-9 rounded-full border-2 border-white object-cover dark:border-gray-900" />
+                        <div class="w-full" data-reveal>
+                            <div class="home-panel home-preview-float relative mx-auto w-full max-w-[46rem] overflow-hidden p-3 lg:mx-0 sm:p-4">
+                                <div class="home-visual-frame">
+                                    <div class="flex items-center justify-between border-b border-white/10 px-4 py-2.5 text-xs text-white/70">
+                                        <span class="font-semibold uppercase tracking-[0.14em] text-brand-100">Live workspace preview</span>
+                                        <span>{{ $questionSampleCount }}+ prompts</span>
                                     </div>
-                                    <p class="mt-2 text-sm font-semibold text-gray-900 dark:text-white">{{ count($focusModes) }} coach modes</p>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Built for repeated practice</p>
+                                    <img
+                                        src="{{ asset('images/ai/video-thumb.png') }}"
+                                        alt="Interview practice preview"
+                                        class="block aspect-[16/8.7] max-h-[390px] w-full object-cover object-top"
+                                    />
+                                    
                                 </div>
 
-                                <div class="absolute bottom-8 right-6 hidden rounded-[24px] border border-white/80 bg-white/95 px-4 py-3 shadow-theme-lg lg:block dark:border-gray-800 dark:bg-gray-900/95">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ count($responseModes) }} response styles</p>
-                                    <p class="text-xs font-medium text-gray-500 dark:text-gray-400">Text, voice, and hybrid</p>
-                                </div> -->
+                                <div class="mt-3 grid gap-3 sm:grid-cols-3">
+                                    <div class="rounded-lg border border-brand-100 bg-white/80 px-4 py-2.5 shadow-theme-xs dark:border-white/10 dark:bg-white/[0.05]">
+                                        <p class="text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Modes</p>
+                                        <p class="mt-1 text-base font-semibold text-gray-950 dark:text-white">{{ count($responseModes) }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-blue-light-100 bg-white/80 px-4 py-2.5 shadow-theme-xs dark:border-white/10 dark:bg-white/[0.05]">
+                                        <p class="text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Coaching</p>
+                                        <p class="mt-1 text-base font-semibold text-gray-950 dark:text-white">{{ count($focusModes) }}</p>
+                                    </div>
+                                    <div class="rounded-lg border border-warning-100 bg-white/80 px-4 py-2.5 shadow-theme-xs dark:border-white/10 dark:bg-white/[0.05]">
+                                        <p class="text-[11px] uppercase tracking-[0.12em] text-gray-500 dark:text-gray-400">Tracks</p>
+                                        <p class="mt-1 text-base font-semibold text-gray-950 dark:text-white">{{ count($practiceTracks) }}</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="courses" class="scroll-mt-28 py-24">
+            <section id="courses" class="section-band">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="mx-auto max-w-2xl text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Courses</p>
-                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                    <div class="mx-auto max-w-2xl text-center" data-reveal>
+                        <p class="home-section-kicker">Courses</p>
+                        <h2 class="home-section-title">
                             Explore Our Popular <span class="text-brand-500">Courses</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -526,7 +522,7 @@
                                     'image' => asset('images/grid-image/image-02.png'),
                                 ];
                             @endphp
-                            <article class="group rounded-[30px] border border-gray-200/50 bg-white/80 p-4 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-34px_rgba(15,23,42,0.5)] dark:border-white/5 dark:bg-gray-900/80">
+                            <article class="group app-surface motion-card rounded-lg border p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md" data-reveal>
                                 <div class="flex items-center justify-between gap-3">
                                     <span class="inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold {{ $course['badgeClass'] }}">
                                         {{ $course['badge'] }}
@@ -534,7 +530,7 @@
                                     <span class="text-xs font-medium text-gray-400 dark:text-gray-500">Track {{ $loop->iteration }}</span>
                                 </div>
 
-                                <div class="mt-4 rounded-[24px] bg-gradient-to-br from-brand-50 via-white to-blue-light-50 p-4 dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+                                <div class="mt-4 rounded-lg border border-white/70 bg-[linear-gradient(135deg,rgba(20,120,100,0.1),rgba(255,255,255,0.88),rgba(76,99,230,0.08))] p-4 dark:border-white/10 dark:bg-[linear-gradient(135deg,rgba(93,187,158,0.08),rgba(15,23,42,0.88),rgba(76,99,230,0.08))]">
                                     <img src="{{ $course['image'] }}" alt="{{ $track['name'] }}" class="mx-auto h-40 object-contain" />
                                 </div>
 
@@ -580,11 +576,11 @@
 
                     <div class="mt-10 text-center">
                         @auth
-                            <a href="{{ $authPrimaryUrl }}" class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
+                            <a href="{{ $authPrimaryUrl }}" class="interactive-link inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
                                 View All Courses
                             </a>
                         @else
-                            <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
+                            <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="interactive-link inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
                                 View All Courses
                             </a>
                         @endauth
@@ -592,11 +588,11 @@
                 </div>
             </section>
 
-            <section id="mentors" class="scroll-mt-28 py-24">
+            <section id="mentors" class="section-band">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="mx-auto max-w-2xl text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Mentors</p>
-                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                    <div class="mx-auto max-w-2xl text-center" data-reveal>
+                        <p class="home-section-kicker">Mentors</p>
+                        <h2 class="home-section-title">
                             Learn From Industry <span class="text-brand-500">Experts</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -606,7 +602,7 @@
 
                     <div class="mt-14 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                         @foreach ($mentorCards as $mentor)
-                            <article class="rounded-[30px] border border-gray-200/50 bg-white/80 px-6 py-8 text-center shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_30px_60px_-34px_rgba(15,23,42,0.5)] dark:border-white/5 dark:bg-gray-900/80">
+                            <article class="app-surface motion-card rounded-lg border px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md" data-reveal>
                                 <div class="relative mx-auto w-fit">
                                     <img src="{{ $mentor['avatar'] }}" alt="{{ $mentor['name'] }}" class="h-20 w-20 rounded-full border-4 border-warning-300 object-cover" />
                                     <span class="absolute -bottom-2 left-1/2 inline-flex -translate-x-1/2 rounded-full bg-warning-500 px-3 py-1 text-[11px] font-semibold text-white shadow-theme-xs">
@@ -628,22 +624,22 @@
                 </div>
             </section>
 
-            <section id="features" class="scroll-mt-28 py-24">
+            <section id="features" class="section-band">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div class="mx-auto max-w-6xl">
-                        <div class="mx-auto max-w-3xl text-center">
-                            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Features</p>
-                            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                        <div class="mx-auto max-w-3xl text-center" data-reveal>
+                            <p class="home-section-kicker">Features</p>
+                            <h2 class="home-section-title">
                                 Platform <span class="text-brand-500">features</span>
                             </h2>
                             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
-                                Discover the tools that power InterviewPilot, from guided interview sessions and automated feedback to progress tracking and focused practice support.
+                                Discover the tools that power SpeakReady AI, from guided interview sessions and automated feedback to progress tracking and focused practice support.
                             </p>
                         </div>
 
                         <div class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                             @foreach (collect($platformFeatures)->take(6) as $feature)
-                                <div class="rounded-[24px] border border-gray-200/50 bg-white/80 p-5 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+                                <div class="app-surface motion-card rounded-lg border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md" data-reveal>
                                     <div class="flex items-start gap-3">
                                         <span class="mt-1 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-100 text-brand-700 dark:bg-brand-500/10 dark:text-brand-300">
                                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -664,15 +660,15 @@
                         <div class="mt-8 text-center">
                             @auth
                                 <div class="flex flex-col items-center justify-center gap-4 sm:flex-row">
-                                    <a href="{{ $authPrimaryUrl }}" class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
+                                    <a href="{{ $authPrimaryUrl }}" class="interactive-link inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
                                         Explore Features
                                     </a>
-                                    <a href="{{ route('session-setup') }}" class="inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
+                                    <a href="{{ route('session-setup') }}" class="interactive-link inline-flex h-12 items-center justify-center rounded-full border border-gray-200 bg-white px-6 text-sm font-semibold text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300">
                                         Session Setup
                                     </a>
                                 </div>
                             @else
-                                <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
+                                <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="interactive-link inline-flex h-12 items-center justify-center rounded-full bg-brand-500 px-6 text-sm font-semibold text-white shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-brand-600">
                                     Explore Features
                                 </a>
                             @endauth
@@ -681,21 +677,21 @@
                 </div>
             </section>
 
-            <section id="developers" class="scroll-mt-28 py-24">
+            <section id="developers" class="section-band">
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div class="mx-auto max-w-2xl text-center">
-            <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Developers</p>
-            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
+        <div class="mx-auto max-w-2xl text-center" data-reveal>
+            <p class="home-section-kicker">Developers</p>
+            <h2 class="home-section-title">
                 What Developers <span class="text-brand-500">Are Saying</span>
             </h2>
             <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
-                Real stories from developers and tech job seekers who improved their interview performance with InterviewPilot.
+                Real stories from developers and tech job seekers who improved their interview performance with SpeakReady AI.
             </p>
         </div>
 
         <div class="mt-14 grid gap-6 lg:grid-cols-3">
             @foreach ($developers as $developer)
-                <article class="rounded-[28px] border border-gray-200/50 bg-white/80 p-6 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md dark:border-white/5 dark:bg-gray-900/80">
+                <article class="app-surface motion-card rounded-lg border p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md" data-reveal>
                     <div class="flex items-center gap-1 text-warning-400">
                         @for ($i = 0; $i < 5; $i++)
                             <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -723,11 +719,11 @@
     </div>
 </section>
 
-            <section id="pricing" class="scroll-mt-28 py-24">
+            <section id="pricing" class="section-band">
                 <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-                    <div class="mx-auto max-w-2xl text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-brand-600 dark:text-brand-300">Pricing</p>
-                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text mt-5 text-4xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                    <div class="mx-auto max-w-2xl text-center" data-reveal>
+                        <p class="home-section-kicker">Pricing</p>
+                        <h2 class="home-section-title">
                             Simple, Transparent <span class="text-brand-500">Pricing</span>
                         </h2>
                         <p class="mt-4 text-base leading-7 text-gray-600 dark:text-gray-300">
@@ -737,7 +733,7 @@
 
                     <div class="mx-auto mt-14 grid max-w-6xl gap-6 lg:grid-cols-3">
                         @foreach ($pricingPlans as $plan)
-                            <article class="relative rounded-[30px] border {{ $plan['featured'] ? 'border-brand-300 bg-brand-50/80 shadow-[0_30px_70px_-38px_rgba(70,95,255,0.45)] dark:border-brand-500/40 dark:bg-brand-500/20' : 'border-gray-200/50 bg-white/80 shadow-[0_18px_44px_-32px_rgba(15,23,42,0.35)] dark:border-white/5 dark:bg-gray-900/80' }} p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-theme-xl">
+                            <article class="motion-card relative rounded-lg border {{ $plan['featured'] ? 'border-brand-300 bg-brand-50/80 shadow-theme-lg dark:border-brand-500/40 dark:bg-brand-500/20' : 'app-surface' }} p-8 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-xl" data-reveal>
                                 @if ($plan['featured'])
                                     <span class="absolute left-1/2 top-0 inline-flex -translate-x-1/2 -translate-y-1/2 rounded-full bg-brand-500 px-4 py-1.5 text-xs font-semibold text-white shadow-theme-xs">
                                         Most Popular
@@ -770,11 +766,11 @@
 
                                 <div class="mt-8">
                                     @auth
-                                        <a href="{{ $authPrimaryUrl }}" class="inline-flex h-12 w-full items-center justify-center rounded-full {{ $plan['featured'] ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-gray-200 bg-white text-gray-700 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300' }} text-sm font-semibold shadow-theme-xs transition">
+                                        <a href="{{ $authPrimaryUrl }}" class="interactive-link inline-flex h-12 w-full items-center justify-center rounded-full {{ $plan['featured'] ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-gray-200 bg-white text-gray-700 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300' }} text-sm font-semibold shadow-theme-xs transition">
                                             {{ $plan['cta'] }}
                                         </a>
                                     @else
-                                        <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="inline-flex h-12 w-full items-center justify-center rounded-full {{ $plan['featured'] ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-gray-200 bg-white text-gray-700 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300' }} text-sm font-semibold shadow-theme-xs transition">
+                                        <a href="{{ route('signup') }}" @click.prevent="openAuthModal('signup')" class="interactive-link inline-flex h-12 w-full items-center justify-center rounded-full {{ $plan['featured'] ? 'bg-brand-500 text-white hover:bg-brand-600' : 'border border-gray-200 bg-white text-gray-700 hover:border-brand-200 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:hover:border-brand-500/30 dark:hover:text-brand-300' }} text-sm font-semibold shadow-theme-xs transition">
                                             {{ $plan['cta'] }}
                                         </a>
                                     @endauth
@@ -791,10 +787,10 @@
                 <div>
                     <div class="flex items-center gap-3">
                         <span class="inline-flex h-11 w-11 items-center justify-center overflow-hidden rounded-2xl border border-brand-100 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-                            <img src="{{ asset('images/logo/interviewpilot-icon.png') }}" alt="InterviewPilot" class="h-full w-full object-cover" />
+                            <img src="{{ asset('images/logo/speakready-ai-icon.png') }}" alt="SpeakReady AI" class="h-full w-full object-cover" />
                         </span>
                         <div>
-                            <p class="text-base font-semibold text-gray-900 dark:text-white">InterviewPilot</p>
+                            <p class="text-base font-semibold text-gray-900 dark:text-white">SpeakReady AI</p>
                             <p class="text-sm text-gray-500 dark:text-gray-400">Practice better answers before the real interview.</p>
                         </div>
                     </div>
@@ -846,7 +842,7 @@
 
             <div class="mx-auto mt-10 max-w-7xl border-t border-brand-100/70 px-4 pt-6 text-sm text-gray-500 sm:px-6 lg:px-8 dark:border-gray-800 dark:text-gray-400">
                 <div class="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <p>&copy; {{ now()->year }} InterviewPilot. All rights reserved.</p>
+                    <p>&copy; {{ now()->year }} SpeakReady AI. All rights reserved.</p>
                     <a href="#home" class="font-medium text-gray-600 transition hover:text-brand-600 dark:text-gray-300 dark:hover:text-brand-300">Back to top</a>
                 </div>
             </div>
@@ -856,7 +852,7 @@
             <div x-show="authModalOpen" x-cloak x-transition.opacity class="fixed inset-0 z-[999] flex items-center justify-center p-4 sm:p-6">
                 <div class="absolute inset-0 bg-slate-950/65 backdrop-blur-sm" @click="closeAuthModal()"></div>
 
-                <div class="relative z-10 w-full max-w-5xl overflow-hidden rounded-[32px] border border-gray-200 bg-white shadow-[0_32px_100px_-42px_rgba(15,23,42,0.65)] dark:border-gray-800 dark:bg-gray-950">
+                <div class="relative z-10 w-full max-w-5xl overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_32px_100px_-42px_rgba(15,23,42,0.65)] dark:border-gray-800 dark:bg-gray-950">
                     <button
                         type="button"
                         class="absolute right-4 top-4 z-20 inline-flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition hover:border-brand-300 hover:text-brand-700 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-400 dark:hover:border-brand-500/30 dark:hover:text-brand-200"
@@ -870,11 +866,8 @@
 
                     <div class="grid lg:grid-cols-[0.92fr_1.08fr] lg:items-stretch">
                         <aside class="relative hidden overflow-hidden border-r border-gray-200 bg-gray-950 px-8 py-12 text-white dark:border-gray-800 lg:flex lg:flex-col lg:justify-center lg:gap-12">
-                            <!-- Animated Orbs for AI aesthetic -->
-                            <div class="absolute -left-10 top-10 h-64 w-64 animate-pulse rounded-full bg-brand-500/20 blur-3xl filter"></div>
-                            <div class="absolute -right-10 bottom-10 h-64 w-64 animate-pulse rounded-full bg-blue-500/20 blur-3xl filter [animation-delay:2s]"></div>
-                            <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(70,95,255,0.15),_transparent_45%)]"></div>
-                            <div class="absolute inset-0 bg-gray-950/40 backdrop-blur-[2px]"></div>
+                            <div class="absolute inset-0 bg-[linear-gradient(135deg,rgba(20,120,100,0.34),rgba(15,23,42,0.94)_48%,rgba(249,115,22,0.18))]"></div>
+                            <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.06)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] bg-[size:34px_34px] opacity-35"></div>
 
                             <div class="relative z-10 mx-auto w-full max-w-md">
                                 <span class="inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-semibold tracking-wider text-brand-300 shadow-theme-xs backdrop-blur-md">
@@ -885,7 +878,7 @@
                                     AI INTERVIEW LAB
                                 </span>
                                 <h2 class="mt-6 max-w-sm text-4xl font-bold leading-[1.15] text-white">
-                                    Meet your personal <span class="bg-gradient-to-r from-brand-400 to-blue-400 bg-clip-text text-transparent">AI Interviewer</span>
+                                    Meet your personal <span class="text-brand-200">AI Interviewer</span>
                                 </h2>
                                 <p class="mt-4 max-w-md text-base leading-7 text-gray-300">
                                     Sign in to resume your mock interviews, access personalized AI feedback, and refine your answers in real-time.
@@ -893,7 +886,7 @@
                             </div>
 
                             <div class="relative z-10 mx-auto w-full max-w-md space-y-4">
-                                <div class="group flex items-start gap-4 rounded-[24px] border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all hover:bg-white/[0.04]">
+                                <div class="group flex items-start gap-4 rounded-lg border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md transition-all hover:bg-white/[0.07]">
                                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-500/20 text-brand-300 transition-transform group-hover:scale-110">
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -905,7 +898,7 @@
                                     </div>
                                 </div>
 
-                                <div class="group flex items-start gap-4 rounded-[24px] border border-white/5 bg-white/[0.02] p-5 backdrop-blur-md transition-all hover:bg-white/[0.04]">
+                                <div class="group flex items-start gap-4 rounded-lg border border-white/10 bg-white/[0.04] p-5 backdrop-blur-md transition-all hover:bg-white/[0.07]">
                                     <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-300 transition-transform group-hover:scale-110">
                                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />

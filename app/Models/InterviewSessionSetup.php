@@ -14,12 +14,14 @@ class InterviewSessionSetup extends Model
         'preferred_category_id',
         'voice_mode',
         'notes',
+        'advanced_options',
         'saved_at',
     ];
 
     protected function casts(): array
     {
         return [
+            'advanced_options' => 'array',
             'saved_at' => 'datetime',
         ];
     }

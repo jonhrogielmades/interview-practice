@@ -1,8 +1,8 @@
-# InterviewPilot Whole System User Script
+# SpeakReady AI Whole System User Script
 
 Target length: 8 to 10 minutes
 Audience: First-time users, evaluators, capstone panelists, and system testers
-Goal: Explain what users need before using InterviewPilot, then show the complete user flow from account access to interview practice, feedback, review, and progress tracking.
+Goal: Explain what users need before using SpeakReady AI, then show the complete user flow from account access to interview practice, feedback, review, and progress tracking.
 
 ## Recording Checklist
 
@@ -18,13 +18,13 @@ Goal: Explain what users need before using InterviewPilot, then show the complet
 
 ## Main Message
 
-"InterviewPilot is an AI-based interview practice system that helps users prepare for job, scholarship, college admission, and IT interviews. A user needs an account, a browser, a chosen interview goal, and optional microphone or camera access. After that, the system guides the user through setup, mock interview practice, AI feedback, session review, progress tracking, and continued learning."
+"SpeakReady AI is an AI-based interview practice system that helps users prepare for job, scholarship, college admission, and IT interviews. A user needs an account, a browser, a chosen interview goal, and optional microphone or camera access. After that, the system guides the user through setup, mock interview practice, AI feedback, session review, progress tracking, and continued learning."
 
 ## What Users Need
 
 Before using the system, a user needs:
 
-- An InterviewPilot account or Google sign-in access, if Google authentication is configured.
+- A SpeakReady AI account or Google sign-in access, if Google authentication is configured.
 - A modern browser such as Chrome or Edge.
 - A stable internet or local network connection.
 - A clear practice goal, such as job interview, scholarship interview, college admission interview, or IT / programming interview.
@@ -61,13 +61,13 @@ These features can be highlighted during the tutorial if they are visible in the
 ## Scene 1 - Opening And System Purpose
 
 Screen action:
-Open the homepage and keep the main InterviewPilot section visible.
+Open the homepage and keep the main SpeakReady AI section visible.
 
 Voice-over:
-"Welcome to InterviewPilot, an AI-based interview practice system for students, applicants, and job seekers. This system is designed for repeated interview simulation, automated feedback, guided learning, progress tracking, and admin monitoring. In this tutorial, I will show what a user needs and how the whole system works from start to finish."
+"Welcome to SpeakReady AI, an AI-based interview practice system for students, applicants, and job seekers. This system is designed for repeated interview simulation, automated feedback, guided learning, progress tracking, and admin monitoring. In this tutorial, I will show what a user needs and how the whole system works from start to finish."
 
 On-screen focus:
-- InterviewPilot homepage
+- SpeakReady AI homepage
 - Workflow navigation
 - Features navigation
 - Tracks navigation
@@ -93,7 +93,7 @@ Screen action:
 Click Sign In, then show the sign-in modal. Switch to Create Account briefly, then return to Sign In and log in with the prepared demo account.
 
 Voice-over:
-"A new user can create an account directly from the homepage. A returning user can sign in with email and password. If Google sign-in is configured, the user can also continue with Google. Once the login is successful, InterviewPilot opens the user workspace where saved sessions, feedback, and practice tools are available."
+"A new user can create an account directly from the homepage. A returning user can sign in with email and password. If Google sign-in is configured, the user can also continue with Google. Once the login is successful, SpeakReady AI opens the user workspace where saved sessions, feedback, and practice tools are available."
 
 On-screen focus:
 - Sign In modal
@@ -172,7 +172,7 @@ Screen action:
 Show voice controls or open Voice Practice and Camera Readiness.
 
 Voice-over:
-"For a more realistic interview experience, InterviewPilot supports voice practice, spoken question playback, and camera readiness tools. When voice mode is used, the browser can convert spoken answers into text for review. When camera-based tools are used, the system can help the user check selected non-verbal cues such as eye contact orientation, posture, head movement, and facial composure."
+"For a more realistic interview experience, SpeakReady AI supports voice practice, spoken question playback, and camera readiness tools. When voice mode is used, the browser can convert spoken answers into text for review. When camera-based tools are used, the system can help the user check selected non-verbal cues such as eye contact orientation, posture, head movement, and facial composure."
 
 On-screen focus:
 - Microphone controls
@@ -187,7 +187,7 @@ Screen action:
 Answer one sample interview question and submit it.
 
 Voice-over:
-"After the user submits an answer, InterviewPilot reviews the response using interview-focused criteria. The verbal evaluation looks at clarity, relevance, grammar, and professionalism. The system also provides strengths, weak areas, improvement tips, an overall summary, and a recommended next step. This feedback helps the user understand what to improve before the next attempt."
+"After the user submits an answer, SpeakReady AI reviews the response using interview-focused criteria. The verbal evaluation looks at clarity, relevance, grammar, and professionalism. The system also provides strengths, weak areas, improvement tips, an overall summary, and a recommended next step. This feedback helps the user understand what to improve before the next attempt."
 
 On-screen focus:
 - Score or average rating
@@ -251,7 +251,7 @@ Screen action:
 Open the Chatbot page and send a sample prompt.
 
 Voice-over:
-"InterviewPilot also includes an interview chatbot. The chatbot is focused on Philippine interview practice for job, scholarship, college admission, and IT or programming scenarios. A user can ask for sample questions, stronger answer suggestions, follow-up questions, or coaching advice. This gives the user extra support outside the structured practice session."
+"SpeakReady AI also includes an interview chatbot. The chatbot is focused on Philippine interview practice for job, scholarship, college admission, and IT or programming scenarios. A user can ask for sample questions, stronger answer suggestions, follow-up questions, or coaching advice. This gives the user extra support outside the structured practice session."
 
 Sample user prompt:
 "Give me a stronger answer for a scholarship interview as an IT student."
@@ -312,7 +312,7 @@ Screen action:
 Open the advanced practice, coaching, or roadmap areas if they are part of the current demo build. If these features are not yet implemented in the visible interface, show this as a planned enhancement slide or briefly mention it after the main workflow.
 
 Voice-over:
-"InterviewPilot can also be extended with advanced coaching modes. These include anxiety calibration, stress interview simulation, evidence checking, STAR or CAR answer coaching, resume-consistency checking, panel interview mode, adaptive weakness recovery, a personal story bank, behavior pattern memory, company culture matching, localized and multilingual practice, honesty warnings, fair mode, reflection journals, micro-lessons, interviewer persona switching, career-stage aware feedback, mock-to-real preparation, and a step-by-step improvement roadmap."
+"SpeakReady AI can also be extended with advanced coaching modes. These include anxiety calibration, stress interview simulation, evidence checking, STAR or CAR answer coaching, resume-consistency checking, panel interview mode, adaptive weakness recovery, a personal story bank, behavior pattern memory, company culture matching, localized and multilingual practice, honesty warnings, fair mode, reflection journals, micro-lessons, interviewer persona switching, career-stage aware feedback, mock-to-real preparation, and a step-by-step improvement roadmap."
 
 On-screen focus:
 - Anxiety calibration and stress simulation controls, if visible
@@ -329,7 +329,7 @@ Screen action:
 Return to the user dashboard or homepage.
 
 Voice-over:
-"That is the complete InterviewPilot flow. A user needs an account, a browser, a chosen interview goal, and optional microphone or camera permission. From there, the system guides the user through setup, question generation, mock interview practice, AI feedback, saved session review, learning activities, chatbot support, advanced coaching modes, profile management, notifications, and continued progress tracking."
+"That is the complete SpeakReady AI flow. A user needs an account, a browser, a chosen interview goal, and optional microphone or camera permission. From there, the system guides the user through setup, question generation, mock interview practice, AI feedback, saved session review, learning activities, chatbot support, advanced coaching modes, profile management, notifications, and continued progress tracking."
 
 On-screen focus:
 - Continue Practice button
@@ -338,7 +338,7 @@ On-screen focus:
 
 ## Short Version For A 2-Minute Demo
 
-1. Open the homepage and introduce InterviewPilot as an AI-based interview practice system.
+1. Open the homepage and introduce SpeakReady AI as an AI-based interview practice system.
 2. Explain what the user needs: account, browser, interview goal, optional microphone, and optional camera permission.
 3. Sign in with a prepared demo account.
 4. Open Session Setup and choose category, question count, focus mode, pacing, and response mode.
@@ -359,4 +359,4 @@ Sample answer:
 
 ## Closing Line
 
-"With InterviewPilot, users can practice interviews, receive guided feedback, review progress, and continue improving until they are more confident and prepared for the real interview."
+"With SpeakReady AI, users can practice interviews, receive guided feedback, review progress, and continue improving until they are more confident and prepared for the real interview."

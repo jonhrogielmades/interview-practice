@@ -1,10 +1,11 @@
 @props(['pageTitle' => 'Page'])
 
-<div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-    <h2 class="text-xl font-semibold text-gray-800 dark:text-white/90">
-        {{ $pageTitle }}
-    </h2>
-    <nav class="min-w-0">
+<div class="mb-6 rounded-lg border border-white/70 bg-white/55 px-4 py-3 shadow-theme-xs backdrop-blur dark:border-white/10 dark:bg-white/[0.04]">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+        <h2 class="text-xl font-semibold text-gray-950 dark:text-white">
+            {{ $pageTitle }}
+        </h2>
+        <nav class="min-w-0">
         <ol class="flex flex-wrap items-center gap-1.5">
             <li>
                 <a
@@ -34,5 +35,6 @@
                 {{ $pageTitle }}
             </li>
         </ol>
-    </nav>
+        </nav>
+    </div>
 </div>

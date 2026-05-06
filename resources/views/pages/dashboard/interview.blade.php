@@ -272,7 +272,7 @@
 @endphp
 
 @section('content')
-    <div id="dashboardOnboarding" class="flex flex-col gap-10">
+    <div id="dashboardOnboarding" class="flex flex-col gap-6 sm:gap-8 lg:gap-10">
         <div x-show="$store.dashboardOnboarding.active" x-cloak x-transition.opacity
             class="fixed inset-0 z-[100000] bg-gray-900/35 backdrop-blur-sm"></div>
 
@@ -449,15 +449,16 @@
         </div>
 
         <section data-dashboard-tour-target="dashboard-home"
-            class="shadow-theme-lg overflow-hidden rounded-[28px] border border-gray-200/50 bg-white/80 backdrop-blur-2xl dark:border-white/5 dark:bg-gray-900/80"
+            class="app-surface-strong overflow-hidden rounded-lg border"
+            data-reveal
             :class="$store.dashboardOnboarding.targetClass('dashboard-home')">
-            <div class="grid gap-6 p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
+            <div class="grid gap-6 bg-[linear-gradient(135deg,rgba(20,120,100,0.1),rgba(255,255,255,0.72),rgba(249,115,22,0.08))] p-5 dark:bg-[linear-gradient(135deg,rgba(93,187,158,0.08),rgba(15,23,42,0.78),rgba(249,115,22,0.05))] sm:p-6 lg:grid-cols-[1.1fr_0.9fr] lg:p-8">
                 <div class="flex flex-col justify-center">
                     <span class="bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-400 mb-4 inline-flex w-fit rounded-full px-3 py-1 text-xs font-medium tracking-[0.2em] uppercase">
                         Capstone Project Dashboard
                     </span>
 
-                    <h1 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-title-sm mb-4 font-bold text-transparent dark:from-white dark:to-gray-400">
+                    <h1 class="text-title-sm mb-4 font-semibold text-gray-950 dark:text-white">
                         AI-Based Interview Practice System
                     </h1>
 
@@ -467,24 +468,24 @@
                         relevance, grammar, and professionalism, and track performance across saved practice sessions.
                     </p>
 
-                    <div class="flex flex-wrap gap-3">
+                    <div class="grid gap-3 sm:flex sm:flex-wrap">
                         <a href="{{ route('practice') }}"
-                            class="bg-brand-500 text-theme-sm hover:scale-105 hover:bg-brand-600 inline-flex items-center justify-center rounded-xl px-5 py-3 font-medium text-white shadow-[0_0_15px_rgba(70,95,255,0.3)] transition-all duration-300">
+                            class="interactive-link bg-brand-500 text-theme-sm hover:-translate-y-0.5 hover:bg-brand-600 inline-flex w-full items-center justify-center rounded-lg px-5 py-3 font-medium text-white shadow-theme-md transition-all duration-300 sm:w-auto">
                             Start Practice
                         </a>
 
                         <a href="{{ route('progress') }}"
-                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                            class="interactive-link text-theme-sm inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white/80 px-5 py-3 font-medium text-gray-700 shadow-theme-xs transition hover:-translate-y-0.5 hover:bg-white dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto">
                             View Progress
                         </a>
 
                         <a href="{{ route('profile') }}"
-                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-5 py-3 font-medium text-gray-700 transition hover:bg-gray-50 hover:-translate-y-0.5 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700">
+                            class="interactive-link text-theme-sm inline-flex w-full items-center justify-center rounded-lg border border-gray-300 bg-white/80 px-5 py-3 font-medium text-gray-700 shadow-theme-xs transition hover:bg-white hover:-translate-y-0.5 hover:shadow-theme-sm dark:border-gray-700 dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-700 sm:w-auto">
                             Profile
                         </a>
 
                         <button type="button" @click="$store.dashboardOnboarding.restart()"
-                            class="text-theme-sm inline-flex items-center justify-center rounded-xl border border-dashed border-brand-300 bg-brand-50 px-5 py-3 font-medium text-brand-600 transition hover:border-brand-400 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/15">
+                            class="interactive-link text-theme-sm inline-flex w-full items-center justify-center rounded-lg border border-dashed border-brand-300 bg-brand-50 px-5 py-3 font-medium text-brand-700 transition hover:border-brand-400 hover:bg-brand-100 dark:border-brand-700 dark:bg-brand-500/10 dark:text-brand-300 dark:hover:bg-brand-500/15 sm:w-auto">
                             {{ count($onboardingSteps) }}-Step Tour
                         </button>
                     </div>
@@ -494,7 +495,7 @@
                     class="grid grid-cols-1 gap-4 sm:grid-cols-2"
                     :class="$store.dashboardOnboarding.targetClass('dashboard-metrics')">
                     @foreach ($summaryCards as $card)
-                        <div class="shadow-theme-xs rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/5">
+                        <div class="motion-card rounded-lg border border-white/70 bg-white/80 p-5 shadow-theme-xs backdrop-blur dark:border-white/10 dark:bg-white/5">
                             <p class="text-theme-xs mb-2 text-gray-500 dark:text-gray-400">{{ $card['label'] }}</p>
                             <h3 class="text-2xl font-bold text-gray-900 dark:text-white">{{ $card['value'] }}</h3>
                             <p @class([
@@ -517,7 +518,7 @@
                 <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     @foreach ($featureCards as $card)
                         <a href="{{ $card['href'] }}"
-                            class="shadow-theme-sm hover:shadow-theme-xl hover:-translate-y-1.5 rounded-2xl border border-gray-200/50 bg-white/80 p-5 backdrop-blur-xl transition-all duration-300 dark:border-white/5 dark:bg-gray-900/80">
+                            class="app-surface motion-card hover:shadow-theme-md hover:-translate-y-1 rounded-lg border p-5 transition-all duration-300" data-reveal>
                             <h3 class="mb-2 flex items-center gap-2 text-base font-semibold text-gray-900 dark:text-white">
                                 @if ($card['icon'] === 'lock')
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -553,10 +554,10 @@
                 </section>
 
                 <section id="practice-categories"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
+                    class="app-surface rounded-lg border p-5 sm:p-6" data-reveal>
                     <div class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                            <h2 class="text-xl font-semibold text-gray-950 dark:text-white">
                                 Interview Categories
                             </h2>
                             <p class="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -572,7 +573,7 @@
 
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                         @foreach ($categories as $category)
-                            <div class="rounded-xl border border-gray-200 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:hover:border-brand-700">
+                            <div class="motion-card rounded-lg border border-gray-200 bg-white/55 p-4 transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-theme-md dark:border-gray-800 dark:bg-white/[0.03] dark:hover:border-brand-700">
                                 <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">
                                     {{ $category['title'] }}
                                 </h3>
@@ -585,9 +586,9 @@
                 </section>
 
                 <section id="workflow"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
+                    class="app-surface rounded-lg border p-5 sm:p-6" data-reveal>
                     <div class="mb-6">
-                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                        <h2 class="text-xl font-semibold text-gray-950 dark:text-white">
                             Practice Workflow
                         </h2>
                         <p class="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -597,7 +598,7 @@
 
                     <div class="grid gap-4 lg:grid-cols-2">
                         @foreach ($workflow as $item)
-                            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/5">
+                            <div class="motion-card rounded-lg border border-gray-200 bg-white/60 p-5 shadow-theme-xs dark:border-gray-800 dark:bg-white/5">
                                 <div class="bg-brand-50 text-brand-500 dark:bg-brand-500/15 dark:text-brand-300 inline-flex rounded-full px-3 py-1 text-xs font-semibold tracking-[0.2em] uppercase">
                                     Step {{ $item['step'] }}
                                 </div>
@@ -615,9 +616,9 @@
 
             <div class="col-span-12 space-y-6 xl:col-span-4">
                 <section id="progress-overview"
-                    class="shadow-theme-sm rounded-2xl border border-gray-200/50 bg-white/80 p-6 backdrop-blur-xl dark:border-white/5 dark:bg-gray-900/80">
+                    class="app-surface rounded-lg border p-5 sm:p-6" data-reveal>
                     <div class="mb-5">
-                        <h2 class="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-xl font-bold text-transparent dark:from-white dark:to-gray-400">
+                        <h2 class="text-xl font-semibold text-gray-950 dark:text-white">
                             Sample Evaluation
                         </h2>
                         <p class="text-theme-sm text-gray-500 dark:text-gray-400">
@@ -667,6 +668,7 @@
                                 <div class="h-2 rounded-full bg-gray-200 dark:bg-gray-800">
                                     <div @class([
                                         'h-2 rounded-full',
+                                        'score-progress',
                                         'bg-brand-500' => $item['tone'] === 'brand',
                                         'bg-success-500' => $item['tone'] === 'success',
                                         'bg-blue-light-500' => $item['tone'] === 'blue',

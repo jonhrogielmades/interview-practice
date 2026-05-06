@@ -39,6 +39,8 @@ dataset('protected_admin_routes', [
     '/admin/users',
     '/admin/apis',
     '/admin/content',
+    '/admin/question-bank',
+    '/admin/announcements',
     '/admin/monitoring',
     '/admin/mobile-lan',
 ]);
