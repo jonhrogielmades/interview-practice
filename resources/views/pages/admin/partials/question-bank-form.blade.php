@@ -1,6 +1,7 @@
 @php
     $isCurrentModal = old('question_modal') === $modalKey;
-    $selectedCategory = $isCurrentModal ? old('category_id') : ($question['categoryId'] ?? ($categoryOptions[0]['id'] ?? 'job'));
+    $defaultCategory = $defaultCategoryId ?? ($categoryOptions[0]['id'] ?? 'job');
+    $selectedCategory = $isCurrentModal ? old('category_id') : ($question['categoryId'] ?? $defaultCategory);
     $selectedProvider = $isCurrentModal ? old('provider_id') : ($question['providerId'] ?? 'local');
     $questionText = $isCurrentModal ? old('question') : ($question['question'] ?? '');
     $guidanceText = $isCurrentModal ? old('guidance') : ($question['guidance'] ?? '');

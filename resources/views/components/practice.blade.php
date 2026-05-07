@@ -183,7 +183,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 64;
+            return 0;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {
@@ -274,7 +274,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 64;
+            return 0;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {
@@ -561,7 +561,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 64;
+            return 0;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {
@@ -717,14 +717,14 @@
 
 <section
     id="practiceSessionModal"
-    class="mt-6 hidden scroll-mt-24"
+    class="practice-session-focus-shell mt-6 hidden scroll-mt-24"
     aria-hidden="true"
     aria-labelledby="practiceModalTitle">
     <div id="practiceSessionModalBackdrop" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm hidden"></div>
     <div
-        class="flex w-full min-h-[80vh] flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 sm:min-h-0 dark:border-white/5 dark:bg-gray-900/90">
+        class="practice-session-panel flex w-full min-h-[80vh] flex-col overflow-hidden rounded-2xl border border-gray-200/50 bg-white/90 shadow-2xl backdrop-blur-2xl transition-all duration-300 sm:min-h-0 dark:border-white/5 dark:bg-gray-900/90">
         <div
-            class="flex flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between sm:px-5 lg:px-6">
+            class="practice-session-header flex flex-col gap-4 border-b border-gray-200 px-4 py-4 dark:border-gray-800 sm:flex-row sm:items-start sm:justify-between sm:px-5 lg:px-6">
             <div>
                 <p class="text-xs font-medium uppercase tracking-[0.2em] text-brand-600 dark:text-brand-300">
                     Interview Workspace
@@ -741,11 +741,11 @@
                 id="closePracticeModalBtn"
                 type="button"
                 class="inline-flex w-full items-center justify-center rounded-lg border border-gray-300 px-4 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03] sm:w-auto">
-                Hide Workspace
+                Exit Focus Mode
             </button>
         </div>
 
-        <div class="p-3 sm:p-5 lg:p-6">
+        <div class="practice-session-body p-3 sm:p-5 lg:p-6">
             <div class="grid items-start gap-4 lg:gap-6 xl:grid-cols-12">
                 <section class="min-w-0 xl:col-span-7">
                     <article class="rounded-2xl border border-gray-200/50 bg-white/80 p-4 shadow-theme-xs backdrop-blur-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-theme-md sm:p-5 dark:border-white/5 dark:bg-gray-900/80">
@@ -1249,7 +1249,7 @@
             return ($store.sidebar.isExpanded || $store.sidebar.isHovered || $store.sidebar.isMobileOpen) ? 290 : 90;
         },
         get topOffset() {
-            return this.viewportWidth >= 640 ? 88 : 64;
+            return 0;
         },
         get wrapperPadding() {
             if (this.viewportWidth >= 1280) {

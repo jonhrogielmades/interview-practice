@@ -53,6 +53,11 @@
             @foreach ($menuGroups as $groupIndex => $menuGroup)
                 @foreach ($menuGroup['items'] as $itemIndex => $item)
                     @if (isset($item['subItems']))
+                        @if (!empty($item['path']))
+                            if (this.matchesPath('{{ $item['path'] }}')) {
+                                this.openSubmenus['{{ $groupIndex }}-{{ $itemIndex }}'] = true;
+                            }
+                        @endif
                         // Check if any submenu item matches current path
                         @foreach ($item['subItems'] as $subItem)
                             if (this.matchesPath('{{ $subItem['path'] }}')) {

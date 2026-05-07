@@ -1,4 +1,22 @@
 import { getWorkspaceState, requestWorkspace } from "./workspace-api";
+import questionBankDataset from "../../data/interview-question-bank.json";
+
+const questionBankCategories = questionBankDataset?.categories || {};
+
+function datasetQuestions(categoryId, fallbackQuestions = []) {
+    const source = questionBankCategories[categoryId]?.questions;
+
+    if (!Array.isArray(source)) {
+        return fallbackQuestions;
+    }
+
+    const questions = source
+        .map((item) => typeof item === "string" ? item : item?.question)
+        .map((question) => String(question || "").trim())
+        .filter(Boolean);
+
+    return questions.length > 0 ? questions : fallbackQuestions;
+}
 
 export const practiceData = {
     focusModes: [
@@ -39,13 +57,13 @@ export const practiceData = {
                 "Show me a strong sample answer for a Philippine interviewer.",
                 "What mistakes should Filipino applicants avoid in this category?"
             ],
-            questions: [
+            questions: datasetQuestions("job", [
                 "Tell me about yourself and how your background in the Philippines prepared you for this role.",
                 "What skills from your OJT, internship, or part-time work can you bring to our company?",
                 "Describe a challenge you handled in school, work, or your community and how you solved it.",
                 "Why do you want to work for our company in the Philippines?",
                 "How do you see your career growing in the Philippine job market over the next five years?"
-            ]
+            ])
         },
         {
             id: "scholarship",
@@ -61,13 +79,13 @@ export const practiceData = {
                 "How can I sound sincere without sounding rehearsed?",
                 "What should I mention about family and financial need professionally?"
             ],
-            questions: [
+            questions: datasetQuestions("scholarship", [
                 "Why should you be chosen for this scholarship in the Philippines?",
                 "How will this scholarship help your studies, family, and long-term goals?",
                 "What achievement best shows your discipline and leadership?",
                 "How do you balance academics, home responsibilities, and community involvement?",
                 "How will you use your education to help your family or community in the future?"
-            ]
+            ])
         },
         {
             id: "admission",
@@ -83,13 +101,13 @@ export const practiceData = {
                 "How should I explain why I chose this course?",
                 "What answer structure works best for admission interviews?"
             ],
-            questions: [
+            questions: datasetQuestions("admission", [
                 "Why do you want to take this program at a Philippine college or university?",
                 "What experiences in senior high school or your community prepared you for this course?",
                 "How do you handle academic pressure, deadlines, and responsibilities at home?",
                 "What makes you a strong candidate for this program?",
                 "What goals do you want to achieve after graduating in the Philippines?"
-            ]
+            ])
         },
         {
             id: "it",
@@ -105,13 +123,13 @@ export const practiceData = {
                 "How can I explain my capstone project better?",
                 "What technical mistakes should I avoid in an entry-level IT interview?"
             ],
-            questions: [
+            questions: datasetQuestions("it", [
                 "Tell me about a capstone, freelance, or school project you built and your role in it.",
                 "How do you troubleshoot programming bugs when your deadline is near?",
                 "Which programming languages, frameworks, or tools are you most comfortable using, and why?",
                 "How do you work with a team during software development or group projects?",
                 "Why do you want to build your career in the IT industry in the Philippines?"
-            ]
+            ])
         }
     ]
 };

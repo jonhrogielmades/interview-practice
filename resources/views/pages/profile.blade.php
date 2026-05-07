@@ -192,12 +192,12 @@
             </div>
         </div>
 
-        <div x-show="isProfileInfoModal" x-cloak x-transition.opacity class="fixed inset-0 z-[99999] flex items-center justify-center p-5">
+        <div x-show="isProfileInfoModal" x-cloak x-transition.opacity class="fixed inset-0 z-[99999] flex items-center justify-center p-5" role="dialog" aria-modal="true" aria-labelledby="profile-info-modal-title">
             <div @click="isProfileInfoModal = false" class="fixed inset-0 bg-gray-400/50 backdrop-blur-[24px]"></div>
             <div @click.stop x-transition.scale class="relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
                 <button type="button" @click="isProfileInfoModal = false" class="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xl text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">&times;</button>
                 <div class="px-2 pr-14">
-                    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Personal Information</h4>
+                    <h4 id="profile-info-modal-title" class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Personal Information</h4>
                     <p class="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Update your details to keep your profile up-to-date.</p>
                 </div>
 
@@ -233,12 +233,12 @@
             </div>
         </div>
 
-        <div x-show="isProfileAddressModal" x-cloak x-transition.opacity class="fixed inset-0 z-[99999] flex items-center justify-center p-5">
+        <div x-show="isProfileAddressModal" x-cloak x-transition.opacity class="fixed inset-0 z-[99999] flex items-center justify-center p-5" role="dialog" aria-modal="true" aria-labelledby="profile-address-modal-title">
             <div @click="isProfileAddressModal = false" class="fixed inset-0 bg-gray-400/50 backdrop-blur-[24px]"></div>
             <div @click.stop x-transition.scale class="relative w-full max-w-[700px] rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
                 <button type="button" @click="isProfileAddressModal = false" class="absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full bg-gray-100 text-xl text-gray-500 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300">&times;</button>
                 <div class="px-2 pr-14">
-                    <h4 class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Address</h4>
+                    <h4 id="profile-address-modal-title" class="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">Edit Address</h4>
                     <p class="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">Update your address details to keep your profile up-to-date.</p>
                 </div>
 

@@ -104,6 +104,7 @@ class MenuHelper
                         'icon' => 'task',
                         'name' => 'Question Bank',
                         'path' => '/admin/question-bank',
+                        'subItems' => self::getAdminQuestionBankCategoryItems(),
                     ],
                     [
                         'icon' => 'email',
@@ -181,6 +182,21 @@ class MenuHelper
                     'icon' => self::getPracticeCategoryIcon($categoryId),
                     'name' => $category['name'],
                     'path' => '/practice?category='.$categoryId,
+                    'pro' => false,
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    protected static function getAdminQuestionBankCategoryItems(): array
+    {
+        return collect(InterviewPracticeCatalog::categories())
+            ->map(function (array $category, string $categoryId) {
+                return [
+                    'icon' => self::getPracticeCategoryIcon($categoryId),
+                    'name' => $category['name'],
+                    'path' => '/admin/question-bank?'.http_build_query(['category' => $categoryId], '', '&', PHP_QUERY_RFC3986),
                     'pro' => false,
                 ];
             })

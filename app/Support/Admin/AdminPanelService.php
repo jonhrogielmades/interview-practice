@@ -113,11 +113,32 @@ class AdminPanelService
         ];
     }
 
-    public function questionBankManagement(InterviewChatbotService $chatbot): array
+    public function questionBankManagement(
+        InterviewChatbotService $chatbot,
+        ?string $selectedCategoryId = null,
+        ?string $searchTerm = null,
+        ?int $questionListSize = null,
+    ): array
     {
         $catalog = collect(InterviewPracticeCatalog::practiceQuestionBank());
+        $selectedCategoryId = is_string($selectedCategoryId) && $catalog->has($selectedCategoryId)
+            ? $selectedCategoryId
+            : null;
+        $displayCatalog = $selectedCategoryId !== null ? $catalog->only($selectedCategoryId) : $catalog;
+        $questionListSizeOptions = [1, 5, 10, 20];
+        $selectedQuestionListSize = in_array($questionListSize, $questionListSizeOptions, true)
+            ? $questionListSize
+            : 5;
+        $questionSearchTerm = trim((string) $searchTerm);
+        $questionSearchTerm = strlen($questionSearchTerm) > 80 ? substr($questionSearchTerm, 0, 80) : $questionSearchTerm;
         $questions = QuestionBankQuestion::query()->ordered()->get();
-        $activeQuestions = $questions->where('is_active', true);
+        $visibleQuestions = $selectedCategoryId !== null
+            ? $questions->where('category_id', $selectedCategoryId)
+            : $questions;
+        $filteredQuestions = $questionSearchTerm === ''
+            ? $visibleQuestions
+            : $visibleQuestions->filter(fn (QuestionBankQuestion $question) => $this->questionMatchesSearch($question, $questionSearchTerm));
+        $activeQuestions = $visibleQuestions->where('is_active', true);
         $providerOptions = $this->questionProviderOptions($chatbot);
         $categoryOptions = $catalog
             ->map(fn (array $category, string $categoryId) => [
@@ -131,44 +152,85 @@ class AdminPanelService
             'summaryCards' => [
                 [
                     'label' => 'Interview Categories',
-                    'value' => (string) $catalog->count(),
-                    'detail' => 'Managed categories in the current practice catalog',
+                    'value' => (string) $displayCatalog->count(),
+                    'detail' => $selectedCategoryId !== null
+                        ? 'Selected category from the admin sidebar dropdown'
+                        : 'Managed categories in the current practice catalog',
                     'tone' => 'brand',
                 ],
                 [
                     'label' => 'Active Questions',
                     'value' => (string) $activeQuestions->count(),
-                    'detail' => 'Prompts available to the local PH coach and workspace context',
+                    'detail' => $selectedCategoryId !== null
+                        ? 'Prompts available in this category'
+                        : 'Prompts available to the local PH coach and workspace context',
                     'tone' => 'blue',
                 ],
                 [
                     'label' => 'AI Provider Sources',
-                    'value' => (string) $questions->where('source_type', 'ai_provider')->count(),
+                    'value' => (string) $visibleQuestions->where('source_type', 'ai_provider')->count(),
                     'detail' => 'Questions tagged from Gemini, Groq, OpenRouter, Claude, Wisdom Gate, or Cohere',
                     'tone' => 'warning',
                 ],
                 [
                     'label' => 'Inactive Drafts',
-                    'value' => (string) $questions->where('is_active', false)->count(),
+                    'value' => (string) $visibleQuestions->where('is_active', false)->count(),
                     'detail' => 'Stored prompts hidden from generated practice context',
                     'tone' => 'success',
                 ],
             ],
-            'questionBanks' => $catalog->map(function (array $category, string $categoryId) use ($questions) {
-                $categoryQuestions = $questions->where('category_id', $categoryId)->values();
+            'questionBanks' => $displayCatalog->map(function (array $category, string $categoryId) use ($questions, $filteredQuestions, $selectedQuestionListSize) {
+                $allCategoryQuestions = $questions->where('category_id', $categoryId)->values();
+                $matchingCategoryQuestions = $filteredQuestions->where('category_id', $categoryId)->values();
+                $matchingQuestionIds = $matchingCategoryQuestions->pluck('id')->all();
+                $visibleQuestionIds = $matchingCategoryQuestions->take($selectedQuestionListSize)->pluck('id')->all();
 
                 return [
                     'id' => $categoryId,
                     'name' => (string) ($category['name'] ?? Str::headline($categoryId)),
                     'description' => (string) ($category['description'] ?? 'Interview practice category'),
-                    'questionCount' => $categoryQuestions->where('is_active', true)->count(),
+                    'questionCount' => $allCategoryQuestions->where('is_active', true)->count(),
+                    'matchingQuestionCount' => $matchingCategoryQuestions->count(),
+                    'visibleQuestionCount' => $matchingCategoryQuestions->take($selectedQuestionListSize)->count(),
                     'quickPrompts' => collect($category['quickPrompts'] ?? [])->take(3)->values()->all(),
-                    'questions' => $categoryQuestions->map(fn (QuestionBankQuestion $question) => $this->mappedQuestionBankQuestion($question))->all(),
+                    'questions' => $allCategoryQuestions
+                        ->map(function (QuestionBankQuestion $question) use ($matchingQuestionIds, $visibleQuestionIds) {
+                            return [
+                                ...$this->mappedQuestionBankQuestion($question),
+                                'searchText' => $this->questionSearchText($question),
+                                'matchesInitialSearch' => in_array($question->id, $matchingQuestionIds, true),
+                                'visibleByDefault' => in_array($question->id, $visibleQuestionIds, true),
+                            ];
+                        })
+                        ->all(),
                 ];
             })->values()->all(),
             'categoryOptions' => $categoryOptions,
             'providerOptions' => $providerOptions,
+            'questionSearchTerm' => $questionSearchTerm,
+            'questionListSizeOptions' => $questionListSizeOptions,
+            'selectedQuestionListSize' => $selectedQuestionListSize,
+            'selectedCategoryId' => $selectedCategoryId,
+            'selectedCategoryName' => $selectedCategoryId !== null
+                ? (string) ($catalog->get($selectedCategoryId)['name'] ?? Str::headline($selectedCategoryId))
+                : null,
         ];
+    }
+
+    protected function questionMatchesSearch(QuestionBankQuestion $question, string $searchTerm): bool
+    {
+        return Str::contains($this->questionSearchText($question), Str::lower($searchTerm));
+    }
+
+    protected function questionSearchText(QuestionBankQuestion $question): string
+    {
+        return Str::lower(implode(' ', [
+            $question->provider_label,
+            $question->source_type,
+            $question->question,
+            $question->guidance,
+            (string) $question->sort_order,
+        ]));
     }
 
     public function announcementManagement(): array

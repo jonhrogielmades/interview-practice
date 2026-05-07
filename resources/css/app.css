@@ -735,6 +735,220 @@ body.app-shell-admin header.sticky {
   box-shadow: 0 16px 44px -38px rgba(15, 23, 42, 0.48);
 }
 
+html.practice-live-focus,
+body.practice-live-focus {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.app-shell-user.user-modal-open header.sticky,
+body.app-shell-user.practice-live-focus header.sticky {
+  display: none;
+}
+
+body.app-shell-user.practice-live-focus {
+  background: var(--ip-page-bg);
+}
+
+body.app-shell-user.practice-live-focus::before,
+body.app-shell-user.practice-live-focus #sidebar {
+  display: none;
+}
+
+body.app-shell-user.practice-live-focus [data-app-shell-main] {
+  margin-left: 0 !important;
+  width: 100% !important;
+}
+
+body.app-shell-user.practice-live-focus [data-app-content] {
+  max-width: none !important;
+  padding: 0 !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal:not(.hidden) {
+  position: fixed;
+  inset: 0;
+  z-index: 100004;
+  display: block;
+  margin: 0 !important;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background: var(--ip-page-bg);
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-panel {
+  height: 100dvh;
+  min-height: 100dvh;
+  border-width: 0;
+  border-radius: 0;
+  background: color-mix(in oklab, var(--ip-surface-strong) 92%, transparent);
+  box-shadow: none;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-header {
+  z-index: 20;
+  flex-shrink: 0;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: color-mix(in oklab, var(--ip-surface-strong) 94%, transparent);
+  backdrop-filter: blur(24px);
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-header p,
+body.app-shell-user.practice-live-focus #practiceSessionModal #selectedCategoryDescription,
+body.app-shell-user.practice-live-focus #practiceSessionModal #coachTipText,
+body.app-shell-user.practice-live-focus #practiceSessionModal #avatarLineText,
+body.app-shell-user.practice-live-focus #practiceSessionModal #responseInput + p,
+body.app-shell-user.practice-live-focus #practiceSessionModal #responseInput + p + p,
+body.app-shell-user.practice-live-focus #practiceSessionModal #voiceStatus + p,
+body.app-shell-user.practice-live-focus #practiceSessionModal #aiInterviewerSection > div:first-child p,
+body.app-shell-user.practice-live-focus #practiceSessionModal #practiceQuestionAgentSection {
+  display: none !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-body {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 1600px;
+  margin-inline: auto;
+  padding: 0.75rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-body > .grid {
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+  gap: 0.75rem;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-body > .grid > section {
+  min-height: 0;
+  overflow: hidden;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-body > .grid > section > article,
+body.app-shell-user.practice-live-focus #practiceSessionModal #aiInterviewerSection {
+  height: 100%;
+  overflow: hidden;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal article {
+  border-radius: 1rem;
+  padding: 0.75rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal article:hover {
+  transform: none;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal article > div:first-child {
+  gap: 0.5rem;
+  padding-bottom: 0.75rem;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal h2,
+body.app-shell-user.practice-live-focus #practiceSessionModal h3 {
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #currentQuestionText {
+  font-size: 1.1rem;
+  line-height: 1.45;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .mt-6 {
+  margin-top: 0.75rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .mt-5,
+body.app-shell-user.practice-live-focus #practiceSessionModal .mt-4,
+body.app-shell-user.practice-live-focus #practiceSessionModal .mt-3 {
+  margin-top: 0.625rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .gap-6,
+body.app-shell-user.practice-live-focus #practiceSessionModal .gap-4,
+body.app-shell-user.practice-live-focus #practiceSessionModal .gap-3 {
+  gap: 0.625rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .space-y-6 > :not([hidden]) ~ :not([hidden]),
+body.app-shell-user.practice-live-focus #practiceSessionModal .space-y-5 > :not([hidden]) ~ :not([hidden]),
+body.app-shell-user.practice-live-focus #practiceSessionModal .space-y-4 > :not([hidden]) ~ :not([hidden]) {
+  margin-top: 0.625rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .rounded-2xl:has(#fillerTrackerSummary),
+body.app-shell-user.practice-live-focus #practiceSessionModal .rounded-2xl:has(#answerVersionSummary) {
+  display: none !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal [class*="px-4"][class*="py-3"],
+body.app-shell-user.practice-live-focus #practiceSessionModal [class*="p-4"] {
+  padding: 0.625rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal button {
+  min-height: 2.25rem !important;
+  padding: 0.5rem 0.75rem !important;
+  font-size: 0.8125rem;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #responseInput {
+  min-height: clamp(7rem, 20dvh, 11rem);
+  border-radius: 1rem;
+  padding: 0.75rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #voiceStatus {
+  padding: 0.625rem 0.75rem !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .voice-wave-shell {
+  min-height: 5.25rem;
+  border-radius: 1rem;
+  padding: 0.625rem 0.75rem;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .voice-wave-bars {
+  height: 3.5rem;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal .voice-wave-meta {
+  display: none;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #faceCameraVideo {
+  height: clamp(9rem, 24dvh, 14rem) !important;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #aiInterviewerSection > div:first-child {
+  align-items: center;
+}
+
+body.app-shell-user.practice-live-focus #practiceSessionModal #aiInterviewerSection .grid {
+  gap: 0.5rem !important;
+}
+
+@media (min-width: 1280px) {
+  body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-body > .grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(320px, 0.75fr);
+  }
+}
+
+@media (max-width: 1279px) {
+  body.app-shell-user.practice-live-focus #practiceSessionModal:not(.hidden) {
+    overflow-y: auto;
+  }
+
+  body.app-shell-user.practice-live-focus #practiceSessionModal .practice-session-panel {
+    height: auto;
+    min-height: 100dvh;
+  }
+}
+
 #sidebar {
   border-color: var(--ip-border);
   background:

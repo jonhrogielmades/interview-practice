@@ -146,6 +146,61 @@ const initializePageLoader = () => {
 
 initializePageLoader();
 
+const initializeUserModalHeaderVisibility = () => {
+    if (!document.body.classList.contains('app-shell-user')) {
+        return;
+    }
+
+    let updateQueued = false;
+
+    const isVisibleModal = (element) => {
+        if (!(element instanceof HTMLElement)) {
+            return false;
+        }
+
+        if (element.hidden || element.getAttribute('aria-hidden') === 'true' || element.classList.contains('hidden')) {
+            return false;
+        }
+
+        const style = window.getComputedStyle(element);
+
+        return style.display !== 'none' && style.visibility !== 'hidden';
+    };
+
+    const updateHeaderState = () => {
+        updateQueued = false;
+
+        const hasOpenModal = Array.from(document.querySelectorAll('[aria-modal="true"], .modal'))
+            .some(isVisibleModal);
+
+        document.body.classList.toggle('user-modal-open', hasOpenModal);
+    };
+
+    const queueUpdate = () => {
+        if (updateQueued) {
+            return;
+        }
+
+        updateQueued = true;
+        window.requestAnimationFrame(updateHeaderState);
+    };
+
+    const observer = new MutationObserver(queueUpdate);
+
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['aria-hidden', 'class', 'hidden', 'style'],
+        childList: true,
+        subtree: true,
+    });
+
+    document.addEventListener('click', queueUpdate, true);
+    document.addEventListener('keydown', queueUpdate, true);
+    window.addEventListener('pageshow', queueUpdate);
+
+    queueUpdate();
+};
+
 const initializeRevealMotion = () => {
     const revealElements = Array.from(document.querySelectorAll('[data-reveal]'));
 
@@ -206,6 +261,7 @@ const scheduleBackgroundTask = (task, errorLabel) => {
 
 // Initialize components on DOM ready
 document.addEventListener('DOMContentLoaded', () => {
+    initializeUserModalHeaderVisibility();
     initializeRevealMotion();
 
     if (window.__INTERVIEW_WORKSPACE_ROUTES__) {

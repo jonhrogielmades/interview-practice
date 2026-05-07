@@ -84,7 +84,9 @@ export function initPractice() {
         documentAnalysis: null,
         answerVersionsByQuestionIndex: {},
         currentHabitSnapshot: null,
-        versionCompareVisible: false
+        versionCompareVisible: false,
+        practiceFocusActive: false,
+        practiceBrowserFullscreenActive: false
     };
 
     const VOICE_AUTO_SUBMIT_DELAY_MS = 2600;
@@ -1183,6 +1185,109 @@ export function initPractice() {
         document.body.dataset.practiceModalCount = String(activeModalCount);
     }
 
+    function closeMobileSidebarForFocus() {
+        try {
+            const sidebarStore = window.Alpine?.store?.("sidebar");
+
+            if (sidebarStore) {
+                sidebarStore.setMobileOpen?.(false);
+                sidebarStore.isHovered = false;
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function requestPracticeBrowserFullscreen() {
+        if (!document.fullscreenEnabled || document.fullscreenElement || typeof document.documentElement.requestFullscreen !== "function") {
+            return;
+        }
+
+        try {
+            const fullscreenRequest = document.documentElement.requestFullscreen();
+
+            if (fullscreenRequest && typeof fullscreenRequest.then === "function") {
+                fullscreenRequest
+                    .then(() => {
+                        state.practiceBrowserFullscreenActive = true;
+
+                        if (!state.practiceFocusActive) {
+                            exitPracticeBrowserFullscreen();
+                        }
+                    })
+                    .catch(() => {
+                        state.practiceBrowserFullscreenActive = false;
+                    });
+                return;
+            }
+
+            state.practiceBrowserFullscreenActive = true;
+        } catch (error) {
+            state.practiceBrowserFullscreenActive = false;
+        }
+    }
+
+    function exitPracticeBrowserFullscreen() {
+        if (!state.practiceBrowserFullscreenActive) {
+            return;
+        }
+
+        state.practiceBrowserFullscreenActive = false;
+
+        if (!document.fullscreenElement || typeof document.exitFullscreen !== "function") {
+            return;
+        }
+
+        try {
+            const exitRequest = document.exitFullscreen();
+
+            if (exitRequest && typeof exitRequest.catch === "function") {
+                exitRequest.catch(() => {});
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    function enterPracticeFocusMode({ requestBrowserFullscreen = true } = {}) {
+        if (state.practiceFocusActive) {
+            if (requestBrowserFullscreen) {
+                requestPracticeBrowserFullscreen();
+            }
+
+            return;
+        }
+
+        state.practiceFocusActive = true;
+        document.documentElement.classList.add("practice-live-focus");
+        document.body.classList.add("practice-live-focus", "user-modal-open");
+        closeMobileSidebarForFocus();
+        lockBodyScroll();
+
+        if (requestBrowserFullscreen) {
+            requestPracticeBrowserFullscreen();
+        }
+    }
+
+    function exitPracticeFocusMode({ exitBrowserFullscreen = true } = {}) {
+        if (!state.practiceFocusActive) {
+            if (exitBrowserFullscreen) {
+                exitPracticeBrowserFullscreen();
+            }
+
+            return;
+        }
+
+        state.practiceFocusActive = false;
+        document.documentElement.classList.remove("practice-live-focus");
+        document.body.classList.remove("practice-live-focus", "user-modal-open");
+        unlockBodyScroll();
+
+        if (exitBrowserFullscreen) {
+            exitPracticeBrowserFullscreen();
+        }
+    }
+
     function setPracticeModalStateTag(text, tone = "neutral") {
         const tones = {
             neutral: "inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-800 dark:text-gray-300",
@@ -1495,9 +1600,9 @@ export function initPractice() {
             elements.practiceSessionModal.setAttribute("aria-hidden", "false");
         }
 
+        enterPracticeFocusMode();
         resumeTimerIfNeeded();
         updatePracticeModalSummary();
-        elements.practiceSessionModal.scrollIntoView({ behavior: "smooth", block: "start" });
 
         if (playOpening) {
             const introductionStarted = playOpeningIntroductionIfNeeded({
@@ -1612,6 +1717,7 @@ export function initPractice() {
 
         elements.practiceSessionModal.classList.add("hidden");
         elements.practiceSessionModal.setAttribute("aria-hidden", "true");
+        exitPracticeFocusMode();
 
         updatePracticeModalSummary();
 
@@ -2809,6 +2915,8 @@ export function initPractice() {
             showMessage("warning", "Generate a question set before entering practice.");
             return false;
         }
+
+        enterPracticeFocusMode();
 
         if (shouldDeliverInterviewerWelcome()) {
             playOpeningIntroductionIfNeeded({
@@ -5773,6 +5881,12 @@ export function initPractice() {
 
     elements.practiceQuestionAgentModalBackdrop?.addEventListener("click", () => {
         closeQuestionAgentModal({ returnFocus: false });
+    });
+
+    document.addEventListener("fullscreenchange", () => {
+        if (!document.fullscreenElement) {
+            state.practiceBrowserFullscreenActive = false;
+        }
     });
 
     window.addEventListener("keydown", (event) => {

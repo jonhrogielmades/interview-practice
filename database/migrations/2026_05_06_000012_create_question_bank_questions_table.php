@@ -1,6 +1,6 @@
 <?php
 
-use App\Support\InterviewPracticeCatalog;
+use App\Support\InterviewQuestionBankDataset;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -31,21 +31,12 @@ return new class extends Migration
         $now = now();
         $rows = [];
 
-        foreach (InterviewPracticeCatalog::practiceQuestionBank() as $categoryId => $category) {
-            foreach (($category['questions'] ?? []) as $index => $question) {
-                $rows[] = [
-                    'category_id' => $categoryId,
-                    'provider_id' => 'local',
-                    'provider_label' => 'Local PH coach',
-                    'source_type' => 'local',
-                    'question' => $question,
-                    'guidance' => null,
-                    'is_active' => true,
-                    'sort_order' => $index + 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ];
-            }
+        foreach (InterviewQuestionBankDataset::seedRows() as $row) {
+            $rows[] = [
+                ...$row,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ];
         }
 
         if ($rows !== []) {

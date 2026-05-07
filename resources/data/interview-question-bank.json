@@ -1,0 +1,406 @@
+{
+  "version": "2026-05-07",
+  "locale": "Philippines",
+  "categories": {
+    "job": {
+      "name": "Job Interview",
+      "description": "Philippine hiring questions for fresh graduates, career shifters, and office or remote roles.",
+      "fieldLabel": "Target role",
+      "fieldPlaceholder": "Example: Customer Service Representative",
+      "fieldNeedPlaceholder": "Example: I want entry-level questions for a BPO or office role where I can highlight communication, teamwork, and internship experience.",
+      "fieldSuggestions": ["Customer Service Representative", "Administrative Assistant", "Virtual Assistant", "Sales Associate"],
+      "keywords": ["ojt", "experience", "skills", "responsibility", "results", "teamwork"],
+      "localFocus": [
+        "Use examples from OJT, internships, student leadership, freelance work, barangay activities, or family responsibilities when relevant.",
+        "Keep the tone respectful, direct, and professional."
+      ],
+      "quickPrompts": [
+        "Give me 3 Philippine-style follow-up questions for this category.",
+        "Show me a strong sample answer for a Philippine interviewer.",
+        "What mistakes should Filipino applicants avoid in this category?"
+      ],
+      "questions": [
+        {
+          "question": "Tell me about yourself and how your background in the Philippines prepared you for this role.",
+          "guidance": "Listen for a concise profile, relevant strengths, and a clear link to the target role."
+        },
+        {
+          "question": "What skills from your OJT, internship, or part-time work can you bring to our company?",
+          "guidance": "Look for transferable skills backed by one real school, OJT, or work example."
+        },
+        {
+          "question": "Describe a challenge you handled in school, work, or your community and how you solved it.",
+          "guidance": "Expect a structured situation, action, result, and lesson learned."
+        },
+        {
+          "question": "Why do you want to work for our company in the Philippines?",
+          "guidance": "The answer should connect the applicant's goals to the company, role, and local context."
+        },
+        {
+          "question": "How do you see your career growing in the Philippine job market over the next five years?",
+          "guidance": "Look for realistic growth, willingness to learn, and commitment to professional development."
+        },
+        {
+          "question": "What is your greatest strength, and how would it help you succeed in this position?",
+          "guidance": "A strong answer names one strength, proves it with evidence, and ties it to job performance."
+        },
+        {
+          "question": "Tell me about a time you had to work with a difficult classmate, teammate, or coworker.",
+          "guidance": "Listen for respectful conflict handling, communication, and accountability."
+        },
+        {
+          "question": "How do you handle pressure when deadlines, customers, or supervisors need quick results?",
+          "guidance": "Expect prioritization, calm communication, and a concrete pressure example."
+        },
+        {
+          "question": "What do you know about this role, and which daily responsibilities are you ready to handle?",
+          "guidance": "The candidate should show role research and practical readiness for common tasks."
+        },
+        {
+          "question": "How would your classmates, OJT supervisor, or previous manager describe your work attitude?",
+          "guidance": "Look for professional traits supported by observed behavior."
+        },
+        {
+          "question": "Describe a time you received criticism and used it to improve your work.",
+          "guidance": "A good answer shows openness to feedback, specific change, and improved outcome."
+        },
+        {
+          "question": "How do you organize your tasks when you have school, family, and work responsibilities at the same time?",
+          "guidance": "Listen for time management habits that fit early-career realities."
+        },
+        {
+          "question": "What achievement are you proud of, and what does it say about your work ethic?",
+          "guidance": "The achievement should reveal discipline, initiative, or persistence."
+        },
+        {
+          "question": "Why should we hire you over other applicants with similar qualifications?",
+          "guidance": "Expect a confident but respectful summary of fit, strengths, and contribution."
+        },
+        {
+          "question": "How do you build trust with customers, teammates, or supervisors?",
+          "guidance": "Look for reliability, clear communication, and follow-through."
+        },
+        {
+          "question": "Tell me about a time you learned a new tool, process, or skill quickly.",
+          "guidance": "A strong answer proves adaptability and self-directed learning."
+        },
+        {
+          "question": "How would you respond if you made a mistake at work?",
+          "guidance": "Listen for honesty, ownership, corrective action, and prevention."
+        },
+        {
+          "question": "What kind of work environment helps you perform at your best?",
+          "guidance": "The answer should stay professional and show flexibility."
+        },
+        {
+          "question": "How do you communicate when you do not understand an instruction from a supervisor?",
+          "guidance": "Expect respectful clarification, active listening, and confirmation of next steps."
+        },
+        {
+          "question": "What salary or growth expectations do you have for an entry-level role in the Philippines?",
+          "guidance": "Look for professionalism, realistic expectations, and openness to discussing total growth."
+        }
+      ]
+    },
+    "scholarship": {
+      "name": "Scholarship Interview",
+      "description": "Philippine scholarship questions about academic goals, financial need, service, and future contribution.",
+      "fieldLabel": "Target study field",
+      "fieldPlaceholder": "Example: Nursing",
+      "fieldNeedPlaceholder": "Example: I need scholarship questions that connect my chosen field to financial need, service, discipline, and long-term goals.",
+      "fieldSuggestions": ["Nursing", "Education", "Information Technology", "Accountancy"],
+      "keywords": ["goals", "leadership", "service", "achievement", "family", "community"],
+      "localFocus": [
+        "Highlight academic discipline, service, leadership, and practical impact on your family or community.",
+        "Use specific examples from school organizations, outreach, peer tutoring, or local projects."
+      ],
+      "quickPrompts": [
+        "Give me 3 scholarship interview questions used in the Philippines.",
+        "How can I sound sincere without sounding rehearsed?",
+        "What should I mention about family and financial need professionally?"
+      ],
+      "questions": [
+        {
+          "question": "Why should you be chosen for this scholarship in the Philippines?",
+          "guidance": "Listen for merit, need, character, and a practical plan for using the opportunity well."
+        },
+        {
+          "question": "How will this scholarship help your studies, family, and long-term goals?",
+          "guidance": "A strong answer connects financial support to academic focus and future contribution."
+        },
+        {
+          "question": "What achievement best shows your discipline and leadership?",
+          "guidance": "Expect a specific achievement with personal effort and impact."
+        },
+        {
+          "question": "How do you balance academics, home responsibilities, and community involvement?",
+          "guidance": "Look for concrete routines, prioritization, and maturity."
+        },
+        {
+          "question": "How will you use your education to help your family or community in the future?",
+          "guidance": "The candidate should state a realistic service or career contribution."
+        },
+        {
+          "question": "Tell us about your current financial situation without exaggerating or sounding entitled.",
+          "guidance": "Listen for honesty, dignity, and a clear explanation of need."
+        },
+        {
+          "question": "What subject or academic area challenges you the most, and how are you improving in it?",
+          "guidance": "A good answer shows self-awareness and active improvement habits."
+        },
+        {
+          "question": "Describe a time you served others through school, church, barangay, or community work.",
+          "guidance": "Look for service motivation, specific action, and reflection."
+        },
+        {
+          "question": "How do you plan to maintain your grades if you receive this scholarship?",
+          "guidance": "Expect a practical study plan, support system, and accountability."
+        },
+        {
+          "question": "What leadership role taught you the most about responsibility?",
+          "guidance": "The answer should show responsibility, decision-making, and humility."
+        },
+        {
+          "question": "If you are not selected, how will you continue pursuing your education?",
+          "guidance": "Listen for resilience and backup plans without resentment."
+        },
+        {
+          "question": "What values guide you when you make difficult decisions as a student?",
+          "guidance": "Expect values tied to behavior, not just a list of traits."
+        },
+        {
+          "question": "How would your teachers or advisers describe your potential?",
+          "guidance": "Look for evidence of academic promise, character, and reliability."
+        },
+        {
+          "question": "What problem in your community do you hope your future career can help address?",
+          "guidance": "The answer should connect field of study to a realistic local need."
+        },
+        {
+          "question": "Tell us about a setback in your education and how you recovered from it.",
+          "guidance": "Listen for resilience, ownership, and a specific recovery strategy."
+        },
+        {
+          "question": "How do you avoid distractions and stay focused on your academic goals?",
+          "guidance": "A strong answer names habits, boundaries, and motivation."
+        },
+        {
+          "question": "What makes your chosen course important to your future service or career plans?",
+          "guidance": "Expect a clear course-to-career connection with service-minded purpose."
+        },
+        {
+          "question": "How have you helped a classmate, sibling, or peer learn something difficult?",
+          "guidance": "Look for patience, communication, and generosity."
+        },
+        {
+          "question": "What will you do if scholarship pressure becomes stressful?",
+          "guidance": "The candidate should mention healthy coping, communication, and continued discipline."
+        },
+        {
+          "question": "What promise can you make to the scholarship committee if they invest in you?",
+          "guidance": "A strong answer is sincere, specific, and realistic."
+        }
+      ]
+    },
+    "admission": {
+      "name": "College Admission",
+      "description": "Philippine college and university admission questions focused on motivation, readiness, and program fit.",
+      "fieldLabel": "Target course",
+      "fieldPlaceholder": "Example: BS Information Technology",
+      "fieldNeedPlaceholder": "Example: I want admission questions that help me explain why this course fits my strengths, interests, and future plans.",
+      "fieldSuggestions": ["BS Information Technology", "BS Nursing", "BS Accountancy", "BS Education"],
+      "keywords": ["motivation", "program", "interest", "future", "readiness", "education"],
+      "localFocus": [
+        "Connect your course choice to realistic goals, family support, and contribution to your community or industry.",
+        "Show readiness for college-level work with concrete habits and examples."
+      ],
+      "quickPrompts": [
+        "Give me 3 Philippine college admission follow-up questions.",
+        "How should I explain why I chose this course?",
+        "What answer structure works best for admission interviews?"
+      ],
+      "questions": [
+        {
+          "question": "Why do you want to take this program at a Philippine college or university?",
+          "guidance": "Listen for sincere motivation, program fit, and awareness of local opportunities."
+        },
+        {
+          "question": "What experiences in senior high school or your community prepared you for this course?",
+          "guidance": "The answer should connect past activities to course readiness."
+        },
+        {
+          "question": "How do you handle academic pressure, deadlines, and responsibilities at home?",
+          "guidance": "Expect time management, support systems, and practical study habits."
+        },
+        {
+          "question": "What makes you a strong candidate for this program?",
+          "guidance": "Look for strengths that match the course and evidence from school or activities."
+        },
+        {
+          "question": "What goals do you want to achieve after graduating in the Philippines?",
+          "guidance": "A strong answer states realistic career or service goals."
+        },
+        {
+          "question": "What subject in senior high school influenced your course choice the most?",
+          "guidance": "Listen for a clear academic interest and reflection."
+        },
+        {
+          "question": "How did your strand, school projects, or extracurricular activities shape your readiness for college?",
+          "guidance": "Expect a link between prior preparation and college demands."
+        },
+        {
+          "question": "What do you expect to be difficult about this course, and how will you prepare for it?",
+          "guidance": "A good answer shows realistic expectations and preparation."
+        },
+        {
+          "question": "How would you contribute to the campus community if admitted?",
+          "guidance": "Look for involvement, service, and healthy collaboration."
+        },
+        {
+          "question": "Tell us about a time you had to study independently or catch up on a difficult lesson.",
+          "guidance": "Listen for initiative, discipline, and resourcefulness."
+        },
+        {
+          "question": "What role does your family or support system play in your college plans?",
+          "guidance": "The answer should mention support respectfully while showing personal responsibility."
+        },
+        {
+          "question": "Why did you choose this school instead of another college or university?",
+          "guidance": "Expect specific reasons such as program quality, values, location, or opportunities."
+        },
+        {
+          "question": "How do you make decisions when your interests and practical career needs do not fully match?",
+          "guidance": "Look for maturity, balance, and thoughtful decision-making."
+        },
+        {
+          "question": "What personal habit do you need to improve before starting college?",
+          "guidance": "A strong answer names one habit and a concrete improvement plan."
+        },
+        {
+          "question": "Describe a group project that taught you something about teamwork.",
+          "guidance": "Listen for collaboration, role clarity, and lessons learned."
+        },
+        {
+          "question": "How would you respond if your first semester grades are lower than expected?",
+          "guidance": "Expect resilience, help-seeking, and adjustment of study methods."
+        },
+        {
+          "question": "What values do you want to carry with you as a college student?",
+          "guidance": "The answer should tie values to daily academic behavior."
+        },
+        {
+          "question": "How do you plan to manage transportation, allowance, schedule, or other practical college challenges?",
+          "guidance": "Look for realistic planning around common Philippine student concerns."
+        },
+        {
+          "question": "What current issue in your chosen field interests you, and why?",
+          "guidance": "A good answer shows curiosity and basic awareness of the field."
+        },
+        {
+          "question": "If admitted, what will you do in your first month to adjust successfully?",
+          "guidance": "Expect an action plan for study habits, relationships, and campus resources."
+        }
+      ]
+    },
+    "it": {
+      "name": "IT / Programming",
+      "description": "Philippine tech interview questions about coding, capstone work, debugging, and teamwork.",
+      "fieldLabel": "Target IT role",
+      "fieldPlaceholder": "Example: Junior Laravel Developer",
+      "fieldNeedPlaceholder": "Example: I want junior developer questions that focus on APIs, debugging, teamwork, and explaining my capstone project clearly.",
+      "fieldSuggestions": ["Junior Web Developer", "QA Tester", "Technical Support Specialist", "Junior Data Analyst"],
+      "keywords": ["project", "problem-solving", "technology", "teamwork", "capstone", "debugging"],
+      "localFocus": [
+        "Use examples from capstone projects, thesis work, internships, bootcamps, client work, or hackathons.",
+        "Emphasize problem-solving, documentation, teamwork, and adaptability."
+      ],
+      "quickPrompts": [
+        "Give me 3 Philippine IT interview follow-up questions.",
+        "How can I explain my capstone project better?",
+        "What technical mistakes should I avoid in an entry-level IT interview?"
+      ],
+      "questions": [
+        {
+          "question": "Tell me about a capstone, freelance, or school project you built and your role in it.",
+          "guidance": "Listen for project purpose, owned responsibilities, tools used, and measurable result."
+        },
+        {
+          "question": "How do you troubleshoot programming bugs when your deadline is near?",
+          "guidance": "Expect a calm debugging process, prioritization, and communication."
+        },
+        {
+          "question": "Which programming languages, frameworks, or tools are you most comfortable using, and why?",
+          "guidance": "The answer should show practical experience, not just a list of technologies."
+        },
+        {
+          "question": "How do you work with a team during software development or group projects?",
+          "guidance": "Look for version control, task coordination, documentation, and respectful communication."
+        },
+        {
+          "question": "Why do you want to build your career in the IT industry in the Philippines?",
+          "guidance": "A strong answer connects motivation, growth mindset, and local industry opportunity."
+        },
+        {
+          "question": "Explain your capstone project to a non-technical interviewer in two minutes.",
+          "guidance": "Listen for plain language, user value, and clear scope."
+        },
+        {
+          "question": "What was the hardest technical problem you solved, and how did you approach it?",
+          "guidance": "Expect problem definition, steps taken, tools used, and outcome."
+        },
+        {
+          "question": "How do you decide whether to ask for help or keep debugging on your own?",
+          "guidance": "Look for independence balanced with good time management and collaboration."
+        },
+        {
+          "question": "What is your experience with Git, GitHub, or other version control workflows?",
+          "guidance": "A good answer includes branches, commits, collaboration, or conflict handling."
+        },
+        {
+          "question": "How would you test a feature before sending it to a teacher, client, or supervisor?",
+          "guidance": "Listen for manual checks, edge cases, user flow testing, and documentation."
+        },
+        {
+          "question": "Describe a time your code did not work during a demo or presentation.",
+          "guidance": "Expect honesty, recovery steps, and lessons learned."
+        },
+        {
+          "question": "How do you keep learning new technologies after class or work hours?",
+          "guidance": "Look for realistic self-study habits, practice projects, and reliable resources."
+        },
+        {
+          "question": "What is the difference between writing code that works and writing code that is maintainable?",
+          "guidance": "The answer should mention readability, structure, testing, and future changes."
+        },
+        {
+          "question": "How do you communicate technical limitations to a non-technical stakeholder?",
+          "guidance": "Listen for clear explanation, options, tradeoffs, and professionalism."
+        },
+        {
+          "question": "What database or data handling experience do you have from school or projects?",
+          "guidance": "Expect practical examples involving tables, relationships, queries, or validation."
+        },
+        {
+          "question": "How would you handle a teammate who is not contributing to a programming project?",
+          "guidance": "Look for respectful communication, documentation, and escalation when needed."
+        },
+        {
+          "question": "What security or privacy concern should a junior developer remember when building web apps?",
+          "guidance": "A strong answer names common risks such as passwords, validation, permissions, or data exposure."
+        },
+        {
+          "question": "Tell me about an API, library, or package you used and why you chose it.",
+          "guidance": "Listen for selection reasoning, integration steps, and what the candidate learned."
+        },
+        {
+          "question": "How would you prepare before joining a remote or hybrid development team?",
+          "guidance": "Expect communication habits, tools, schedule discipline, and documentation."
+        },
+        {
+          "question": "What kind of junior IT role fits your current skills best, and what skill are you still improving?",
+          "guidance": "Look for honest self-assessment and a focused learning plan."
+        }
+      ]
+    }
+  }
+}

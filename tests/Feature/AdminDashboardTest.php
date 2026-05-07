@@ -138,7 +138,10 @@ test('admin sidebar shows the admin dashboard link', function () {
         ->assertSeeText('Admin Dashboard')
         ->assertSee('href="/admin/dashboard"', false)
         ->assertSee('href="/admin/users"', false)
-        ->assertSee('href="/admin/question-bank"', false)
+        ->assertSee('href="/admin/question-bank?category=job"', false)
+        ->assertSee('href="/admin/question-bank?category=scholarship"', false)
+        ->assertSee('href="/admin/question-bank?category=admission"', false)
+        ->assertSee('href="/admin/question-bank?category=it"', false)
         ->assertSee('href="/admin/announcements"', false)
         ->assertSee('href="/admin/apis"', false)
         ->assertSee('href="/admin/monitoring"', false);
@@ -188,6 +191,95 @@ test('admins can open the dedicated question bank page', function () {
         ->assertSeeText('Add question')
         ->assertSeeText('Local PH coach')
         ->assertSeeText('Announcement Templates');
+});
+
+test('admins can filter the question bank by sidebar category links', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    QuestionBankQuestion::query()->create([
+        'category_id' => 'it',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'How did you debug your Laravel capstone under deadline pressure?',
+        'is_active' => true,
+        'sort_order' => 0,
+    ]);
+
+    QuestionBankQuestion::query()->create([
+        'category_id' => 'scholarship',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'How will this scholarship help your family and community?',
+        'is_active' => true,
+        'sort_order' => 20,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.question-bank', ['category' => 'it']))
+        ->assertOk()
+        ->assertSeeText('IT / Programming Question Bank')
+        ->assertSee('href="/admin/question-bank?category=job"', false)
+        ->assertSee('href="/admin/question-bank?category=scholarship"', false)
+        ->assertSee('href="/admin/question-bank?category=admission"', false)
+        ->assertSee('href="/admin/question-bank?category=it"', false)
+        ->assertSeeText('How did you debug your Laravel capstone under deadline pressure?')
+        ->assertDontSeeText('How will this scholarship help your family and community?');
+});
+
+test('admins can search question bank rows and choose the visible list size', function () {
+    $admin = User::factory()->admin()->create([
+        'email' => 'admin@example.com',
+    ]);
+
+    QuestionBankQuestion::query()->create([
+        'category_id' => 'it',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'CodexSearch architecture: how did you choose your Laravel modules?',
+        'is_active' => true,
+        'sort_order' => 0,
+    ]);
+
+    QuestionBankQuestion::query()->create([
+        'category_id' => 'it',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'CodexSearch debugging: how did you resolve your hardest bug?',
+        'is_active' => true,
+        'sort_order' => 1,
+    ]);
+
+    QuestionBankQuestion::query()->create([
+        'category_id' => 'it',
+        'provider_id' => 'local',
+        'provider_label' => 'Local PH coach',
+        'source_type' => 'local',
+        'question' => 'How do you work with a software team?',
+        'is_active' => true,
+        'sort_order' => 3,
+    ]);
+
+    $this->actingAs($admin)
+        ->get(route('admin.question-bank', [
+            'category' => 'it',
+            'search' => 'codexsearch',
+            'per_page' => 1,
+        ]))
+        ->assertOk()
+        ->assertSee('name="search"', false)
+        ->assertSee('value="codexsearch"', false)
+        ->assertSee('name="per_page"', false)
+        ->assertSee('value="1" selected', false)
+        ->assertSeeText('Showing 1 of 2 matching questions')
+        ->assertSee('x-model.debounce.100ms="questionSearch"', false)
+        ->assertSee('data-question-row', false)
+        ->assertSeeText('CodexSearch architecture: how did you choose your Laravel modules?');
 });
 
 test('admins can open the dedicated announcements page', function () {

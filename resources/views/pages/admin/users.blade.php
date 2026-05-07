@@ -6,7 +6,10 @@
     <div
         class="space-y-6"
         x-data="{ editingUserId: @js(old('edit_user_id') ? (string) old('edit_user_id') : null) }"
-        x-effect="document.body.classList.toggle('overflow-hidden', editingUserId !== null)"
+        x-effect="
+            document.body.classList.toggle('overflow-hidden', editingUserId !== null);
+            document.documentElement.classList.toggle('overflow-hidden', editingUserId !== null);
+        "
         @keydown.escape.window="editingUserId = null"
     >
         @if (session('status'))
@@ -227,13 +230,13 @@
                 x-show="editingUserId === @js((string) $user['id'])"
                 x-cloak
                 x-transition.opacity
-                class="fixed bottom-0 left-0 right-0 top-0 z-[99999] flex items-center justify-center overflow-y-auto p-4 sm:p-6"
+                class="fixed bottom-0 left-0 right-0 top-0 z-[99999] flex h-[100dvh] items-center justify-center overflow-y-auto overscroll-contain p-4 sm:p-6"
                 :style="{ left: window.innerWidth >= 1280 ? (($store.sidebar.isExpanded || $store.sidebar.isHovered) ? '290px' : '90px') : '0px' }"
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="edit-profile-title-{{ $user['id'] }}"
             >
-                <div class="absolute inset-0 bg-gray-950/50 backdrop-blur-sm" @click="editingUserId = null"></div>
+                <div class="absolute inset-0 min-h-full bg-gray-950/55 backdrop-blur-[18px]" @click="editingUserId = null"></div>
 
                 <section
                     id="user-form-{{ $user['id'] }}"

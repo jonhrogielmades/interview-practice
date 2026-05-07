@@ -55,6 +55,39 @@
         ],
     ];
 
+    $systemFlow = [
+        [
+            'step' => '01',
+            'title' => 'Account access',
+            'body' => 'The user signs in or creates an account so practice sessions, feedback, and progress can be saved.',
+        ],
+        [
+            'step' => '02',
+            'title' => 'Session setup',
+            'body' => 'The user chooses category, question count, pacing, coaching focus, and preferred answer mode.',
+        ],
+        [
+            'step' => '03',
+            'title' => 'Question preparation',
+            'body' => 'The system loads or generates interview prompts that match the selected track and setup.',
+        ],
+        [
+            'step' => '04',
+            'title' => 'Mock interview',
+            'body' => 'The user answers each prompt by voice, text, or hybrid response inside the practice workspace.',
+        ],
+        [
+            'step' => '05',
+            'title' => 'AI feedback',
+            'body' => 'The system reviews answers for clarity, relevance, grammar, professionalism, and next-step coaching.',
+        ],
+        [
+            'step' => '06',
+            'title' => 'Review and progress',
+            'body' => 'Saved results feed Session Review, Feedback Center, Category Insights, and Progress tracking.',
+        ],
+    ];
+
     $onboardingSteps = [
         [
             'label' => 'Session Setup',
@@ -277,175 +310,226 @@
             class="fixed inset-0 z-[100000] bg-gray-900/35 backdrop-blur-sm"></div>
 
         <div x-show="$store.dashboardOnboarding.active" x-cloak x-transition.opacity
-            class="fixed inset-x-4 bottom-4 z-[100002] sm:left-auto sm:right-4"
-            :class="$store.dashboardOnboarding.currentStep()?.form || ($store.dashboardOnboarding.currentStep()?.cards || []).length > 0
-                ? 'w-[min(480px,calc(100vw-2rem))]'
-                : 'w-[min(360px,calc(100vw-2rem))]'">
-            <div
-                class="shadow-theme-xl max-h-[calc(100vh-2rem)] w-full overflow-y-auto rounded-[24px] border border-white/70 bg-white/95 p-4 backdrop-blur-xl dark:border-gray-700/70 dark:bg-gray-900/95 sm:p-5">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <span
-                            class="bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-300 inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
-                                stroke="currentColor" class="h-3.5 w-3.5">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
-                            </svg>
-                            <span x-text="$store.dashboardOnboarding.currentStep()?.label"></span>
-                        </span>
-
-                        <h2 class="mt-3 text-lg leading-7 font-semibold text-gray-900 dark:text-white"
-                            x-text="$store.dashboardOnboarding.currentStep()?.title"></h2>
-                    </div>
-
-                    <button type="button" @click="$store.dashboardOnboarding.finish()"
-                        class="rounded-full border border-gray-200 px-3 py-1.5 text-[12px] font-medium text-gray-500 transition hover:border-gray-300 hover:text-gray-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:text-white">
-                        Skip
-                    </button>
-                </div>
-
-                <p class="mt-3 text-[13px] leading-6 text-gray-600 dark:text-gray-300"
-                    x-text="$store.dashboardOnboarding.currentStep()?.body"></p>
-
-                <div x-show="$store.dashboardOnboarding.currentStep()?.form" x-cloak class="mt-4">
-                    <div
-                        class="rounded-[22px] border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-blue-light-50/60 p-3.5 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-gray-900 dark:to-blue-light-500/10">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <p class="text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-500"
-                                    x-text="$store.dashboardOnboarding.currentStep()?.form?.eyebrow"></p>
-                                <p class="mt-2 text-[13px] font-semibold leading-5 text-gray-900 dark:text-white"
-                                    x-text="$store.dashboardOnboarding.currentStep()?.form?.title"></p>
-                            </div>
+            class="fixed bottom-0 right-0 top-0 z-[100002] flex items-center justify-center p-3 sm:p-6"
+            :style="{ left: window.innerWidth >= 1280 ? (($store.sidebar.isExpanded || $store.sidebar.isHovered) ? '290px' : '90px') : '0px' }"
+            role="dialog" aria-modal="true" aria-labelledby="dashboard-onboarding-title">
+            <section @click.stop x-transition.scale.origin.center
+                class="shadow-theme-xl max-h-[calc(100dvh-2rem)] w-full max-w-5xl overflow-y-auto rounded-lg border border-white/75 bg-white/95 backdrop-blur-2xl dark:border-gray-700/80 dark:bg-gray-900/95 lg:overflow-hidden">
+                <div class="grid min-h-0 lg:max-h-[calc(100dvh-2rem)] lg:grid-cols-[0.95fr_1.2fr]">
+                    <aside class="custom-scrollbar border-b border-gray-200 bg-[linear-gradient(135deg,rgba(20,120,100,0.1),rgba(255,255,255,0.92),rgba(76,99,230,0.08))] p-5 dark:border-gray-800 dark:bg-[linear-gradient(135deg,rgba(93,187,158,0.12),rgba(15,23,42,0.96),rgba(76,99,230,0.1))] sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:border-b-0 lg:border-r">
+                        <div class="flex items-center justify-between gap-3">
+                            <span
+                                class="inline-flex items-center gap-2 rounded-lg border border-brand-100 bg-white/80 px-3 py-1.5 text-[11px] font-semibold uppercase text-brand-600 shadow-theme-xs dark:border-brand-500/20 dark:bg-white/5 dark:text-brand-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                    stroke-width="1.7" stroke="currentColor" class="h-3.5 w-3.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                </svg>
+                                User Onboarding
+                            </span>
 
                             <span
-                                class="rounded-full border border-brand-200 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-brand-500 dark:border-brand-500/30 dark:bg-gray-900/80 dark:text-brand-300">
-                                Form
-                            </span>
+                                class="rounded-lg border border-white/70 bg-white/75 px-3 py-1.5 text-[11px] font-semibold text-gray-500 shadow-theme-xs dark:border-white/10 dark:bg-white/5 dark:text-gray-300"
+                                x-text="$store.dashboardOnboarding.stepLabel()"></span>
                         </div>
 
-                        <div class="mt-4 space-y-3">
-                            <template
-                                x-for="section in ($store.dashboardOnboarding.currentStep()?.form?.sections || [])"
-                                :key="section.title">
-                                <div
-                                    class="rounded-2xl border border-white/70 bg-white/85 p-3 shadow-theme-xs dark:border-white/10 dark:bg-gray-900/80">
-                                    <p class="text-[11px] font-semibold uppercase tracking-[0.16em] text-gray-400 dark:text-gray-500"
-                                        x-text="section.title"></p>
+                        <p class="mt-5 text-[11px] font-semibold uppercase text-brand-500 dark:text-brand-300"
+                            x-text="$store.dashboardOnboarding.currentStep()?.label"></p>
+                        <h2 id="dashboard-onboarding-title"
+                            class="mt-2 text-2xl font-semibold leading-8 text-gray-950 dark:text-white"
+                            x-text="$store.dashboardOnboarding.currentStep()?.title"></h2>
+                        <p class="mt-3 text-sm leading-7 text-gray-600 dark:text-gray-300"
+                            x-text="$store.dashboardOnboarding.currentStep()?.body"></p>
 
-                                    <div x-show="(section.fields || []).length > 0" class="mt-3 space-y-2.5">
-                                        <template x-for="field in (section.fields || [])"
-                                            :key="`${section.title}-${field.label}`">
-                                            <div>
-                                                <p class="text-[10px] font-medium uppercase tracking-[0.14em] text-gray-400 dark:text-gray-500"
-                                                    x-text="field.label"></p>
+                        <div class="mt-6">
+                            <div class="mb-3 flex items-center justify-between gap-3">
+                                <p class="text-[11px] font-semibold uppercase text-gray-500 dark:text-gray-400">
+                                    System Flow
+                                </p>
+                                <span class="text-[11px] font-medium text-gray-400 dark:text-gray-500">
+                                    End-to-end path
+                                </span>
+                            </div>
 
-                                                <div
-                                                    class="mt-1.5 rounded-xl border border-gray-200 bg-gray-50/90 px-3 py-2.5 dark:border-gray-700 dark:bg-white/5">
-                                                    <div x-show="field.kind !== 'textarea'"
-                                                        class="flex items-center justify-between gap-3">
-                                                        <span class="text-[12px] font-medium text-gray-800 dark:text-gray-100"
-                                                            x-text="field.value"></span>
-                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                            viewBox="0 0 24 24" stroke-width="1.7"
-                                                            stroke="currentColor"
-                                                            class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                                        </svg>
-                                                    </div>
-
-                                                    <p x-show="field.kind === 'textarea'"
-                                                        class="text-[11px] leading-5 text-gray-600 dark:text-gray-300"
-                                                        x-text="field.value"></p>
-                                                </div>
-                                            </div>
-                                        </template>
-                                    </div>
-
-                                    <div x-show="(section.actions || []).length > 0"
-                                        class="mt-3 grid grid-cols-2 gap-2">
-                                        <template x-for="action in (section.actions || [])"
-                                            :key="`${section.title}-${action.label}`">
-                                            <span
-                                                class="inline-flex items-center justify-center rounded-xl px-3 py-2 text-[11px] font-semibold"
-                                                :class="action.tone === 'primary'
-                                                    ? 'bg-brand-500 text-white'
-                                                    : 'border border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300'">
-                                                <span x-text="action.label"></span>
+                            <ol class="space-y-3">
+                                @foreach ($systemFlow as $flow)
+                                    <li class="grid grid-cols-[2.25rem_1fr] gap-3">
+                                        <span
+                                            class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-lg border border-brand-100 bg-white text-[11px] font-semibold text-brand-600 shadow-theme-xs dark:border-brand-500/20 dark:bg-white/5 dark:text-brand-300">
+                                            {{ $flow['step'] }}
+                                        </span>
+                                        <span class="min-w-0">
+                                            <span class="block text-sm font-semibold text-gray-900 dark:text-white">
+                                                {{ $flow['title'] }}
                                             </span>
-                                        </template>
+                                            <span class="mt-1 block text-xs leading-5 text-gray-500 dark:text-gray-400">
+                                                {{ $flow['body'] }}
+                                            </span>
+                                        </span>
+                                    </li>
+                                @endforeach
+                            </ol>
+                        </div>
+                    </aside>
+
+                    <div class="p-5 sm:p-6 lg:min-h-0 lg:overflow-y-auto lg:custom-scrollbar">
+                        <div class="flex items-start justify-between gap-4">
+                            <div>
+                                <p class="text-[11px] font-semibold uppercase text-gray-400 dark:text-gray-500">
+                                    Tutorial focus
+                                </p>
+                                <p class="mt-2 text-base font-semibold text-gray-900 dark:text-white">
+                                    What this step teaches
+                                </p>
+                            </div>
+
+                            <button type="button" @click="$store.dashboardOnboarding.finish()"
+                                class="inline-flex items-center justify-center rounded-lg border border-gray-200 px-3 py-2 text-[12px] font-medium text-gray-500 transition hover:border-gray-300 hover:bg-gray-50 hover:text-gray-700 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600 dark:hover:bg-white/5 dark:hover:text-white">
+                                Skip
+                            </button>
+                        </div>
+
+                        <div x-show="$store.dashboardOnboarding.currentStep()?.form" x-cloak class="mt-5">
+                            <div
+                                class="rounded-lg border border-brand-100 bg-gradient-to-br from-brand-50 via-white to-blue-light-50/60 p-4 dark:border-brand-500/20 dark:from-brand-500/10 dark:via-gray-900 dark:to-blue-light-500/10">
+                                <div class="flex items-start justify-between gap-3">
+                                    <div>
+                                        <p class="text-[10px] font-semibold uppercase text-brand-500"
+                                            x-text="$store.dashboardOnboarding.currentStep()?.form?.eyebrow"></p>
+                                        <p class="mt-2 text-[13px] font-semibold leading-5 text-gray-900 dark:text-white"
+                                            x-text="$store.dashboardOnboarding.currentStep()?.form?.title"></p>
                                     </div>
+
+                                    <span
+                                        class="rounded-lg border border-brand-200 bg-white/80 px-2.5 py-1 text-[10px] font-semibold uppercase text-brand-500 dark:border-brand-500/30 dark:bg-gray-900/80 dark:text-brand-300">
+                                        Form
+                                    </span>
                                 </div>
+
+                                <div class="mt-4 space-y-3">
+                                    <template
+                                        x-for="section in ($store.dashboardOnboarding.currentStep()?.form?.sections || [])"
+                                        :key="section.title">
+                                        <div
+                                            class="rounded-lg border border-white/70 bg-white/85 p-3 shadow-theme-xs dark:border-white/10 dark:bg-gray-900/80">
+                                            <p class="text-[11px] font-semibold uppercase text-gray-400 dark:text-gray-500"
+                                                x-text="section.title"></p>
+
+                                            <div x-show="(section.fields || []).length > 0" class="mt-3 space-y-2.5">
+                                                <template x-for="field in (section.fields || [])"
+                                                    :key="`${section.title}-${field.label}`">
+                                                    <div>
+                                                        <p class="text-[10px] font-medium uppercase text-gray-400 dark:text-gray-500"
+                                                            x-text="field.label"></p>
+
+                                                        <div
+                                                            class="mt-1.5 rounded-lg border border-gray-200 bg-gray-50/90 px-3 py-2.5 dark:border-gray-700 dark:bg-white/5">
+                                                            <div x-show="field.kind !== 'textarea'"
+                                                                class="flex items-center justify-between gap-3">
+                                                                <span class="text-[12px] font-medium text-gray-800 dark:text-gray-100"
+                                                                    x-text="field.value"></span>
+                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                                                    viewBox="0 0 24 24" stroke-width="1.7"
+                                                                    stroke="currentColor"
+                                                                    class="h-3.5 w-3.5 text-gray-400 dark:text-gray-500">
+                                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                                        d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                                                </svg>
+                                                            </div>
+
+                                                            <p x-show="field.kind === 'textarea'"
+                                                                class="text-[11px] leading-5 text-gray-600 dark:text-gray-300"
+                                                                x-text="field.value"></p>
+                                                        </div>
+                                                    </div>
+                                                </template>
+                                            </div>
+
+                                            <div x-show="(section.actions || []).length > 0"
+                                                class="mt-3 grid grid-cols-2 gap-2">
+                                                <template x-for="action in (section.actions || [])"
+                                                    :key="`${section.title}-${action.label}`">
+                                                    <span
+                                                        class="inline-flex items-center justify-center rounded-lg px-3 py-2 text-[11px] font-semibold"
+                                                        :class="action.tone === 'primary'
+                                                            ? 'bg-brand-500 text-white'
+                                                            : 'border border-brand-200 bg-brand-50 text-brand-600 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300'">
+                                                        <span x-text="action.label"></span>
+                                                    </span>
+                                                </template>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div x-show="($store.dashboardOnboarding.currentStep()?.cards || []).length > 0" x-cloak
+                            class="mt-5">
+                            <p class="text-[11px] font-semibold uppercase text-gray-400 dark:text-gray-500">
+                                What's inside
+                            </p>
+
+                            <div class="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <template x-for="card in ($store.dashboardOnboarding.currentStep()?.cards || [])"
+                                    :key="card.eyebrow">
+                                    <article
+                                        class="flex h-full flex-col rounded-lg border border-gray-200 bg-gray-50/80 p-4 transition hover:border-brand-200 hover:bg-white dark:border-gray-700 dark:bg-white/5 dark:hover:border-brand-500/30 dark:hover:bg-white/10">
+                                        <p class="text-[10px] font-semibold uppercase text-brand-500"
+                                            x-text="card.eyebrow"></p>
+                                        <p class="mt-2 text-sm font-semibold leading-5 text-gray-900 dark:text-white"
+                                            x-text="card.title"></p>
+                                        <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400"
+                                            x-text="card.body"></p>
+                                    </article>
+                                </template>
+                            </div>
+                        </div>
+
+                        <div class="mt-6 flex items-center gap-1.5">
+                            <template x-for="(step, index) in $store.dashboardOnboarding.steps" :key="step.target">
+                                <button type="button" @click="$store.dashboardOnboarding.goTo(index)"
+                                    class="h-2 flex-1 rounded-full transition"
+                                    :class="index === $store.dashboardOnboarding.currentStepIndex
+                                        ? 'bg-brand-500'
+                                        : (index < $store.dashboardOnboarding.currentStepIndex
+                                            ? 'bg-brand-200 dark:bg-brand-700'
+                                            : 'bg-gray-200 dark:bg-gray-700')"
+                                    :aria-label="`Go to step ${index + 1}`"></button>
                             </template>
                         </div>
-                    </div>
-                </div>
 
-                <div x-show="($store.dashboardOnboarding.currentStep()?.cards || []).length > 0" x-cloak
-                    class="mt-4">
-                    <p
-                        class="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400 dark:text-gray-500">
-                        What's inside
-                    </p>
+                        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <p class="text-xs font-medium text-gray-500 dark:text-gray-400"
+                                x-text="`${$store.dashboardOnboarding.currentStep()?.label || 'Dashboard'} is part of the complete user practice flow.`"></p>
 
-                    <div class="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
-                        <template x-for="card in ($store.dashboardOnboarding.currentStep()?.cards || [])"
-                            :key="card.eyebrow">
-                            <div
-                                class="flex h-full flex-col rounded-2xl border border-gray-200 bg-gray-50/80 p-3 dark:border-gray-700 dark:bg-white/5">
-                                <p class="text-[10px] font-semibold tracking-[0.18em] text-brand-500 uppercase"
-                                    x-text="card.eyebrow"></p>
-                                <p class="mt-2 text-[12px] font-semibold leading-5 text-gray-900 dark:text-white"
-                                    x-text="card.title"></p>
-                                <p class="mt-1 text-[11px] leading-5 text-gray-500 dark:text-gray-400"
-                                    x-text="card.body"></p>
+                            <div class="grid grid-cols-2 gap-3 sm:min-w-[220px]">
+                                <button type="button" @click="$store.dashboardOnboarding.previous()"
+                                    :disabled="$store.dashboardOnboarding.currentStepIndex === 0"
+                                    class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-3 text-[13px] font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-white/5">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.7" stroke="currentColor" class="h-4 w-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M15.75 19.5 8.25 12l7.5-7.5" />
+                                    </svg>
+                                    Previous
+                                </button>
+
+                                <button type="button" @click="$store.dashboardOnboarding.next()"
+                                    class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-[13px] font-medium text-white transition hover:bg-brand-600">
+                                    <span
+                                        x-text="$store.dashboardOnboarding.currentStepIndex === $store.dashboardOnboarding.steps.length - 1 ? 'Finish' : 'Next'"></span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                                        stroke-width="1.7" stroke="currentColor" class="h-4 w-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                                    </svg>
+                                </button>
                             </div>
-                        </template>
+                        </div>
                     </div>
                 </div>
-
-                <div class="mt-5 flex items-center gap-1.5">
-                    <template x-for="(step, index) in $store.dashboardOnboarding.steps" :key="step.target">
-                        <button type="button" @click="$store.dashboardOnboarding.goTo(index)"
-                            class="h-2 flex-1 rounded-full transition"
-                            :class="index === $store.dashboardOnboarding.currentStepIndex
-                                ? 'bg-brand-500'
-                                : (index < $store.dashboardOnboarding.currentStepIndex
-                                    ? 'bg-brand-200 dark:bg-brand-700'
-                                    : 'bg-gray-200 dark:bg-gray-700')"
-                            :aria-label="`Go to step ${index + 1}`"></button>
-                    </template>
-                </div>
-
-                <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400"
-                        x-text="$store.dashboardOnboarding.stepLabel()"></p>
-
-                    <div class="grid grid-cols-2 gap-3 sm:min-w-[220px]">
-                        <button type="button" @click="$store.dashboardOnboarding.previous()"
-                            :disabled="$store.dashboardOnboarding.currentStepIndex === 0"
-                            class="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 px-4 py-3 text-[13px] font-medium text-gray-700 transition hover:border-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:text-gray-200 dark:hover:border-gray-600 dark:hover:bg-white/5">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
-                                stroke="currentColor" class="h-4 w-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
-                            </svg>
-                            Previous
-                        </button>
-
-                        <button type="button" @click="$store.dashboardOnboarding.next()"
-                            class="bg-brand-500 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-[13px] font-medium text-white transition hover:bg-brand-600">
-                            <span
-                                x-text="$store.dashboardOnboarding.currentStepIndex === $store.dashboardOnboarding.steps.length - 1 ? 'Finish' : 'Next'"></span>
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.7"
-                                stroke="currentColor" class="h-4 w-4">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
+            </section>
         </div>
 
         <section data-dashboard-tour-target="dashboard-home"
